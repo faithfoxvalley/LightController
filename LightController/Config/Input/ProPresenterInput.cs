@@ -1,4 +1,6 @@
 ﻿using LightController.Pro;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace LightController.Config.Input
 {
@@ -9,9 +11,39 @@ namespace LightController.Config.Input
 
         public ProPresenterInput() { }
 
-        public ProPresenterInput(ProPresenter pro, ValueRange channels) : base(channels)
+        public override Task Init()
         {
-            this.pro = pro;
+            pro = new ProPresenter("http://localhost:1025/v1/");
+
+        }
+
+
+        public override async Task Start()
+        {
+            var status = await pro.AsyncGetTransportStatus(Layer.Presentation);
+            if (status.is_playing && Path.HasExtension(status.name))
+            {
+                string path = Path.Combine(pro.MediaAssetsPath, status.name);
+                if (File.Exists(path))
+                {
+                    GetThumbnailOptions options = new GetThumbnailOptions
+                    {
+                        SeekSpan = TimeSpan.FromSeconds(10),
+                        OutputFormat = OutputFormat.Image2,
+                        PixelFormat = MediaToolkit.Tasks.PixelFormat.Rgba
+                    };
+
+                    GetThumbnailResult result = await service.ExecuteAsync(new FfTaskGetThumbnail(
+                      path,
+                      options
+                    ));
+
+                    string newFile = @"C:\Users\austin.vaness\Desktop\Test\image.jpg";
+
+                    BitmapProcessing.ReadImage(result.ThumbnailData, 14, 0.1);
+                }
+
+            }
         }
     }
 }

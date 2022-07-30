@@ -28,11 +28,14 @@ namespace LightController.Color
         public byte Blue { get; set; }
 
 
-        public static explicit operator ColorHSV(ColorRGB x)
+        /*public static explicit operator ColorHSV(ColorRGB x)
         {
-            double _red = x.Red / 255f;
-            double _green = x.Green / 255f;
-            double _blue = x.Blue / 255f;
+            if (x == null)
+                return null;
+
+            double _red = x.Red / 255.0;
+            double _green = x.Green / 255.0;
+            double _blue = x.Blue / 255.0;
 
             // Value
             double value = Math.Max(_red, Math.Max(_green, _blue));
@@ -45,13 +48,14 @@ namespace LightController.Color
             if (chroma == 0)
                 hue = 0;
             else if (value == _red)
-                hue = 60 * ((_green - _blue) / chroma);
+                hue = ((_green - _blue) / chroma) % 6;
             else if (value == _green)
-                hue = 60 * (2 + (_blue - _red) / chroma);
+                hue = 2 + (_blue - _red) / chroma;
             else if (value == _blue)
-                hue = 60 * (4 + (_red - _green) / chroma);
+                hue = 4 + (_red - _green) / chroma;
             else
                 throw new Exception("Impossible result.");
+            hue *= 60;
 
             // Saturation
             double saturation;
@@ -61,6 +65,47 @@ namespace LightController.Color
                 saturation = chroma / value;
 
             return new ColorHSV(hue, saturation, value);
+        }*/
+
+        public static explicit operator ColorHSI(ColorRGB x)
+        {
+            if (x == null)
+                return null;
+
+            double _red = x.Red / 255.0;
+            double _green = x.Green / 255.0;
+            double _blue = x.Blue / 255.0;
+
+            double cMax = Math.Max(_red, Math.Max(_green, _blue));
+            double cMin = Math.Min(_red, Math.Min(_green, _blue));
+            double chroma = cMax - cMin;
+
+
+            // Hue
+            double hue;
+            if (chroma == 0)
+                hue = 0;
+            else if (cMax == _red)
+                hue = ((_green - _blue) / chroma) % 6;
+            else if (cMax == _green)
+                hue = 2 + (_blue - _red) / chroma;
+            else if (cMax == _blue)
+                hue = 4 + (_red - _green) / chroma;
+            else
+                throw new Exception("Impossible result.");
+            hue *= 60;
+
+            // Intensity
+            double intensity = (_red + _green + _blue) / 3;
+
+            // Saturation
+            double saturation = 0;
+            if (intensity == 0)
+                saturation = 0;
+            else
+                saturation = 1 - (cMin / intensity);
+
+            return new ColorHSI(hue, saturation, intensity);
         }
 
         public override string ToString()

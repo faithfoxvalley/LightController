@@ -1,8 +1,7 @@
 ﻿using LightController.Config.Input;
+using LightController.Config.Output.Dmx;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace LightController.Config.Output
@@ -10,11 +9,11 @@ namespace LightController.Config.Output
     [YamlTag("!dmx_output")]
     public class DmxOutput : OutputBase
     {
-        public int Address { get; set; }
+        public List<DmxDeviceProfile> Devices { get; set; }
 
-        public override Task WriteOut(InputBase input)
+        public override void Update()
         {
-            throw new NotImplementedException();
+
         }
     }
 }

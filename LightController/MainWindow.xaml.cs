@@ -1,4 +1,5 @@
-﻿using LightController.Color;
+﻿using Colourful;
+using LightController.Color;
 using LightController.Config;
 using LightController.Config.Input;
 using LightController.Pro;
@@ -6,6 +7,7 @@ using MediaToolkit.Services;
 using MediaToolkit.Tasks;
 using NAudio.Midi;
 using System;
+using System.IO;
 using System.Linq;
 using System.Windows;
 
@@ -22,9 +24,18 @@ namespace LightController
         private MidiIn midiIn;
         private IMediaToolkitService service;
         private ConfigFile config;
+        private ColorHSI testHsi = new ColorHSI();
+
+        public static string ApplicationData { get; private set; }
+
+        public object RGBColor { get; }
 
         public MainWindow()
         {
+            ApplicationData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            if (!Directory.Exists(ApplicationData))
+                throw new DirectoryNotFoundException("No /AppData/Local/ folder exists!");
+
             InitializeComponent();
 
             for (int device = 0; device < MidiIn.NumberOfDevices; device++)
@@ -38,30 +49,8 @@ namespace LightController
 
             service = MediaToolkitService.CreateInstance(ffmpegFilePath);
 
-        }
-
-        private async void btnInit_Click(object sender, RoutedEventArgs e)
-        {
-            pro = new ProPresenter("http://localhost:1025/v1/");
-            await pro.AsyncInit();
-            ProLibrary library = pro.Libraries.First();
-            await pro.AsyncUpdateLibraryData(library);
-
-            ConfigFile config = ConfigFile.Load();
-            config.Inputs.Add(new ColorInput(new ColorRGB(255, 0, 128), new ValueRange(1, 5)));
-            config.Inputs.Add(new ColorInput(new ColorRGB(50, 255, 50), new ValueRange(6, 6)));
-            config.Inputs.Add(new ProPresenterInput(pro, new ValueRange(7, 20)));
-            config.Save();
-
-            if (comboBoxMidiInDevices.SelectedIndex >= 0)
-            {
-                midiIn = new MidiIn(comboBoxMidiInDevices.SelectedIndex);
-                midiIn.MessageReceived += midiIn_MessageReceived;
-                midiIn.ErrorReceived += midiIn_ErrorReceived;
-                midiIn.Start();
-            }
-
-            MessageBox.Show("Done!");
+            config = ConfigFile.Load();
+            config.Init();
         }
 
         private void midiIn_MessageReceived(object sender, MidiInMessageEventArgs e)
@@ -122,11 +111,35 @@ namespace LightController
         
         public void Update()
         {
-            foreach(InputBase input in config.Inputs)
+            //foreach(InputBase input in config.Inputs)
             {
 
             }
         }
-        
+
+        private void sliderHue_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            testHsi.Hue = e.NewValue * 240;
+            UpdateLabel(testHsi);
+        }
+
+        private void sliderSaturation_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            testHsi.Saturation = e.NewValue;
+            UpdateLabel(testHsi);
+        }
+
+        private void sliderIntensity_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            testHsi.Intensity = e.NewValue;
+            UpdateLabel(testHsi);
+        }
+
+        private void UpdateLabel(ColorHSI hsi)
+        {
+            ColorRGB rgb = (ColorRGB)hsi;
+            ColorRGBW rgbw = (ColorRGBW)hsi;
+            lblColor.Content = $"{rgb.Red}, {rgb.Green}, {rgb.Blue}\n{rgbw.Red}, {rgbw.Green}, {rgbw.Blue}, {rgbw.White}";
+        }
     }
 }

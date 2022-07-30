@@ -11,13 +11,16 @@ namespace LightController.Color
             Value = value;
         }
 
-        public double Hue { get; private set; }
-        public double Saturation { get; private set; }
-        public double Value { get; private set; }
+        public double Hue { get; set; }
+        public double Saturation { get; set; }
+        public double Value { get; set; }
 
 
         public static explicit operator ColorRGB(ColorHSV x)
         {
+			if (x == null)
+				return null;
+
 			double r, g, b;
 			double hue = x.Hue;
 			double saturation = x.Saturation;

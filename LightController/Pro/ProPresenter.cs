@@ -4,20 +4,21 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using LightController.Pro.Packet;
 using Newtonsoft.Json;
+using YamlDotNet.Serialization;
 
 namespace LightController.Pro
 {
+    /// <summary>
+    /// Serializable propresenter config
+    /// </summary>
     public class ProPresenter
     {
-        private string url;
-        private HttpClient client = new HttpClient();
 
+        [YamlIgnore]
         public List<ProLibrary> Libraries { get; } = new List<ProLibrary>();
 
-        public ProPresenter(string url)
-        {
-            this.url = url;
-        }
+        private HttpClient client = new HttpClient();
+
 
         public async Task AsyncInit()
         {
@@ -33,7 +34,7 @@ namespace LightController.Pro
         {
             try
             {
-                string responseBody = await client.GetStringAsync(url + "library/" + library.Uuid);
+                string responseBody = await client.GetStringAsync(Url + "library/" + library.Uuid);
                 LibraryItemList items = await Task.FromResult(JsonConvert.DeserializeObject<LibraryItemList>(responseBody));
                 if(items.items != null)
                     library.UpdateLibraryData(items);
@@ -51,7 +52,7 @@ namespace LightController.Pro
         {
             try
             {
-                string responseBody = await client.GetStringAsync(url + layer.ToString().ToLowerInvariant() + "/time");
+                string responseBody = await client.GetStringAsync(Url + layer.ToString().ToLowerInvariant() + "/time");
                 if (float.TryParse(responseBody, out float time))
                     return time;
             }
@@ -65,7 +66,7 @@ namespace LightController.Pro
         {
             try
             {
-                string responseBody = await client.GetStringAsync(url + "transport/" + layer.ToString().ToLowerInvariant() + "/current");
+                string responseBody = await client.GetStringAsync(Url + "transport/" + layer.ToString().ToLowerInvariant() + "/current");
                 return await Task.FromResult(JsonConvert.DeserializeObject<TransportLayerStatus>(responseBody));
             }
             catch (HttpRequestException e)
@@ -79,7 +80,7 @@ namespace LightController.Pro
 
             try
             {
-                return await client.GetByteArrayAsync(url + uuid + "/thumbnail");
+                return await client.GetByteArrayAsync(Url + uuid + "/thumbnail");
             }
             catch (HttpRequestException e)
             {
@@ -91,7 +92,7 @@ namespace LightController.Pro
         {
             try
             {
-                string responseBody = await client.GetStringAsync(url + "libraries");
+                string responseBody = await client.GetStringAsync(Url + "libraries");
                 return await Task.FromResult(JsonConvert.DeserializeObject<ItemId[]>(responseBody));
             }
             catch (HttpRequestException e)
@@ -104,7 +105,7 @@ namespace LightController.Pro
         {
             try
             {
-                string responseBody = await client.GetStringAsync(url + "presentation/active");
+                string responseBody = await client.GetStringAsync(Url + "presentation/active");
                 return await Task.FromResult(JsonConvert.DeserializeObject<Presentation>(responseBody));
             }
             catch (HttpRequestException e)

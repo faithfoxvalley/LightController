@@ -7,9 +7,12 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-        <Button x:Name="btnInit" Content="Init" HorizontalAlignment="Left" Margin="41,37,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.404,0.503" Click="btnInit_Click"/>
         <Button x:Name="btnCheckContent" Content="Check Content" HorizontalAlignment="Left" Margin="41,62,0,0" VerticalAlignment="Top" Click="btnCheckContent_Click"/>
         <ComboBox x:Name="comboBoxMidiInDevices" HorizontalAlignment="Left" Margin="234,62,0,0" VerticalAlignment="Top" Width="120"/>
+        <Slider x:Name="sliderHue" HorizontalAlignment="Left" Margin="506,158,0,0" VerticalAlignment="Top" Width="120" Maximum="1" LargeChange="0.1" SmallChange="0.01" ValueChanged="sliderHue_ValueChanged"  />
+        <Slider x:Name="sliderSaturation" HorizontalAlignment="Left" Margin="506,198,0,0" VerticalAlignment="Top" Width="120" Maximum="1" LargeChange="0.1" SmallChange="0.01" ValueChanged="sliderSaturation_ValueChanged"/>
+        <Slider x:Name="sliderIntensity" HorizontalAlignment="Left" Margin="506,238,0,0" VerticalAlignment="Top" Width="120" Maximum="1" LargeChange="0.1"  SmallChange="0.01" ValueChanged="sliderIntensity_ValueChanged"/>
+        <Label x:Name="lblColor" Content="Label" HorizontalAlignment="Left" Margin="506,277,0,0" VerticalAlignment="Top"/>
 
     </Grid>
 </Window>
