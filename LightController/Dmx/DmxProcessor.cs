@@ -17,7 +17,7 @@ namespace LightController.Dmx
         {
             foreach (OpenDMX.NET.FTDI.Device device in controller.GetDevices())
             {
-                if (device.Description == config.DmxDevice)
+                if (string.IsNullOrWhiteSpace(config.DmxDevice) || device.Description == config.DmxDevice)
                 {
                     controller.Open(device.DeviceIndex);
                     break;
