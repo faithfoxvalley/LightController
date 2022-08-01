@@ -3,7 +3,7 @@
     public struct TransportLayerStatus
     {
         public bool is_playing;
-        public StringValue uuid;
+        public StringValue? uuid;
         public string name;
         public string artist;
         public bool audio_only;

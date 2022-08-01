@@ -1,6 +1,5 @@
 ﻿using LightController.Config.Dmx;
 using LightController.Config.Input;
-using LightController.Config.Output;
 using LightController.Midi;
 using System;
 using System.Collections.Generic;
@@ -18,21 +17,7 @@ namespace LightController.Config
     {
         private const string FileName = "config.yml";
 
-        public string MidiDevice
-        {
-            get
-            {
-                return midiDevice.Name;
-            }
-
-            set
-            {
-                if (midi.TryGetDevice(value, out MidiInput device))
-                    midiDevice = device;
-                else
-                    midiDevice = null;
-            }
-        }
+        public string MidiDevice { get; set; }
         public string DefaultScene { get; set; }
 
         [YamlMember(Alias = "Pro")]
@@ -42,54 +27,12 @@ namespace LightController.Config
 
         public List<Scene> Scenes { get; set; } = new List<Scene>();
 
-
-        private Scene activeScene;
-        private MidiInput midiDevice;
-        private MidiDeviceList midi = new MidiDeviceList();
-
         public ConfigFile() { }
-
-        public async Task Init()
-        {
-
-            if (midiDevice != null)
-            {
-                midiDevice.NoteEvent += MidiDevice_NoteEvent;
-                midiDevice.Input.Start();
-            }
-
-            await ProPresenter.AsyncInit();
-
-            await Task.WhenAll(Scenes.Select(x => x.Init()));
-
-            if (!string.IsNullOrWhiteSpace(DefaultScene))
-            {
-                Scene scene = Scenes.Find(x => x.Name == DefaultScene.Trim());
-                if(scene != null)
-                {
-                    activeScene = scene;
-                    scene.Activate();
-                }
-            }
-        }
-
-        private void MidiDevice_NoteEvent(MidiNote note)
-        {
-            Scene newScene = Scenes.Find(s => s.MidiNote == note);
-            if (newScene != null)
-            {
-                foreach (Scene s in Scenes)
-                    s.Deactivate();
-
-                activeScene = newScene;
-                newScene.Activate();
-            }
-        }
 
 
         public static string GetUserFileLocation()
         {
-            string path = Path.Combine(MainWindow.ApplicationData, typeof(ConfigFile).Assembly.GetName().Name);
+            string path = Path.Combine(MainWindow.Instance.ApplicationData, typeof(ConfigFile).Assembly.GetName().Name);
             if (!Directory.Exists(path))
                 Directory.CreateDirectory(path);
             return Path.Combine(path, FileName);
@@ -104,6 +47,7 @@ namespace LightController.Config
                 {
                     DeserializerBuilder deserializer = new DeserializerBuilder()
                         .IgnoreFields()
+                        .IgnoreUnmatchedProperties()
                         .WithNamingConvention(UnderscoredNamingConvention.Instance);
                     foreach (var tag in GetYamlTags())
                         deserializer.WithTagMapping(tag.Item1, tag.Item2);

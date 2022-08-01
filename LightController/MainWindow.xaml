@@ -7,12 +7,18 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-        <Button x:Name="btnCheckContent" Content="Check Content" HorizontalAlignment="Left" Margin="41,62,0,0" VerticalAlignment="Top" Click="btnCheckContent_Click"/>
-        <ComboBox x:Name="comboBoxMidiInDevices" HorizontalAlignment="Left" Margin="234,62,0,0" VerticalAlignment="Top" Width="120"/>
-        <Slider x:Name="sliderHue" HorizontalAlignment="Left" Margin="506,158,0,0" VerticalAlignment="Top" Width="120" Maximum="1" LargeChange="0.1" SmallChange="0.01" ValueChanged="sliderHue_ValueChanged"  />
-        <Slider x:Name="sliderSaturation" HorizontalAlignment="Left" Margin="506,198,0,0" VerticalAlignment="Top" Width="120" Maximum="1" LargeChange="0.1" SmallChange="0.01" ValueChanged="sliderSaturation_ValueChanged"/>
-        <Slider x:Name="sliderIntensity" HorizontalAlignment="Left" Margin="506,238,0,0" VerticalAlignment="Top" Width="120" Maximum="1" LargeChange="0.1"  SmallChange="0.01" ValueChanged="sliderIntensity_ValueChanged"/>
-        <Label x:Name="lblColor" Content="Label" HorizontalAlignment="Left" Margin="506,277,0,0" VerticalAlignment="Top"/>
-
+        <Button x:Name="btnCheckContent" Content="Check Content" HorizontalAlignment="Left" Margin="41,62,0,0" VerticalAlignment="Top" Click="btnCheckContent_Click" />
+        <Rectangle x:Name="box0" HorizontalAlignment="Left" Height="100" Margin="80,264,0,0" VerticalAlignment="Top" Width="40" Fill="White"/>
+        <Rectangle x:Name="box1" HorizontalAlignment="Left" Height="100" Margin="120,264,0,0" VerticalAlignment="Top" Width="40" Fill="White"/>
+        <Rectangle x:Name="box2" HorizontalAlignment="Left" Height="100" Margin="160,264,0,0" VerticalAlignment="Top" Width="40" Fill="White"/>
+        <Rectangle x:Name="box3" HorizontalAlignment="Left" Height="100" Margin="200,264,0,0" VerticalAlignment="Top" Width="40" Fill="White"/>
+        <Rectangle x:Name="box4" HorizontalAlignment="Left" Height="100" Margin="240,264,0,0" VerticalAlignment="Top" Width="40" Fill="White"/>
+        <Rectangle x:Name="box5" HorizontalAlignment="Left" Height="100" Margin="280,264,0,0" VerticalAlignment="Top" Width="40" Fill="White"/>
+        <Rectangle x:Name="box6" HorizontalAlignment="Left" Height="100" Margin="320,264,0,0" VerticalAlignment="Top" Width="40" Fill="White"/>
+        <Rectangle x:Name="box7" HorizontalAlignment="Left" Height="100" Margin="360,264,0,0" VerticalAlignment="Top" Width="40" Fill="White"/>
+        <Rectangle x:Name="box8" HorizontalAlignment="Left" Height="100" Margin="280,264,0,0" VerticalAlignment="Top" Width="40" Fill="White"/>
+        <Rectangle x:Name="box9" HorizontalAlignment="Left" Height="100" Margin="320,264,0,0" VerticalAlignment="Top" Width="40" Fill="White"/>
+        <Label x:Name="label" Content="Label" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.585,-0.11"/>
+        <Canvas x:Name="canvas" MouseDown="Canvas_MouseDown" MouseMove="Canvas_MouseMove" MouseUp="Canvas_MouseUp" Background="Transparent" />
     </Grid>
 </Window>

@@ -11,6 +11,7 @@ namespace LightController.Dmx
     {
         private DmxFrame frame;
         private DmxChannel flatAddressMap;
+        private IEnumerable<DmxChannel> addressMap;
 
         public DmxDevice(Config.Dmx.DmxDeviceProfile profile, Config.Dmx.DmxDeviceAddress address)
         {
@@ -26,75 +27,9 @@ namespace LightController.Dmx
             if (Contains(DmxChannel.Intensity))
                 target = new ColorHSI(target.Hue, target.Saturation, 1);
 
-            ColorRGBW rgbw = (ColorRGBW)target;
-
-            // Get byte values;
-            byte white = 0;
-            byte red, green, blue;
-            if (Contains(DmxChannel.White))
-            {
-                white = rgbw.White;
-                red = rgbw.Red;
-                green = rgbw.Green;
-                blue = rgbw.Blue;
-            }
-            else
-            {
-                ColorRGB rgb = (ColorRGB)target;
-                red = rgb.Red;
-                green = rgb.Green;
-                blue = rgb.Blue;
-            }
-
-            // Convert RGB and create other special types of channels
-            byte amber = 0;
-            if (Contains(DmxChannel.Amber))
-                amber = RemoveColor(rgbw, new ColorRGB());
-
-            byte indigo = 0;
-            if (Contains(DmxChannel.Indigo))
-                indigo = RemoveColor(rgbw, new ColorRGB());
-
-            byte lime = 0;
-            if (Contains(DmxChannel.Lime))
-                lime = RemoveColor(rgbw, new ColorRGB());
+            ColorRGB rgb = (ColorRGB)target;
 
             frame.Reset();
-
-            foreach (DmxChannel color in AddressMap)
-            {
-                byte packet;
-                switch (color)
-                {
-                    case DmxChannel.Intensity:
-                        packet = (byte)(intensity * 255);
-                        break;
-                    case DmxChannel.White:
-                        packet = Math.Min(Math.Min(rgbw.Red, rgbw.Green), rgbw.Blue);
-                        break;
-                    case DmxChannel.Amber:
-                        packet = amber;
-                        break;
-                    case DmxChannel.Indigo:
-                        packet = indigo;
-                        break;
-                    case DmxChannel.Lime:
-                        packet = lime;
-                        break;
-                    case DmxChannel.Red:
-                        packet = rgbw.Red;
-                        break;
-                    case DmxChannel.Green:
-                        packet = rgbw.Green;
-                        break;
-                    case DmxChannel.Blue:
-                        packet = rgbw.Blue;
-                        break;
-                    default:
-                        continue;
-                }
-                frame.Add(packet);
-            }
 
             return frame;
         }
@@ -102,9 +37,27 @@ namespace LightController.Dmx
         /// <summary>
         /// Creates a new color channel from a color and a mask
         /// </summary>
-        private byte RemoveColor(ColorRGBW color, ColorRGB mask)
+        private byte RemoveColor(ColorRGB color, DmxChannel channel)
         {
-            return 0;
+            ColorRGB mask;
+            switch (channel)
+            {
+                case DmxChannel.White:
+                    mask = new ColorRGB(255, 255, 255);
+                    break;
+                default:
+                    return 0;
+            }
+
+            double r = color.Red / mask.Red;
+            double g = color.Green / mask.Green;
+            double b = color.Blue / mask.Blue;
+            double amount = Math.Min(Math.Min(r, g), b);
+            byte value = (byte)(amount * 255);
+            color.Red -= value;
+            color.Green -= value;
+            color.Blue -= value;
+            return value;
         }
 
         private bool Contains(DmxChannel address)

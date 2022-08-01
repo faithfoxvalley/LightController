@@ -1,24 +1,28 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using LightController.Pro.Packet;
 using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 namespace LightController.Pro
 {
-    /// <summary>
-    /// Serializable propresenter config
-    /// </summary>
     public class ProPresenter
     {
+        const string Url = "http://localhost:1025/v1/";
 
-        [YamlIgnore]
         public List<ProLibrary> Libraries { get; } = new List<ProLibrary>();
 
         private HttpClient client = new HttpClient();
 
+        public ProPresenter() { }
+
+        public ProPresenter(Config.ProPresenterConfig config)
+        {
+            AsyncInit();
+        }
 
         public async Task AsyncInit()
         {
@@ -47,21 +51,6 @@ namespace LightController.Pro
 
 
 
-
-        public async Task<float> AsyncGetTransportLayerTime(Layer layer)
-        {
-            try
-            {
-                string responseBody = await client.GetStringAsync(Url + layer.ToString().ToLowerInvariant() + "/time");
-                if (float.TryParse(responseBody, out float time))
-                    return time;
-            }
-            catch (HttpRequestException e)
-            {
-            }
-            return float.NaN;
-        }
-
         public async Task<TransportLayerStatus> AsyncGetTransportStatus(Layer layer)
         {
             try
@@ -73,6 +62,26 @@ namespace LightController.Pro
             {
             }
             return await Task.FromResult(new TransportLayerStatus());
+        }
+
+
+        public async Task<double> AsyncGetTransportLayerTime(Layer layer)
+        {
+            Stopwatch sw = Stopwatch.StartNew();
+
+            try
+            {
+                string responseBody = await client.GetStringAsync(Url + "transport/" + layer.ToString().ToLowerInvariant() + "/time");
+                double time = double.Parse(responseBody);
+                sw.Stop();
+                time += sw.ElapsedMilliseconds / 2000.0;
+                return time;
+            }
+            catch
+            {
+                sw.Stop();
+            }
+            return double.NaN;
         }
 
         public async Task<byte[]> AsyncGetThumbnail(string uuid, int width)

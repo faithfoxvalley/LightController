@@ -29,9 +29,10 @@ namespace LightController.Config
         /// <summary>
         /// Called after the scene has been created, regardless of wether it is currently active
         /// </summary>
-        public async Task Init()
+        public void Init()
         {
-            await Task.WhenAll(Inputs.Select(x => x.Init()));
+            foreach(InputBase input in Inputs)
+                input.Init();
         }
 
 

@@ -1,4 +1,6 @@
-﻿using LightController.Pro;
+﻿using LightController.Color;
+using LightController.Pro;
+using MediaToolkit.Tasks;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -11,16 +13,16 @@ namespace LightController.Config.Input
 
         public ProPresenterInput() { }
 
-        public override Task Init()
+        public override void Init()
         {
-            pro = new ProPresenter("http://localhost:1025/v1/");
+            //pro = new ProPresenter("http://localhost:1025/v1/");
 
         }
 
 
-        public override async Task Start()
+        public override void Start()
         {
-            var status = await pro.AsyncGetTransportStatus(Layer.Presentation);
+            /*var status = await pro.AsyncGetTransportStatus(Layer.Presentation);
             if (status.is_playing && Path.HasExtension(status.name))
             {
                 string path = Path.Combine(pro.MediaAssetsPath, status.name);
@@ -43,7 +45,7 @@ namespace LightController.Config.Input
                     BitmapProcessing.ReadImage(result.ThumbnailData, 14, 0.1);
                 }
 
-            }
+            }*/
         }
     }
 }

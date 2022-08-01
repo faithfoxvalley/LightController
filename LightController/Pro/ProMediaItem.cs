@@ -1,4 +1,4 @@
-﻿using ProtoBuf;
+﻿using LightController.Color;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 
 namespace LightController.Pro
 {
-    [ProtoContract]
     public class ProMediaItem
     {
         private string path;
@@ -17,13 +16,8 @@ namespace LightController.Pro
         public ProMediaItem(string path)
         {
             this.path = path;
-            
         }
 
-        [ProtoContract]
-        public class Frame
-        {
 
-        }
     }
 }

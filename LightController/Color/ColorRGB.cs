@@ -1,7 +1,9 @@
-﻿using System;
+﻿using ProtoBuf;
+using System;
 
 namespace LightController.Color
 {
+    [ProtoContract(UseProtoMembersOnly = true)]
     public class ColorRGB
     {
         public ColorRGB() { }
@@ -23,8 +25,13 @@ namespace LightController.Color
             Blue = data[start];
         }
 
+        [ProtoMember(1)]
         public byte Red { get; set; }
+
+        [ProtoMember(2)]
         public byte Green { get; set; }
+
+        [ProtoMember(3)]
         public byte Blue { get; set; }
 
 
@@ -86,7 +93,7 @@ namespace LightController.Color
             if (chroma == 0)
                 hue = 0;
             else if (cMax == _red)
-                hue = ((_green - _blue) / chroma) % 6;
+                hue = (_green - _blue) / chroma;
             else if (cMax == _green)
                 hue = 2 + (_blue - _red) / chroma;
             else if (cMax == _blue)
@@ -94,6 +101,8 @@ namespace LightController.Color
             else
                 throw new Exception("Impossible result.");
             hue *= 60;
+            while (hue < 0)
+                hue += 360;
 
             // Intensity
             double intensity = (_red + _green + _blue) / 3;

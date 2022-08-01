@@ -22,9 +22,9 @@ namespace LightController.Config.Input
             Channels = channels;
         }
 
-        public virtual Task Init()
+        public virtual void Init()
         {
-            return Task.CompletedTask;
+
         }
 
         public virtual void Start()
