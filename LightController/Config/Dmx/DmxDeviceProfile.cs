@@ -23,26 +23,25 @@ namespace LightController.Config.Dmx
         {
             get
             {
-                return AddressMap.Select(x => x.ToString().ToLowerInvariant()).ToArray();
+                return AddressMap.Select(x => x?.ToString()).ToArray();
             }
 
             set
             {
                 foreach (string color in value)
                 {
-                    if (Enum.TryParse(color, out DmxChannel result))
+                    DmxChannel channel  = DmxChannel.Parse(color, AddressMap.Count);
+                    if(channel == null)
                     {
-                        AddressMap.Add(result);
-                        FlatAddressMap |= result;
+                        // TODO: Warn user
                     }
+                    AddressMap.Add(channel);
                 }
             }
         }
+
         [YamlIgnore]
         public List<DmxChannel> AddressMap { get; private set; } = new List<DmxChannel>();
-        [YamlIgnore]
-        public DmxChannel FlatAddressMap { get; private set; } = DmxChannel.Unknown;
-
 
     }
 }

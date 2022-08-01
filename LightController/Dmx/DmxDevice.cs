@@ -1,5 +1,4 @@
-﻿using LightController.Color;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,59 +9,31 @@ namespace LightController.Dmx
     public class DmxDevice
     {
         private DmxFrame frame;
-        private DmxChannel flatAddressMap;
-        private IEnumerable<DmxChannel> addressMap;
+        private List<DmxChannel> addressMap;
+        private bool hasIntensity;
 
         public DmxDevice(Config.Dmx.DmxDeviceProfile profile, Config.Dmx.DmxDeviceAddress address)
         {
-            frame = new DmxFrame(profile.AddressMap, profile.DmxLength, address.StartAddress);
-            flatAddressMap = profile.FlatAddressMap;
+            frame = new DmxFrame(profile.DmxLength, address.StartAddress);
+            addressMap = profile.AddressMap.Where(x => x != null).OrderByDescending(x => x.MaskSize).ToList();
+            hasIntensity = addressMap.Find(x => x.IsIntensity) != null;
         }
 
 
-        public DmxFrame GetFrame(ColorHSI target)
+        public DmxFrame GetFrame(Colourful.RGBColor rgb, double intensity)
         {
-            // Intensity
-            double intensity = target.Intensity;
-            if (Contains(DmxChannel.Intensity))
-                target = new ColorHSI(target.Hue, target.Saturation, 1);
-
-            ColorRGB rgb = (ColorRGB)target;
-
             frame.Reset();
 
-            return frame;
-        }
-
-        /// <summary>
-        /// Creates a new color channel from a color and a mask
-        /// </summary>
-        private byte RemoveColor(ColorRGB color, DmxChannel channel)
-        {
-            ColorRGB mask;
-            switch (channel)
+            foreach (DmxChannel channel in addressMap)
             {
-                case DmxChannel.White:
-                    mask = new ColorRGB(255, 255, 255);
-                    break;
-                default:
-                    return 0;
+                double channelIntensity = 1;
+                if(!hasIntensity || channel.IsIntensity)
+                    channelIntensity = intensity;
+
+                frame.Set(channel.Index, channel.GetValue(ref rgb, channelIntensity));
             }
 
-            double r = color.Red / mask.Red;
-            double g = color.Green / mask.Green;
-            double b = color.Blue / mask.Blue;
-            double amount = Math.Min(Math.Min(r, g), b);
-            byte value = (byte)(amount * 255);
-            color.Red -= value;
-            color.Green -= value;
-            color.Blue -= value;
-            return value;
-        }
-
-        private bool Contains(DmxChannel address)
-        {
-            return (flatAddressMap & address) != 0;
+            return frame;
         }
 
     }

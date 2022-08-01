@@ -31,8 +31,6 @@
     <PackageReference Include="MediaToolkit.NetCore" Version="0.2.1-preview" />
     <PackageReference Include="NAudio.Midi" Version="2.1.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="OpenCvSharp4" Version="4.6.0.20220608" />
-    <PackageReference Include="OpenCvSharp4.runtime.win" Version="4.6.0.20220608" />
     <PackageReference Include="OpenDMX.NET" Version="1.0.1" />
     <PackageReference Include="protobuf-net" Version="3.1.17" />
     <PackageReference Include="System.Drawing.Common" Version="6.0.0" />

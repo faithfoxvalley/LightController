@@ -1,4 +1,5 @@
 ﻿using NAudio.Midi;
+using System;
 using System.Collections.Generic;
 
 namespace LightController.Midi
@@ -28,6 +29,24 @@ namespace LightController.Midi
 
             device = null;
             return false;
+        }
+
+        public bool TryGetFirstDevice(out MidiInput device)
+        {
+            if (MidiIn.NumberOfDevices > 0 && TryGetDevice(0, out MidiIn result))
+            {
+                device = new MidiInput(result, MidiIn.DeviceInfo(0).ProductName.Trim());
+                return true;
+            }
+            device = null;
+            return false;
+        }
+
+        public MidiInput FirstOrDefault()
+        {
+            if(MidiIn.NumberOfDevices > 0 && TryGetDevice(0, out MidiIn result))
+                return new MidiInput(result, MidiIn.DeviceInfo(0).ProductName.Trim());
+            return null;
         }
 
         private bool TryGetDevice(int index, out MidiIn input)

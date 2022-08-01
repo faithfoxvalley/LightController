@@ -18,6 +18,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace LightController
 {
@@ -34,7 +35,7 @@ namespace LightController
         private IMediaToolkitService service;
         private ConfigFile config;
         private SceneManager sceneManager;
-        private SolidColorBrush[] brushes = new SolidColorBrush[10];
+        private DmxProcessor dmx;
 
         public static MainWindow Instance { get; private set; }
 
@@ -54,24 +55,99 @@ namespace LightController
 
             service = MediaToolkitService.CreateInstance(ffmpegFilePath);
 
-            //config = ConfigFile.Load();
-            //sceneManager = new SceneManager(config.Scenes, config.MidiDevice, config.DefaultScene);
-            pro = new ProPresenter();
+            config = new ConfigFile
+            {
+                // Config settings
+                DefaultScene = "Worship",
+                ProPresenter = new ProPresenterConfig()
+                {
+                    ApiUrl = "http://localhost:1025/v1/",
+                    MediaAssetsPath = @"C:\Users\austin.vaness\Documents\ProPresenter\Media\Assets"
+                },
+                Dmx = new Config.Dmx.DmxConfig()
+                {
+                    DmxDevice = null,
+                    Fixtures = new List<Config.Dmx.DmxDeviceProfile>()
+                    {
+                        new Config.Dmx.DmxDeviceProfile()
+                        {
+                            Name = "Spotlight",
+                            DmxLength = 5,
+                            AddressMapStrings = new[] { "intensity", "red", "green", "blue" }
+                        },
+                        new Config.Dmx.DmxDeviceProfile()
+                        {
+                            Name = "RGBW",
+                            DmxLength = 4,
+                            AddressMapStrings = new[] { "red", "green", "blue", "white" }
+                        },
+                        new Config.Dmx.DmxDeviceProfile()
+                        {
+                            Name = "Lightbar",
+                            DmxLength = 13,
+                            AddressMapStrings = new[] { "red", "green", "blue", "white", "amber", null, "intensity" }
+                        },
+                    },
+                    Addresses = new List<Config.Dmx.DmxDeviceAddress>()
+                    {
+                        new Config.Dmx.DmxDeviceAddress()
+                        {
+                            Name = "Spotlight",
+                            StartAddress = 1,
+                            Count = 5,
+                        },
+                        new Config.Dmx.DmxDeviceAddress()
+                        {
+                            Name = "RGBW",
+                            StartAddress = 255,
+                        },
+                        new Config.Dmx.DmxDeviceAddress()
+                        {
+                            Name = "Lightbar",
+                            StartAddress = 30,
+                            Count = 14,
+                        }
+                    }
 
-            box0.Fill = brushes[0] = new SolidColorBrush();
-            box1.Fill = brushes[1] = new SolidColorBrush();
-            box2.Fill = brushes[2] = new SolidColorBrush();
-            box3.Fill = brushes[3] = new SolidColorBrush();
-            box4.Fill = brushes[4] = new SolidColorBrush();
-            box5.Fill = brushes[5] = new SolidColorBrush();
-            box6.Fill = brushes[6] = new SolidColorBrush();
-            box7.Fill = brushes[7] = new SolidColorBrush();
-            box8.Fill = brushes[8] = new SolidColorBrush();
-            box9.Fill = brushes[9] = new SolidColorBrush();
+                },
+                Scenes = new List<Scene>()
+                {
+                    new Scene()
+                    {
+                        Name = "Worship",
+                        MidiNote = new Midi.MidiNote()
+                        {
+                            Channel = 0,
+                            Note = 0,
+                        },
+                        Inputs = new List<InputBase>()
+                        {
+                            new ColorInput()
+                            {
+                                RGB = new ColorRGB(255, 255, 255),
+                                ChannelRange = "1-20"
+                            }
+                        }
+                    }
+                },
+            };
+            config.Save();
+
+
+            sceneManager = new SceneManager(config.Scenes, config.MidiDevice, config.DefaultScene);
+            pro = new ProPresenter();
 
             pro.AsyncInit();
 
-            //MediaLibrary.DrawHistogram(@"C:\Users\austi\Desktop\Test\image.jpg");
+            DispatcherTimer timer = new DispatcherTimer();
+            timer.Interval = TimeSpan.FromMilliseconds(500);
+            timer.Tick += Update;
+            timer.Start();
+        }
+
+        private void Update(object sender, EventArgs e)
+        {
+
         }
 
         private async void btnCheckContent_Click(object sender, RoutedEventArgs e)
@@ -122,7 +198,7 @@ namespace LightController
 
                         if (result.ThumbnailData.Length > 0)
                         {
-                            ColorRGB[] colorData = await Task.Run(() => MediaLibrary.ReadImage(result.ThumbnailData, 854, 1));
+                            ColorRGB[] colorData = await Task.Run(() => MediaLibrary.ReadImage(result.ThumbnailData, 14, 1));
                             for (int i = 0; i < colorData.Length; i++)
                             {
                                 ColorRGB color = colorData[i];
@@ -157,48 +233,6 @@ namespace LightController
                 break;
             }
             
-        }
-
-        private Point startPoint;
-        private Rectangle rect;
-
-        private void Canvas_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            startPoint = e.GetPosition(canvas);
-
-            rect = new Rectangle
-            {
-                Stroke = Brushes.LightBlue,
-                StrokeThickness = 2
-            };
-            Canvas.SetLeft(rect, startPoint.X);
-            Canvas.SetTop(rect, startPoint.Y);
-            canvas.Children.Add(rect);
-        }
-
-        private void Canvas_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (e.LeftButton == MouseButtonState.Released || rect == null)
-                return;
-
-            var pos = e.GetPosition(canvas);
-
-            var x = Math.Min(pos.X, startPoint.X);
-            var y = Math.Min(pos.Y, startPoint.Y);
-
-            var w = Math.Max(pos.X, startPoint.X) - x;
-            var h = Math.Max(pos.Y, startPoint.Y) - y;
-
-            rect.Width = w;
-            rect.Height = h;
-
-            Canvas.SetLeft(rect, x);
-            Canvas.SetTop(rect, y);
-        }
-
-        private void Canvas_MouseUp(object sender, MouseButtonEventArgs e)
-        {
-            rect = null;
         }
     }
 }

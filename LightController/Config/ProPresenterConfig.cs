@@ -8,7 +8,7 @@ namespace LightController.Config
 {
     public class ProPresenterConfig
     {
-        public string ApiUrl { get; set; } = "http://localhost:50001/v1/";
+        public string ApiUrl { get; set; }
         public string MediaAssetsPath { get; set; }
     }
 }

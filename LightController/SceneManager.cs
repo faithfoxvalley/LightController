@@ -19,8 +19,16 @@ namespace LightController
             this.scenes = scenes;
 
             MidiDeviceList midiDevices = new MidiDeviceList();
-            if (midiDevices.TryGetDevice(midiDevice, out this.midiDevice))
+
+            if (string.IsNullOrWhiteSpace(midiDevice))
+            {
+                if(midiDevices.TryGetFirstDevice(out this.midiDevice))
+                    this.midiDevice.NoteEvent += MidiDevice_NoteEvent;
+            }
+            else if (midiDevices.TryGetDevice(midiDevice, out this.midiDevice))
+            {
                 this.midiDevice.NoteEvent += MidiDevice_NoteEvent;
+            }
 
             foreach (Scene s in scenes)
                 s.Init();
