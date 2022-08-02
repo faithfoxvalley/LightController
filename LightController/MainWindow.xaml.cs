@@ -125,7 +125,8 @@ namespace LightController
                             new ColorInput()
                             {
                                 RGB = new ColorRGB(255, 255, 255),
-                                FixtureRange = "1-20"
+                                FixtureRange = "1-20",
+                                IntensityMode = "50%"
                             }
                         }
                     }
