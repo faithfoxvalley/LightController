@@ -10,7 +10,7 @@ namespace LightController.Dmx
 {
     public class DmxProcessor
     {
-        private List<DmxDevice> fixtures = new List<DmxDevice>();
+        private List<DmxFixture> fixtures = new List<DmxFixture>();
         private DmxController controller = new DmxController();
 
         public DmxProcessor(DmxConfig config)
@@ -36,10 +36,15 @@ namespace LightController.Dmx
             {
                 DmxDeviceProfile profile = profiles[fixtureAddress.Name];
                 for(int i = 0; i < fixtureAddress.Count; i++)
-                    fixtures.Add(new DmxDevice(profile, fixtureAddress));
+                    fixtures.Add(new DmxFixture(profile, fixtureAddress, fixtures.Count));
             }
         }
 
+        public void UpdateInputs(IEnumerable<Config.Input.InputBase> inputs)
+        {
+            foreach (DmxFixture fixture in fixtures)
+                fixture.UpdateInputs(inputs);
+        }
 
         public void Write(DmxFrame frame)
         {

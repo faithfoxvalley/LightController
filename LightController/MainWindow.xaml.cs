@@ -125,7 +125,7 @@ namespace LightController
                             new ColorInput()
                             {
                                 RGB = new ColorRGB(255, 255, 255),
-                                ChannelRange = "1-20"
+                                FixtureRange = "1-20"
                             }
                         }
                     }
@@ -135,6 +135,9 @@ namespace LightController
 
 
             sceneManager = new SceneManager(config.Scenes, config.MidiDevice, config.DefaultScene);
+
+            dmx = new DmxProcessor(config.Dmx);
+
             pro = new ProPresenter();
 
             pro.AsyncInit();
@@ -147,7 +150,7 @@ namespace LightController
 
         private void Update(object sender, EventArgs e)
         {
-
+            
         }
 
         private async void btnCheckContent_Click(object sender, RoutedEventArgs e)

@@ -6,20 +6,20 @@ namespace LightController.Config.Input
     public abstract class InputBase
     {
         [YamlIgnore]
-        public ValueSet Channels { get; set; }
+        public ValueSet FixtureIds { get; set; }
 
-        [YamlMember(Alias = "Channels")]
-        public string ChannelRange
+        [YamlMember(Alias = "FixtureIds")]
+        public string FixtureRange
         {
-            get => Channels.ToString();
-            set => Channels = new ValueSet(value);
+            get => FixtureIds.ToString();
+            set => FixtureIds = new ValueSet(value);
         }
 
         protected InputBase() { }
 
-        public InputBase(ValueSet channels)
+        public InputBase(ValueSet fixtureIds)
         {
-            Channels = channels;
+            FixtureIds = fixtureIds;
         }
 
         public virtual void Init()
@@ -28,6 +28,11 @@ namespace LightController.Config.Input
         }
 
         public virtual void Start()
+        {
+
+        }
+
+        public virtual void Update()
         {
 
         }

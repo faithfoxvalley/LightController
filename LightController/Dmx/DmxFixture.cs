@@ -6,19 +6,33 @@ using System.Threading.Tasks;
 
 namespace LightController.Dmx
 {
-    public class DmxDevice
+    public class DmxFixture
     {
         private DmxFrame frame;
         private List<DmxChannel> addressMap;
         private bool hasIntensity;
+        private Config.Input.InputBase input;
+        private int fixtureId;
 
-        public DmxDevice(Config.Dmx.DmxDeviceProfile profile, Config.Dmx.DmxDeviceAddress address)
+        public DmxFixture(Config.Dmx.DmxDeviceProfile profile, Config.Dmx.DmxDeviceAddress address, int fixtureId)
         {
             frame = new DmxFrame(profile.DmxLength, address.StartAddress);
             addressMap = profile.AddressMap.Where(x => x != null).OrderByDescending(x => x.MaskSize).ToList();
             hasIntensity = addressMap.Find(x => x.IsIntensity) != null;
+            this.fixtureId = fixtureId;
         }
 
+        public void UpdateInputs(IEnumerable<Config.Input.InputBase> inputs)
+        {
+            foreach(var input in inputs)
+            {
+                if (input.FixtureIds.Contains(fixtureId))
+                {
+                    this.input = input;
+                    break;
+                }
+            }
+        }
 
         public DmxFrame GetFrame(Colourful.RGBColor rgb, double intensity)
         {
