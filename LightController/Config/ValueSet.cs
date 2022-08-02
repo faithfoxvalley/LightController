@@ -53,6 +53,16 @@ namespace LightController.Config
             return !result.Empty;
         }
 
+        public bool Contains(int value)
+        {
+            foreach (Range range in ranges)
+            {
+                if (range.Contains(value))
+                    return true;
+            }
+            return false;
+        }
+
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
