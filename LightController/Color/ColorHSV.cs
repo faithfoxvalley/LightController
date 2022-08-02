@@ -95,8 +95,7 @@ namespace LightController.Color
 
 		public override string ToString()
 		{
-			ColorRGB rgb = (ColorRGB)this;
-			return $"#{rgb.Red:X2}{rgb.Green:X2}{rgb.Blue:X2}";
+			return $"{Hue:0.#}, {Saturation:P}, {Value:P}";
 		}
 	}
 }

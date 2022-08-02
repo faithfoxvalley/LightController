@@ -133,11 +133,8 @@ namespace LightController
             };
             config.Save();
 
-
-            sceneManager = new SceneManager(config.Scenes, config.MidiDevice, config.DefaultScene);
-
             dmx = new DmxProcessor(config.Dmx);
-
+            sceneManager = new SceneManager(config.Scenes, config.MidiDevice, config.DefaultScene, dmx);
             pro = new ProPresenter();
 
             pro.AsyncInit();

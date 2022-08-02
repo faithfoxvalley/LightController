@@ -1,10 +1,10 @@
-﻿using LightController.Color;
+﻿using Colourful;
+using LightController.Color;
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
-using Colourful;
 
 namespace LightController.Pro
 {

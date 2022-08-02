@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using LightController.Color;
+using System.Threading.Tasks;
 using YamlDotNet.Serialization;
 
 namespace LightController.Config.Input
@@ -14,6 +15,20 @@ namespace LightController.Config.Input
             get => FixtureIds.ToString();
             set => FixtureIds = new ValueSet(value);
         }
+
+        public string IntensityMode
+        {
+            get
+            {
+                return intensity.ToString();
+            }
+            set
+            {
+                intensity = InputIntensity.Parse(value);
+            }
+        }
+
+        private InputIntensity intensity = new InputIntensity();
 
         protected InputBase() { }
 
@@ -42,6 +57,11 @@ namespace LightController.Config.Input
 
         }
 
-        public abstract Colourful.RGBColor GetColor();
+        public abstract ColorRGB GetColor();
+
+        public virtual double GetIntensity(ColorRGB target)
+        {
+            return intensity.GetIntensity(target);
+        }
     }
 }

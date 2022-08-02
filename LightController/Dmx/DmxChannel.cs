@@ -1,4 +1,4 @@
-﻿using Colourful;
+﻿using LightController.Color;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -10,13 +10,13 @@ namespace LightController.Dmx
 {
     public class DmxChannel
     {
-        private RGBColor mask;
+        private ColorRGB mask;
         private byte? constantValue;
         private string stringValue;
 
         public int Index { get; private set; }
         public bool IsIntensity { get; private set; } = false;
-        public double MaskSize => IsIntensity ? double.PositiveInfinity : mask.R + mask.G + mask.B;
+        public double MaskSize => IsIntensity ? double.PositiveInfinity : mask.Red + mask.Green + mask.Blue;
 
         public DmxChannel(string stringValue, int index)
         {
@@ -40,27 +40,27 @@ namespace LightController.Dmx
                 var color = ColorTranslator.FromHtml(value);
                 if (color.IsEmpty)
                     return null;
-                result.mask = RGBColor.FromColor(color);
+                result.mask = ColorRGB.FromColor(color);
                 return result;
             }
 
-            RGBColor mask;
+            ColorRGB mask;
             switch (value)
             {
                 case "red":
-                    mask = new RGBColor(1, 0, 0);
+                    mask = new ColorRGB(255, 0, 0);
                     break;
                 case "green":
-                    mask = new RGBColor(0, 1, 0);
+                    mask = new ColorRGB(0, 255, 0);
                     break;
                 case "blue":
-                    mask = new RGBColor(0, 0, 1);
+                    mask = new ColorRGB(0, 0, 255);
                     break;
                 case "white":
-                    mask = new RGBColor(1, 1, 1);
+                    mask = new ColorRGB(255, 255, 255);
                     break;
                 case "amber":
-                    mask = RGBColor.FromRGB8Bit(255, 191, 0);
+                    mask = new ColorRGB(255, 191, 0);
                     break;
                 case "intensity":
                     result.IsIntensity = true;
@@ -77,7 +77,7 @@ namespace LightController.Dmx
             return result;
         }
 
-        public byte GetValue(ref RGBColor color, double intensity)
+        public byte GetValue(ref ColorRGB color, double intensity)
         {
             if (constantValue.HasValue)
                 return constantValue.Value;
@@ -85,11 +85,11 @@ namespace LightController.Dmx
             if (IsIntensity)
                 return (byte)(255 * intensity);
 
-            double r = color.R / mask.R;
-            double g = color.G / mask.G;
-            double b = color.B / mask.B;
+            double r = color.Red / (double)mask.Red;
+            double g = color.Green / (double)mask.Green;
+            double b = color.Blue / (double)mask.Blue;
             double amount = Math.Min(Math.Min(r, g), b);
-            color = new RGBColor(r - amount, g - amount, b - amount);
+            color = new ColorRGB((byte)(r - amount), (byte)(g - amount), (byte)(b - amount));
             return (byte)(amount * 255 * intensity);
 
         }

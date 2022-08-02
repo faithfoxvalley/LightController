@@ -1,4 +1,4 @@
-﻿using Colourful;
+﻿using LightController.Color;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -37,8 +37,14 @@ namespace LightController.Dmx
 
         public DmxFrame GetFrame()
         {
-            double intensity = 1; // TODO
-            RGBColor rgb = input.GetColor();
+            ColorRGB rgb = input.GetColor();
+            double intensity = input.GetIntensity(rgb);
+
+            // Make a copy with maximum intensity
+            rgb = new ColorRGB(
+                (byte)(rgb.Red / intensity),
+                (byte)(rgb.Green / intensity),
+                (byte)(rgb.Blue / intensity));
 
             frame.Reset();
 

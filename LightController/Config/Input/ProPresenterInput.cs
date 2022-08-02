@@ -1,5 +1,4 @@
-﻿using Colourful;
-using LightController.Color;
+﻿using LightController.Color;
 using LightController.Pro;
 using MediaToolkit.Tasks;
 using System.IO;
@@ -15,9 +14,9 @@ namespace LightController.Config.Input
 
         public ProPresenterInput() { }
 
-        public override RGBColor GetColor()
+        public override ColorRGB GetColor()
         {
-            return new RGBColor(1, 1, 0);
+            return new ColorRGB(1, 1, 0);
         }
 
         public override void Init()

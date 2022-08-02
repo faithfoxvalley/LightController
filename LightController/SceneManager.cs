@@ -16,9 +16,10 @@ namespace LightController
         private MidiInput midiDevice;
         private DmxProcessor dmx;
 
-        public SceneManager(List<Scene> scenes, string midiDevice, string defaultScene)
+        public SceneManager(List<Scene> scenes, string midiDevice, string defaultScene, DmxProcessor dmx)
         {
             this.scenes = scenes;
+            this.dmx = dmx;
 
             MidiDeviceList midiDevices = new MidiDeviceList();
 

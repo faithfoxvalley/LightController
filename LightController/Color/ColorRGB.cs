@@ -1,5 +1,6 @@
 ﻿using ProtoBuf;
 using System;
+using YamlDotNet.Serialization;
 
 namespace LightController.Color
 {
@@ -35,7 +36,7 @@ namespace LightController.Color
         public byte Blue { get; set; }
 
 
-        /*public static explicit operator ColorHSV(ColorRGB x)
+        public static explicit operator ColorHSV(ColorRGB x)
         {
             if (x == null)
                 return null;
@@ -72,9 +73,14 @@ namespace LightController.Color
                 saturation = chroma / value;
 
             return new ColorHSV(hue, saturation, value);
-        }*/
+        }
 
-        public static explicit operator ColorHSI(ColorRGB x)
+        public static ColorRGB FromColor(System.Drawing.Color color)
+        {
+            return new ColorRGB(color.R, color.G, color.B);
+        }
+
+        /*public static explicit operator ColorHSI(ColorRGB x)
         {
             if (x == null)
                 return null;
@@ -115,7 +121,7 @@ namespace LightController.Color
                 saturation = 1 - (cMin / intensity);
 
             return new ColorHSI(hue, saturation, intensity);
-        }
+        }*/
 
         public override string ToString()
         {
