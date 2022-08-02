@@ -43,7 +43,8 @@ namespace LightController.Config
             string file = GetUserFileLocation();
             if (File.Exists(file))
             {
-                using(StreamReader reader = File.OpenText(file))
+                ConfigFile existingFile;
+                using (StreamReader reader = File.OpenText(file))
                 {
                     DeserializerBuilder deserializer = new DeserializerBuilder()
                         .IgnoreFields()
@@ -52,8 +53,10 @@ namespace LightController.Config
                     foreach (var tag in GetYamlTags())
                         deserializer.WithTagMapping(tag.Item1, tag.Item2);
 
-                    return deserializer.Build().Deserialize<ConfigFile>(reader);
+                    existingFile = deserializer.Build().Deserialize<ConfigFile>(reader);
                 }
+                existingFile.Save();
+                return existingFile;
             }
             ConfigFile newFile = new ConfigFile();
             newFile.Save();

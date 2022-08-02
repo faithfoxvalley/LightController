@@ -3,12 +3,13 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:LightController"
+        xmlns:local="clr-namespace:LightController" xmlns:colorpicker="clr-namespace:ColorPicker;assembly=ColorPicker"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
         <Canvas x:Name="canvas" Background="Transparent" />
-        <Button x:Name="btnCheckContent" Content="Check Content" HorizontalAlignment="Left" Margin="41,62,0,0" VerticalAlignment="Top" Click="btnCheckContent_Click" />
-        <Label x:Name="label" Content="Label" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.585,-0.11"/>
+        <Button x:Name="btnCheckContent" Content="Check Content" HorizontalAlignment="Left" Margin="370,27,0,0" VerticalAlignment="Top" Click="btnCheckContent_Click" />
+        <Label x:Name="label" Content="Label" HorizontalAlignment="Left" Margin="300,10,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.585,-0.11"/>
+        <colorpicker:StandardColorPicker x:Name="colorPicker" Width="200" Height="380" Margin="10,10,590,44"/>
     </Grid>
 </Window>

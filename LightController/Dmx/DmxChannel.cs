@@ -16,10 +16,11 @@ namespace LightController.Dmx
 
         public int Index { get; private set; }
         public bool IsIntensity { get; private set; } = false;
-        public double MaskSize => IsIntensity ? double.PositiveInfinity : mask.Red + mask.Green + mask.Blue;
+        public double MaskSize => mask == null ? double.PositiveInfinity : mask.Red + mask.Green + mask.Blue;
 
-        public DmxChannel(string stringValue, int index)
+        public DmxChannel(ColorRGB mask, string stringValue, int index)
         {
+            this.mask = mask;
             this.stringValue = stringValue;
             Index = index;
         }
@@ -33,15 +34,12 @@ namespace LightController.Dmx
             if(string.IsNullOrWhiteSpace(value))
                 return null;
 
-            DmxChannel result = new DmxChannel(value, index);
-
             if (value[0] == '#')
             {
                 var color = ColorTranslator.FromHtml(value);
                 if (color.IsEmpty)
                     return null;
-                result.mask = ColorRGB.FromColor(color);
-                return result;
+                return new DmxChannel(ColorRGB.FromColor(color), value, index);
             }
 
             ColorRGB mask;
@@ -63,18 +61,21 @@ namespace LightController.Dmx
                     mask = new ColorRGB(255, 191, 0);
                     break;
                 case "intensity":
-                    result.IsIntensity = true;
-                    return result;
+                    return new DmxChannel(null, value, index)
+                    {
+                        IsIntensity = true
+                    };
                 default:
                     if(byte.TryParse(value, out byte b))
                     {
-                        result.constantValue = b;
-                        return result;
+                        return new DmxChannel(null, value, index)
+                        {
+                            constantValue = b
+                        };
                     }
                     return null;
             }
-            result.mask = mask;
-            return result;
+            return new DmxChannel(mask, value, index);
         }
 
         public byte GetValue(ref ColorRGB color, double intensity)

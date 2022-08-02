@@ -26,9 +26,10 @@ namespace LightController.Config.Input
         }
 
 
-        public override void Start()
+        public override async void Start()
         {
             // TODO: Initialize info about current background
+
 
             /*var status = await pro.AsyncGetTransportStatus(Layer.Presentation);
             if (status.is_playing && Path.HasExtension(status.name))
@@ -59,6 +60,7 @@ namespace LightController.Config.Input
         public override void Update()
         {
             // TODO: Update the current color based on the background frame and estimated time
+
         }
     }
 }

@@ -1,6 +1,8 @@
 ﻿using Colourful;
 using LightController.Color;
+using ProtoBuf;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -8,15 +10,26 @@ using System.Runtime.InteropServices;
 
 namespace LightController.Pro
 {
+    [ProtoContract(UseProtoMembersOnly = true)]
     public class MediaLibrary
     {
-        public ColorRGB[] GetData(int width)
+        private Dictionary<string, ProMediaItem> media = new Dictionary<string, ProMediaItem>();
+
+        [ProtoMember(1)]
+        private object o;
+
+        public MediaLibrary()
+        {
+
+        }
+
+        public ColorRGB[] GetData(string name, int width)
         {
             return null;
         }
 
 
-        public static ColorRGB[] ReadImage(byte[] data, int width, double range)
+        private static ColorRGB[] ReadImage(byte[] data, int width, double range)
         {
             ColorRGB[] result;
             using (var ms = new MemoryStream(data))

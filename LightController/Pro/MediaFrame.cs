@@ -9,21 +9,14 @@ using System.Threading.Tasks;
 namespace LightController.Pro
 {
     [ProtoContract(UseProtoMembersOnly = true)]
-    public class ProMediaItem
+    public class MediaFrame
     {
         [ProtoMember(1)]
         private ColorRGB[] data;
+        [ProtoMember(2)]
+        private double time;
 
-        private Dictionary<int, ColorRGB[]> resizedData = new Dictionary<int, ColorRGB[]>();
 
-        public ProMediaItem()
-        {
-
-        }
-
-        public ColorRGB[] GetData(int size)
-        {
-            return new ColorRGB[size];
-        }
+        public MediaFrame() { }
     }
 }

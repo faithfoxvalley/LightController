@@ -55,6 +55,23 @@ namespace LightController
 
             service = MediaToolkitService.CreateInstance(ffmpegFilePath);
 
+            config = ConfigFile.Load();
+
+            dmx = new DmxProcessor(config.Dmx);
+            sceneManager = new SceneManager(config.Scenes, config.MidiDevice, config.DefaultScene, dmx);
+            pro = new ProPresenter();
+
+            pro.AsyncInit();
+
+            DispatcherTimer timer = new DispatcherTimer();
+            timer.Interval = TimeSpan.FromMilliseconds(500);
+            timer.Tick += Update;
+            timer.Start();
+        }
+
+        // For debug
+        private void GenerateConfig()
+        {
             config = new ConfigFile
             {
                 // Config settings
@@ -133,17 +150,6 @@ namespace LightController
                 },
             };
             config.Save();
-
-            dmx = new DmxProcessor(config.Dmx);
-            sceneManager = new SceneManager(config.Scenes, config.MidiDevice, config.DefaultScene, dmx);
-            pro = new ProPresenter();
-
-            pro.AsyncInit();
-
-            DispatcherTimer timer = new DispatcherTimer();
-            timer.Interval = TimeSpan.FromMilliseconds(500);
-            timer.Tick += Update;
-            timer.Start();
         }
 
         private void Update(object sender, EventArgs e)
@@ -154,7 +160,7 @@ namespace LightController
 
         private async void btnCheckContent_Click(object sender, RoutedEventArgs e)
         {
-            const int targetMs = 500;
+            /*const int targetMs = 500;
             const double marginTop = 50;
             const double marginLeft = 50;
             const double width = 1;
@@ -233,7 +239,7 @@ namespace LightController
                 if (ms > 0)
                     await Task.Delay((int)ms);
                 break;
-            }
+            }*/
             
         }
     }

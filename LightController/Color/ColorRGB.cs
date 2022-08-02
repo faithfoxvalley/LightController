@@ -1,11 +1,12 @@
 ﻿using ProtoBuf;
 using System;
+using System.Collections.Generic;
 using YamlDotNet.Serialization;
 
 namespace LightController.Color
 {
     [ProtoContract(UseProtoMembersOnly = true)]
-    public class ColorRGB
+    public class ColorRGB : IEquatable<ColorRGB>
     {
         public ColorRGB() { }
 
@@ -75,7 +76,21 @@ namespace LightController.Color
             return new ColorHSV(hue, saturation, value);
         }
 
+        public static bool operator ==(ColorRGB left, ColorRGB right)
+        {
+            return EqualityComparer<ColorRGB>.Default.Equals(left, right);
+        }
+
+        public static bool operator !=(ColorRGB left, ColorRGB right)
+        {
+            return !(left == right);
+        }
+
         public static ColorRGB FromColor(System.Drawing.Color color)
+        {
+            return new ColorRGB(color.R, color.G, color.B);
+        }
+        public static ColorRGB FromColor(System.Windows.Media.Color color)
         {
             return new ColorRGB(color.R, color.G, color.B);
         }
@@ -126,6 +141,24 @@ namespace LightController.Color
         public override string ToString()
         {
             return $"#{Red:X2}{Green:X2}{Blue:X2}";
+        }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as ColorRGB);
+        }
+
+        public bool Equals(ColorRGB other)
+        {
+            return other is not null &&
+                   Red == other.Red &&
+                   Green == other.Green &&
+                   Blue == other.Blue;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Red, Green, Blue);
         }
     }
 }
