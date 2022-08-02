@@ -41,5 +41,7 @@ namespace LightController.Config.Input
         {
 
         }
+
+        public abstract Colourful.RGBColor GetColor();
     }
 }

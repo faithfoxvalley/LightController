@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Colourful;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,7 +23,7 @@ namespace LightController.Dmx
             this.fixtureId = fixtureId;
         }
 
-        public void UpdateInputs(IEnumerable<Config.Input.InputBase> inputs)
+        public void SetInput(IEnumerable<Config.Input.InputBase> inputs)
         {
             foreach(var input in inputs)
             {
@@ -34,8 +35,11 @@ namespace LightController.Dmx
             }
         }
 
-        public DmxFrame GetFrame(Colourful.RGBColor rgb, double intensity)
+        public DmxFrame GetFrame()
         {
+            double intensity = 1; // TODO
+            RGBColor rgb = input.GetColor();
+
             frame.Reset();
 
             foreach (DmxChannel channel in addressMap)

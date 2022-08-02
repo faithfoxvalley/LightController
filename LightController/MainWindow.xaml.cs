@@ -150,7 +150,8 @@ namespace LightController
 
         private void Update(object sender, EventArgs e)
         {
-            
+            sceneManager.Update();
+            dmx.Write();
         }
 
         private async void btnCheckContent_Click(object sender, RoutedEventArgs e)

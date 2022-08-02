@@ -1,4 +1,5 @@
-﻿using LightController.Color;
+﻿using Colourful;
+using LightController.Color;
 using LightController.Pro;
 using MediaToolkit.Tasks;
 using System.IO;
@@ -6,12 +7,18 @@ using System.Threading.Tasks;
 
 namespace LightController.Config.Input
 {
+    // TODO
     [YamlTag("!propresenter_input")]
     public class ProPresenterInput : InputBase
     {
         private ProPresenter pro;
 
         public ProPresenterInput() { }
+
+        public override RGBColor GetColor()
+        {
+            return new RGBColor(1, 1, 0);
+        }
 
         public override void Init()
         {
@@ -22,6 +29,8 @@ namespace LightController.Config.Input
 
         public override void Start()
         {
+            // TODO: Initialize info about current background
+
             /*var status = await pro.AsyncGetTransportStatus(Layer.Presentation);
             if (status.is_playing && Path.HasExtension(status.name))
             {
@@ -46,6 +55,11 @@ namespace LightController.Config.Input
                 }
 
             }*/
+        }
+
+        public override void Update()
+        {
+            // TODO: Update the current color based on the background frame and estimated time
         }
     }
 }

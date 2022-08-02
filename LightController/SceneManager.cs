@@ -1,4 +1,5 @@
 ﻿using LightController.Config;
+using LightController.Dmx;
 using LightController.Midi;
 using System;
 using System.Collections.Generic;
@@ -13,6 +14,7 @@ namespace LightController
         private List<Scene> scenes;
         private Scene activeScene;
         private MidiInput midiDevice;
+        private DmxProcessor dmx;
 
         public SceneManager(List<Scene> scenes, string midiDevice, string defaultScene)
         {
@@ -40,9 +42,15 @@ namespace LightController
                 {
                     activeScene = scene;
                     scene.Activate();
+                    dmx.SetInputs(scene.Inputs);
                 }
             }
 
+        }
+
+        public void Update()
+        {
+            activeScene?.Update();
         }
 
         private void MidiDevice_NoteEvent(MidiNote note)
@@ -55,6 +63,7 @@ namespace LightController
 
                 activeScene = newScene;
                 newScene.Activate();
+                dmx.SetInputs(newScene.Inputs);
             }
         }
     }

@@ -36,19 +36,23 @@ namespace LightController.Dmx
             {
                 DmxDeviceProfile profile = profiles[fixtureAddress.Name];
                 for(int i = 0; i < fixtureAddress.Count; i++)
-                    fixtures.Add(new DmxFixture(profile, fixtureAddress, fixtures.Count));
+                    fixtures.Add(new DmxFixture(profile, fixtureAddress, fixtures.Count + 1));
             }
         }
 
-        public void UpdateInputs(IEnumerable<Config.Input.InputBase> inputs)
+        public void SetInputs(IEnumerable<Config.Input.InputBase> inputs)
         {
             foreach (DmxFixture fixture in fixtures)
-                fixture.UpdateInputs(inputs);
+                fixture.SetInput(inputs);
         }
-
-        public void Write(DmxFrame frame)
+        
+        public void Write()
         {
-            controller.SetChannels(frame.StartAddress, frame.Data);
+            foreach (DmxFixture fixture in fixtures)
+            {
+                DmxFrame frame = fixture.GetFrame();
+                controller.SetChannels(frame.StartAddress, frame.Data);
+            }
         }
     }
 }

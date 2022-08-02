@@ -1,5 +1,6 @@
 ﻿using LightController.Config.Input;
 using LightController.Midi;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -65,6 +66,15 @@ namespace LightController.Config
                 input.Stop();
 
             active = false;
+        }
+
+        public void Update()
+        {
+            if (!active)
+                return;
+
+            foreach (InputBase input in Inputs)
+                input.Update();
         }
     }
 }
