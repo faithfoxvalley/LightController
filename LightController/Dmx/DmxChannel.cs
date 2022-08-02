@@ -103,12 +103,11 @@ namespace LightController.Dmx
                 b = double.PositiveInfinity;
 
             double amount = Math.Min(Math.Min(r, g), b);
-            byte result = (byte)(amount * 255);
             color = new ColorRGB(
-                (byte)(color.Red - result), 
-                (byte)(color.Green - result), 
-                (byte)(color.Blue - result));
-            return (byte)(result * intensity);
+                (byte)(color.Red - (amount * mask.Red)), 
+                (byte)(color.Green - (amount * mask.Green)), 
+                (byte)(color.Blue - (amount * mask.Blue)));
+            return (byte)(amount * 255 * intensity);
 
         }
 
