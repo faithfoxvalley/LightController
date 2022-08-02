@@ -35,8 +35,12 @@ namespace LightController.Dmx
             foreach(DmxDeviceAddress fixtureAddress in config.Addresses)
             {
                 DmxDeviceProfile profile = profiles[fixtureAddress.Name];
-                for(int i = 0; i < fixtureAddress.Count; i++)
-                    fixtures.Add(new DmxFixture(profile, fixtureAddress, fixtures.Count + 1));
+                int address = fixtureAddress.StartAddress;
+                for (int i = 0; i < fixtureAddress.Count; i++)
+                {
+                    fixtures.Add(new DmxFixture(profile, address, fixtures.Count + 1));
+                    address += profile.DmxLength;
+                }
             }
         }
 

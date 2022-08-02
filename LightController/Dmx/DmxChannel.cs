@@ -86,12 +86,29 @@ namespace LightController.Dmx
             if (IsIntensity)
                 return (byte)(255 * intensity);
 
-            double r = color.Red / (double)mask.Red;
-            double g = color.Green / (double)mask.Green;
-            double b = color.Blue / (double)mask.Blue;
+            double r = 0;
+            if (mask.Red > 0)
+                r = color.Red / (double)mask.Red;
+            else
+                r = double.PositiveInfinity;
+            double g = 0;
+            if (mask.Green > 0)
+                g = color.Green / (double)mask.Green;
+            else
+                g = double.PositiveInfinity;
+            double b = 0;
+            if (mask.Blue > 0)
+                b = color.Blue / (double)mask.Blue;
+            else
+                b = double.PositiveInfinity;
+
             double amount = Math.Min(Math.Min(r, g), b);
-            color = new ColorRGB((byte)(r - amount), (byte)(g - amount), (byte)(b - amount));
-            return (byte)(amount * 255 * intensity);
+            byte result = (byte)(amount * 255);
+            color = new ColorRGB(
+                (byte)(color.Red - result), 
+                (byte)(color.Green - result), 
+                (byte)(color.Blue - result));
+            return (byte)(result * intensity);
 
         }
 

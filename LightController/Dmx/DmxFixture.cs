@@ -15,9 +15,9 @@ namespace LightController.Dmx
         private Config.Input.InputBase input;
         private int fixtureId;
 
-        public DmxFixture(Config.Dmx.DmxDeviceProfile profile, Config.Dmx.DmxDeviceAddress address, int fixtureId)
+        public DmxFixture(Config.Dmx.DmxDeviceProfile profile, int dmxStartAddress, int fixtureId)
         {
-            frame = new DmxFrame(profile.DmxLength, address.StartAddress);
+            frame = new DmxFrame(profile.DmxLength, dmxStartAddress);
             addressMap = profile.AddressMap.Where(x => x != null).OrderByDescending(x => x.MaskSize).ToList();
             hasIntensity = addressMap.Find(x => x.IsIntensity) != null;
             this.fixtureId = fixtureId;
