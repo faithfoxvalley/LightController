@@ -5,7 +5,6 @@ namespace LightController.Config.Input
 {
     public class InputIntensity
     {
-        private string stringValue;
         private double? intensity;
 
         public static InputIntensity Parse(string value)
@@ -13,8 +12,11 @@ namespace LightController.Config.Input
             if (value == null)
                 return new InputIntensity();
 
+            value = value.Trim().ToLowerInvariant();
+            if (value == "auto")
+                return new InputIntensity();
+
             InputIntensity result = new InputIntensity();
-            result.stringValue = value;
 
             if (byte.TryParse(value, out byte intensity))
             {
@@ -37,7 +39,7 @@ namespace LightController.Config.Input
 
         public override string ToString()
         {
-            return stringValue;
+            return intensity.HasValue ? intensity.Value.ToString() : "auto";
         }
     }
 }
