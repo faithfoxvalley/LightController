@@ -54,10 +54,17 @@ namespace LightController.Dmx
 
             if (value[0] == '#' && value.Length == 7)
             {
-                byte r = (byte)Convert.ToInt32(value.Substring(1, 2), 16);
-                byte g = (byte)Convert.ToInt32(value.Substring(3, 2), 16);
-                byte b = (byte)Convert.ToInt32(value.Substring(5, 2), 16);
-                return new DmxChannel(new ColorRGB(r, g, b), value, index);
+                try
+                {
+                    byte r = (byte)Convert.ToInt32(value.Substring(1, 2), 16);
+                    byte g = (byte)Convert.ToInt32(value.Substring(3, 2), 16);
+                    byte b = (byte)Convert.ToInt32(value.Substring(5, 2), 16);
+                    return new DmxChannel(new ColorRGB(r, g, b), value, index);
+                }
+                catch
+                {
+                    return null;
+                }
             }
 
             ColorRGB mask;
