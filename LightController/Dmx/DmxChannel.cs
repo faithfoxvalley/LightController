@@ -1,4 +1,5 @@
-﻿using LightController.Color;
+﻿using Colourful;
+using LightController.Color;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -10,6 +11,7 @@ namespace LightController.Dmx
 {
     public class DmxChannel
     {
+        private static IColorConverter<xyChromaticity, RGBColor> colourfulConverter; // Used for color temperature
         private ColorRGB mask;
         private byte? constantValue;
         private string stringValue;
@@ -33,6 +35,22 @@ namespace LightController.Dmx
             value = value.Trim().ToLowerInvariant();
             if(string.IsNullOrWhiteSpace(value))
                 return null;
+
+            if (value[value.Length - 1] == 'k')
+            {
+                if(double.TryParse(value.Substring(0, value.Length - 1), out double temperature))
+                {
+                    xyChromaticity chromacity = CCTConverter.GetChromaticityOfCCT(temperature);
+                    if(colourfulConverter == null)
+                    {
+                        colourfulConverter = new ConverterBuilder()
+                        .Fromxy(Illuminants.D65).ToRGB().Build();
+                    }
+                    RGBColor colourfulColor = colourfulConverter.Convert(chromacity).NormalizeIntensity();
+                    return new DmxChannel(ColorRGB.FromColor(colourfulColor), value, index);
+                }
+                return null;
+            }
 
             if (value[0] == '#' && value.Length == 7)
             {

@@ -94,6 +94,10 @@ namespace LightController.Color
         {
             return new ColorRGB(color.R, color.G, color.B);
         }
+        public static ColorRGB FromColor(Colourful.RGBColor color)
+        {
+            return new ColorRGB((byte)(color.R * 255), (byte)(color.G * 255), (byte)(color.B * 255));
+        }
 
         /*public static explicit operator ColorHSI(ColorRGB x)
         {
