@@ -53,7 +53,6 @@ namespace LightController
                 throw new DirectoryNotFoundException("No /AppData/Local/ folder exists!");
 
 
-            service = MediaToolkitService.CreateInstance(ffmpegFilePath);
 
             config = ConfigFile.Load();
 
@@ -61,7 +60,6 @@ namespace LightController
             sceneManager = new SceneManager(config.Scenes, config.MidiDevice, config.DefaultScene, dmx);
             pro = new ProPresenter();
 
-            pro.AsyncInit();
 
             DispatcherTimer timer = new DispatcherTimer();
             timer.Interval = TimeSpan.FromMilliseconds(500);

@@ -85,11 +85,36 @@ namespace LightController.Config
             }
         }
 
+        public int Min()
+        {
+            int min = int.MaxValue;
+            foreach (Range range in ranges)
+            {
+                if (range.Min < min)
+                    min = range.Min;
+            }
+            return min;
+        }
+
+        public int Max()
+        {
+            int max = int.MinValue;
+            foreach (Range range in ranges)
+            {
+                if (range.Max > max)
+                    max = range.Max;
+            }
+            return max;
+        }
+
 
         private class Range : IEnumerable<int>
         {
             private int start;
             private int end;
+
+            public int Min => start;
+            public int Max => end;
 
             public Range(string range)
             {
@@ -98,6 +123,12 @@ namespace LightController.Config
                     string[] split = range.Split(new[] { '-' }, 2);
                     start = int.Parse(split[0].Trim());
                     end = int.Parse(split[1].Trim());
+                    if(start > end)
+                    {
+                        int temp = start;
+                        start = end;
+                        end = temp;
+                    }
                 }
                 else
                 {

@@ -10,7 +10,10 @@ namespace LightController.Config.Input
     [YamlTag("!propresenter_input")]
     public class ProPresenterInput : InputBase
     {
-        private ProPresenter pro;
+        private ProPresenter pro = null;
+        private ProMediaItem media;
+        private int min;
+        private int max;
 
         public ProPresenterInput() { }
 
@@ -22,14 +25,16 @@ namespace LightController.Config.Input
         public override void Init()
         {
             //pro = new ProPresenter("http://localhost:1025/v1/");
-
+            min = FixtureIds.Min();
+            max = FixtureIds.Max();
         }
 
 
         public override async void Start()
         {
             // TODO: Initialize info about current background
-
+            media = null;
+            media = await pro.GetCurrentMediaAsync();
 
             /*var status = await pro.AsyncGetTransportStatus(Layer.Presentation);
             if (status.is_playing && Path.HasExtension(status.name))
@@ -60,6 +65,9 @@ namespace LightController.Config.Input
         public override void Update()
         {
             // TODO: Update the current color based on the background frame and estimated time
+            if (media == null)
+                return;
+
 
         }
     }
