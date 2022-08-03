@@ -16,29 +16,44 @@ namespace LightController.Pro
     public class ProMediaItem
     {
         private const string AppDataCache = "Media";
-        private const string FfmpegFilePath = @"C:\Bin\ffmpeg.exe";
         private const double FrameInterval = 0.1;
 
         [ProtoMember(1)]
         private MediaFrame[] data;
-        private Dictionary<int, ColorRGB[]> resizedData = new Dictionary<int, ColorRGB[]>();
-        private static IMediaToolkitService service;
+        private Dictionary<int, MediaFrame[]> resizedData = new Dictionary<int, MediaFrame[]>();
 
         public ProMediaItem()
         {
-            service = MediaToolkitService.CreateInstance(FfmpegFilePath);
         }
 
-        public ColorRGB[] GetData(int size)
+        public ColorRGB[] GetData(int size, double time)
         {
-            return new ColorRGB[size];
+            MediaFrame[] frames;
+            if (!resizedData.TryGetValue(size, out frames))
+                frames = resizedData[size] = ResizeData(data, size);
+
+            int index = (int)(time / FrameInterval);
+            if (index >= data.Length)
+                index = data.Length - 1;
+
+            return frames[index].Data;
+        }
+
+        private MediaFrame[] ResizeData(MediaFrame[] data, int size)
+        {
+            MediaFrame[] newData = new MediaFrame[data.Length];
+            for (int i = 0; i < data.Length; i++)
+                newData[i] = data[i].ResizeData(size);
+            return newData;
         }
 
         public static async Task<ProMediaItem> GetItemAsync(string mediaFolder, string file, double length)
         {
             string appdata = Path.Combine(MainWindow.Instance.ApplicationData, AppDataCache);
             Directory.CreateDirectory(appdata);
-            string cacheFile = Path.Combine(appdata, file);
+            if (!Directory.Exists(appdata))
+                throw new Exception();
+            string cacheFile = Path.Combine(appdata, Path.ChangeExtension(file, "bin"));
             if(File.Exists(cacheFile))
                 return LoadItem(cacheFile);
             return await CreateItem(Path.Combine(mediaFolder, file), cacheFile, length);
@@ -58,7 +73,7 @@ namespace LightController.Pro
             {
                 options.SeekSpan = TimeSpan.FromSeconds(time);
 
-                GetThumbnailResult thumbnailResult = await service.ExecuteAsync(new FfTaskGetThumbnail(
+                GetThumbnailResult thumbnailResult = await MainWindow.Instance.Ffmpeg.ExecuteAsync(new FfTaskGetThumbnail(
                   mediaPath,
                   options
                 ));

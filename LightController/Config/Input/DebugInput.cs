@@ -37,14 +37,14 @@ namespace LightController.Config.Input
             intensity = picker.SelectedColor.A / 255d;
         }
 
-        public override ColorRGB GetColor()
+        public override ColorRGB GetColor(int fixtureId)
         {
             return rgb;
         }
 
-        public override double GetIntensity(ColorRGB target)
+        public override double GetIntensity(int fixtureId, ColorRGB target)
         {
-            return intensity * base.GetIntensity(target);
+            return intensity * base.GetIntensity(fixtureId, target);
         }
     }
 }

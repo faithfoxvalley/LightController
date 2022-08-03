@@ -57,9 +57,9 @@ namespace LightController.Config.Input
 
         }
 
-        public abstract ColorRGB GetColor();
+        public abstract ColorRGB GetColor(int fixtureId);
 
-        public virtual double GetIntensity(ColorRGB target)
+        public virtual double GetIntensity(int fixtureid, ColorRGB target)
         {
             return intensity.GetIntensity(target);
         }

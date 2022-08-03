@@ -21,6 +21,8 @@ namespace LightController.Pro
         [ProtoMember(2)]
         private double time;
 
+        public ColorRGB[] Data => data;
+
         public MediaFrame() { }
 
         public MediaFrame(ColorRGB[] data, double time)
@@ -58,6 +60,50 @@ namespace LightController.Pro
                 }
             }
             return result;
+        }
+
+        public MediaFrame ResizeData(int size)
+        {
+            double[,] pixels = new double[size, 4];
+            double pixelsPerIndex = (double)size / this.data.Length;
+
+            var fromRgb = new ConverterBuilder().FromRGB().ToXYZ(Illuminants.D65).Build();
+
+            for (int i = 0; i < this.data.Length; i++)
+            {
+                int pixelIndex = (int)(i * pixelsPerIndex);
+
+                ColorRGB rgb = this.data[i];
+                var xyz = fromRgb.Convert(RGBColor.FromRGB8Bit(rgb.Red, rgb.Green, rgb.Blue));
+
+                pixels[pixelIndex, 0] += xyz.X;
+                pixels[pixelIndex, 1] += xyz.Y;
+                pixels[pixelIndex, 2] += xyz.Z;
+                pixels[pixelIndex, 3]++;
+            }
+
+
+            var toRgb = new ConverterBuilder().FromXYZ(Illuminants.D65).ToRGB().Build();
+
+            ColorRGB[] resultPixels = new ColorRGB[size];
+            for (int i = 0; i < size; i++)
+            {
+                int count = (int)pixels[i, 3];
+                double x = pixels[i, 0];
+                double y = pixels[i, 1];
+                double z = pixels[i, 2];
+                RGBColor rgb = toRgb.Convert(new XYZColor(x / count, y / count, z / count));
+                byte red = (byte)(rgb.R * 255);
+                byte green = (byte)(rgb.G * 255);
+                byte blue = (byte)(rgb.B * 255);
+
+                resultPixels[i] = new ColorRGB(red, green, blue);
+            }
+
+            MediaFrame newFrame = new MediaFrame();
+            newFrame.data = resultPixels;
+            newFrame.time = time;
+            return newFrame;
         }
 
         private static ColorRGB[] GetPixels(Bitmap bmp, int width)

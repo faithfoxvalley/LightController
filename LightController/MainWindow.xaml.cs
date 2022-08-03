@@ -4,20 +4,10 @@ using LightController.Config.Input;
 using LightController.Dmx;
 using LightController.Pro;
 using MediaToolkit.Services;
-using MediaToolkit.Tasks;
-using NAudio.Midi;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Shapes;
 using System.Windows.Threading;
 
 namespace LightController
@@ -27,12 +17,10 @@ namespace LightController
     /// </summary>
     public partial class MainWindow : Window
     {
-        private const string ffmpegFilePath = @"C:\Bin\ffmpeg.exe";
-        private const string Url = "http://localhost:1025/v1/";
-        private const string Media = @"D:\Documents\ProPresenter\Media\Assets";
+        private const string FfmpegFilePath = @"C:\Bin\ffmpeg.exe";
 
         private ProPresenter pro;
-        private IMediaToolkitService service;
+        private IMediaToolkitService ffmpeg;
         private ConfigFile config;
         private SceneManager sceneManager;
         private DmxProcessor dmx;
@@ -40,7 +28,8 @@ namespace LightController
         public static MainWindow Instance { get; private set; }
 
         public string ApplicationData { get; }
-
+        public ProPresenter Pro => pro;
+        public IMediaToolkitService Ffmpeg => ffmpeg;
 
         public MainWindow()
         {
@@ -48,17 +37,21 @@ namespace LightController
 
             InitializeComponent();
 
-            ApplicationData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            if (!Directory.Exists(ApplicationData))
+            string path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            if (!Directory.Exists(path))
                 throw new DirectoryNotFoundException("No /AppData/Local/ folder exists!");
+            path = Path.Combine(path, typeof(MainWindow).Assembly.GetName().Name);
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+            ApplicationData = path;
 
-
+            ffmpeg = MediaToolkitService.CreateInstance(FfmpegFilePath);
 
             config = ConfigFile.Load();
 
+            pro = new ProPresenter(config.ProPresenter);
             dmx = new DmxProcessor(config.Dmx);
             sceneManager = new SceneManager(config.Scenes, config.MidiDevice, config.DefaultScene, dmx);
-            pro = new ProPresenter();
 
 
             DispatcherTimer timer = new DispatcherTimer();

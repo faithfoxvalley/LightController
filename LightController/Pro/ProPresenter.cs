@@ -16,8 +16,6 @@ namespace LightController.Pro
         private HttpClient client = new HttpClient();
         private Dictionary<string, ProMediaItem> media = new Dictionary<string, ProMediaItem>();
 
-        public ProPresenter() { }
-
         public ProPresenter(Config.ProPresenterConfig config)
         {
             url = config.ApiUrl;

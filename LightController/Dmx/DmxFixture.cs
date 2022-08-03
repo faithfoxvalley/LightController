@@ -37,8 +37,8 @@ namespace LightController.Dmx
 
         public DmxFrame GetFrame()
         {
-            ColorRGB rgb = input.GetColor();
-            double intensity = input.GetIntensity(rgb);
+            ColorRGB rgb = input.GetColor(fixtureId);
+            double intensity = input.GetIntensity(fixtureId, rgb);
 
             // Make a copy with maximum intensity
             rgb = new ColorRGB(

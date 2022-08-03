@@ -11,7 +11,7 @@ namespace LightController.Config.Input
 
         public ColorInput() { }
 
-        public override ColorRGB GetColor()
+        public override ColorRGB GetColor(int fixtureId)
         {
             return RGB;
         }

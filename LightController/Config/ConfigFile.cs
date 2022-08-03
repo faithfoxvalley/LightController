@@ -32,10 +32,7 @@ namespace LightController.Config
 
         public static string GetUserFileLocation()
         {
-            string path = Path.Combine(MainWindow.Instance.ApplicationData, typeof(ConfigFile).Assembly.GetName().Name);
-            if (!Directory.Exists(path))
-                Directory.CreateDirectory(path);
-            return Path.Combine(path, FileName);
+            return Path.Combine(MainWindow.Instance.ApplicationData, FileName);
         }
 
         public static ConfigFile Load()

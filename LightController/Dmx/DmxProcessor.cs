@@ -52,8 +52,11 @@ namespace LightController.Dmx
         
         public void Write()
         {
+
+#if !DEBUG
             if (!foundDevice)
                 return;
+#endif
 
             foreach (DmxFixture fixture in fixtures)
             {

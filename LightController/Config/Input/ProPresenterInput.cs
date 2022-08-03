@@ -12,19 +12,16 @@ namespace LightController.Config.Input
     {
         private ProPresenter pro = null;
         private ProMediaItem media;
+        private ColorRGB[] colors;
         private int min;
         private int max;
 
         public ProPresenterInput() { }
 
-        public override ColorRGB GetColor()
-        {
-            return new ColorRGB(1, 1, 0);
-        }
 
         public override void Init()
         {
-            //pro = new ProPresenter("http://localhost:1025/v1/");
+            pro = MainWindow.Instance.Pro;
             min = FixtureIds.Min();
             max = FixtureIds.Max();
         }
@@ -33,7 +30,6 @@ namespace LightController.Config.Input
         public override async void Start()
         {
             // TODO: Initialize info about current background
-            media = null;
             media = await pro.GetCurrentMediaAsync();
 
             /*var status = await pro.AsyncGetTransportStatus(Layer.Presentation);
@@ -62,13 +58,28 @@ namespace LightController.Config.Input
             }*/
         }
 
-        public override void Update()
+        public override async void Update()
         {
             // TODO: Update the current color based on the background frame and estimated time
             if (media == null)
                 return;
 
+            double time = await pro.AsyncGetTransportLayerTime(Layer.Presentation);
 
+            colors = media.GetData((max - min) + 1, time);
         }
+
+        public override ColorRGB GetColor(int fixtureId)
+        {
+            if (colors == null)
+                return new ColorRGB();
+
+            int index = fixtureId - min;
+            if (index >= colors.Length)
+                index = colors.Length - 1;
+
+            return colors[index];
+        }
+
     }
 }
