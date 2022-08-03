@@ -1,0 +1,98 @@
+default_scene: Worship
+pro:
+  api_url: http://localhost:1025/v1/
+  media_assets_path: C:\Users\SoundBooth\Documents\ProPresenter\Media\Assets
+dmx:
+  fixtures:
+  - name: Spotlight
+    dmx_length: 5
+    address_map:
+    - intensity
+    - red
+    - green
+    - blue
+    - 255
+  - name: RGBW
+    dmx_length: 4
+    address_map:
+    - red
+    - green
+    - blue
+    - 2700k
+  - name: Lightbar
+    dmx_length: 13
+    address_map:
+    - red
+    - green
+    - blue
+    - white
+    - amber
+    - 
+    - intensity
+    - 255
+  addresses:
+  - name: Spotlight
+    start_address: 1
+    count: 5
+  - name: RGBW
+    start_address: 255
+    count: 1
+  - name: Lightbar
+    start_address: 30
+    count: 14
+scenes:
+- name: Worship
+  midi_note:
+    channel: 0
+    note: 0
+  inputs:
+  - !color_input
+    rgb:
+      red: 255
+      green: 255
+      blue: 255
+    fixture_ids: 1, 2, 4
+    intensity_mode: 40%
+  - !color_input
+    rgb:
+      red: 255
+      green: 255
+      blue: 255
+    fixture_ids: 3
+    intensity_mode: 60%
+  - !color_input
+    rgb:
+      red: 100
+      green: 255
+      blue: 100
+    fixture_ids: 6
+    intensity_mode: 75%
+  - !color_input
+    rgb:
+      red: 255
+      green: 255
+      blue: 255
+    fixture_ids: 7-20
+    intensity_mode: 50%
+- name: ProPresenter
+  midi_note:
+    channel: 1
+    note: 0
+  inputs:
+  - !color_input
+    rgb:
+      red: 255
+      green: 255
+      blue: 255
+    fixture_ids: 1, 2, 4
+    intensity_mode: 40%
+  - !color_input
+    rgb:
+      red: 255
+      green: 255
+      blue: 255
+    fixture_ids: 3
+    intensity_mode: 60%
+  - !propresenter_input
+    fixture_ids: 6-20
+    intensity_mode: auto
