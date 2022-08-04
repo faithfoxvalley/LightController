@@ -104,6 +104,11 @@ namespace LightController.Color
             return Math.Max(Math.Max(Red, Green), Blue);
         }
 
+        public byte Min()
+        {
+            return Math.Min(Math.Min(Red, Green), Blue);
+        }
+
         /*public static explicit operator ColorHSI(ColorRGB x)
         {
             if (x == null)

@@ -28,7 +28,7 @@ namespace LightController.Config.Input
             }
         }
 
-        private InputIntensity intensity = new InputIntensity();
+        protected InputIntensity intensity = new InputIntensity();
 
         protected InputBase() { }
 

@@ -8,6 +8,8 @@ namespace LightController.Config.Input
         private string intensityString = "auto";
         private double? intensity;
 
+        public double? Value => intensity;
+
         public InputIntensity() { }
 
         public InputIntensity(double intensity, string intensityString)
@@ -48,8 +50,7 @@ namespace LightController.Config.Input
             if (intensity.HasValue)
                 return intensity.Value;
 
-            byte value = Math.Max(Math.Max(rgb.Red, rgb.Green), rgb.Blue);
-            return value / 255d;
+            return rgb.Max() / 255d;
         }
 
         public override string ToString()

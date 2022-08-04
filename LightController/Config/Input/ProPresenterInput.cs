@@ -2,6 +2,7 @@
 using LightController.Pro;
 using MediaToolkit.Tasks;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace LightController.Config.Input
@@ -13,9 +14,24 @@ namespace LightController.Config.Input
         private ProPresenter pro = null;
         private ProMediaItem media;
         private ColorRGB[] colors;
+        private byte maxColorValue;
+        private byte minColorValue;
         private object colorLock = new object();
         private int min;
         private int max;
+        private InputIntensity minIntensity = new InputIntensity();
+
+        public string MinIntensity
+        {
+            get
+            {
+                return minIntensity.ToString();
+            }
+            set
+            {
+                minIntensity = InputIntensity.Parse(value);
+            }
+        }
 
         public ProPresenterInput() { }
 
@@ -30,38 +46,13 @@ namespace LightController.Config.Input
 
         public override async Task StartAsync()
         {
-            // TODO: Initialize info about current background
+            // Initialize info about current background
             media = await pro.GetCurrentMediaAsync();
-
-            /*var status = await pro.AsyncGetTransportStatus(Layer.Presentation);
-            if (status.is_playing && Path.HasExtension(status.name))
-            {
-                string path = Path.Combine(pro.MediaAssetsPath, status.name);
-                if (File.Exists(path))
-                {
-                    GetThumbnailOptions options = new GetThumbnailOptions
-                    {
-                        SeekSpan = TimeSpan.FromSeconds(10),
-                        OutputFormat = OutputFormat.Image2,
-                        PixelFormat = MediaToolkit.Tasks.PixelFormat.Rgba
-                    };
-
-                    GetThumbnailResult result = await service.ExecuteAsync(new FfTaskGetThumbnail(
-                      path,
-                      options
-                    ));
-
-                    string newFile = @"C:\Users\austin.vaness\Desktop\Test\image.jpg";
-
-                    BitmapProcessing.ReadImage(result.ThumbnailData, 14, 0.1);
-                }
-
-            }*/
         }
 
         public override async Task UpdateAsync()
         {
-            // TODO: Update the current color based on the background frame and estimated time
+            // Update the current color based on the background frame and estimated time
             if (media == null)
                 return;
 
@@ -70,6 +61,8 @@ namespace LightController.Config.Input
             lock(colorLock)
             {
                 colors = media.GetData((max - min) + 1, time);
+                maxColorValue = colors.Select(x => x.Max()).Max();
+                minColorValue = colors.Select(x => x.Min()).Min();
             }
         }
 
@@ -91,6 +84,33 @@ namespace LightController.Config.Input
                 }
             }
             return result;
+        }
+
+        public override double GetIntensity(int fixtureid, ColorRGB color)
+        {
+            // intensity provided by user
+            double targetMaxIntensity = intensity.Value ?? 1;
+            double targetMinIntensity = minIntensity.Value ?? 0;
+
+            // intensity of the media 
+            double maxChannelValue;
+            double minChannelValue;
+            lock (colorLock)
+            {
+                maxChannelValue = maxColorValue / 255d;
+                minChannelValue = minColorValue / 255d;
+            }
+
+            double thisIntensity = color.Max() / 255d;
+
+            if(minChannelValue == maxChannelValue || targetMinIntensity == targetMaxIntensity)
+                return targetMaxIntensity;
+
+            // https://math.stackexchange.com/a/914843
+            // Input: [minChannelValue-maxChannelValue]
+            // Output: [targetMinIntensity-targetMaxIntensity]
+            double target = targetMinIntensity + (((targetMaxIntensity - targetMinIntensity) / (maxChannelValue - minChannelValue)) * (thisIntensity - minChannelValue));
+            return target;
         }
 
     }
