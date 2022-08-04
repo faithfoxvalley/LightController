@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Threading;
 
 namespace LightController
 {
@@ -15,22 +17,28 @@ namespace LightController
         private Scene activeScene;
         private MidiInput midiDevice;
         private DmxProcessor dmx;
+        private System.Windows.Controls.ComboBox sceneList;
 
-        public SceneManager(List<Scene> scenes, string midiDevice, string defaultScene, DmxProcessor dmx)
+        public SceneManager(List<Scene> scenes, string midiDevice, string defaultScene, DmxProcessor dmx, System.Windows.Controls.ComboBox sceneList)
         {
             this.scenes = scenes;
             this.dmx = dmx;
+            this.sceneList = sceneList;
 
             MidiDeviceList midiDevices = new MidiDeviceList();
 
             if (string.IsNullOrWhiteSpace(midiDevice))
             {
                 if(midiDevices.TryGetFirstDevice(out this.midiDevice))
+                {
                     this.midiDevice.NoteEvent += MidiDevice_NoteEvent;
+                    this.midiDevice.Input.Start();
+                }
             }
             else if (midiDevices.TryGetDevice(midiDevice, out this.midiDevice))
             {
                 this.midiDevice.NoteEvent += MidiDevice_NoteEvent;
+                this.midiDevice.Input.Start();
             }
 
             foreach (Scene s in scenes)
@@ -42,30 +50,54 @@ namespace LightController
                 if (scene != null)
                 {
                     activeScene = scene;
-                    scene.Activate();
+                    UpdateSceneUI(activeScene.Name);
                     dmx.SetInputs(scene.Inputs);
                 }
             }
 
         }
 
-        public void Update()
+        public Task ActivateSceneAsync()
         {
-            activeScene?.Update();
+            if (activeScene != null)
+                return activeScene.ActivateAsync();
+            return Task.CompletedTask;
         }
 
-        private void MidiDevice_NoteEvent(MidiNote note)
+        public Task UpdateAsync()
+        {
+            if (activeScene != null)
+                return activeScene.UpdateAsync();
+            return Task.CompletedTask;
+        }
+
+        private async void MidiDevice_NoteEvent(MidiNote note)
         {
             Scene newScene = scenes.Find(s => s.MidiNote == note);
-            if (newScene != null)
+            if (newScene != null && newScene != activeScene) // TODO: Allow for scene to be reactivated and cancel media creation only when necessary.
             {
                 foreach (Scene s in scenes)
-                    s.Deactivate();
+                    await s.DeactivateAsync();
 
                 activeScene = newScene;
-                newScene.Activate();
+                UpdateSceneUI(activeScene.Name);
+                await newScene.ActivateAsync();
                 dmx.SetInputs(newScene.Inputs);
             }
+        }
+
+        private void UpdateSceneUI(string name)
+        {
+            Application.Current.Dispatcher.BeginInvoke(() =>
+            {
+                for (int i = 0; i < sceneList.Items.Count; i++)
+                {
+                    if (sceneList.Items[i] as string == name)
+                    {   
+                        sceneList.SelectedIndex = i;
+                    }
+                }
+            });
         }
     }
 }

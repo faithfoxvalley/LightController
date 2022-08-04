@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 
@@ -20,14 +21,17 @@ namespace LightController
     public partial class MainWindow : Window
     {
         private const string FfmpegFilePath = @"C:\Bin\ffmpeg.exe";
-        private const int UpdateRate = 40;
+        private const int DmxUpdateRate = 40;
+        private const int InputsUpdateRate = 200;
 
         private ProPresenter pro;
         private IMediaToolkitService ffmpeg;
         private ConfigFile config;
         private SceneManager sceneManager;
         private DmxProcessor dmx;
-        private Timer timer;
+        private Timer dmxTimer; // Runs on different thread
+        private Timer inputsTimer; // Runs on different thread
+        private bool inputActivated = false;
 
         public static MainWindow Instance { get; private set; }
 
@@ -55,109 +59,67 @@ namespace LightController
 
             pro = new ProPresenter(config.ProPresenter);
             dmx = new DmxProcessor(config.Dmx);
-            sceneManager = new SceneManager(config.Scenes, config.MidiDevice, config.DefaultScene, dmx);
+            sceneManager = new SceneManager(config.Scenes, config.MidiDevice, config.DefaultScene, dmx, listScene);
 
+            // Update scene combobox
+            foreach (var scene in config.Scenes)
+                listScene.Items.Add(scene.Name);
+            listScene.SelectionChanged += ListScene_SelectionChanged;
 
-            // TODO: Update inputs on 10hz (100ms) and Update dmx on 30hz (33ms) (Or just one timer?)
             // https://stackoverflow.com/a/12797382
-            timer = new Timer(Update, null, UpdateRate, Timeout.Infinite);
+            dmxTimer = new Timer(UpdateDmx, null, DmxUpdateRate, Timeout.Infinite);
+            inputsTimer = new Timer(UpdateInputs, null, InputsUpdateRate, Timeout.Infinite);
+
+        }
+        private void ListScene_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+
         }
 
-        // For debug
-        private void GenerateConfig()
+        // This runs on a different thread
+        private async void UpdateInputs(object state)
         {
-            config = new ConfigFile
+            try
             {
-                // Config settings
-                DefaultScene = "Worship",
-                ProPresenter = new ProPresenterConfig()
-                {
-                    ApiUrl = "http://localhost:1025/v1/",
-                    MediaAssetsPath = @"C:\Users\austin.vaness\Documents\ProPresenter\Media\Assets"
-                },
-                Dmx = new Config.Dmx.DmxConfig()
-                {
-                    DmxDevice = null,
-                    Fixtures = new List<Config.Dmx.DmxDeviceProfile>()
-                    {
-                        new Config.Dmx.DmxDeviceProfile()
-                        {
-                            Name = "Spotlight",
-                            DmxLength = 5,
-                            AddressMapStrings = new[] { "intensity", "red", "green", "blue" }
-                        },
-                        new Config.Dmx.DmxDeviceProfile()
-                        {
-                            Name = "RGBW",
-                            DmxLength = 4,
-                            AddressMapStrings = new[] { "red", "green", "blue", "white" }
-                        },
-                        new Config.Dmx.DmxDeviceProfile()
-                        {
-                            Name = "Lightbar",
-                            DmxLength = 13,
-                            AddressMapStrings = new[] { "red", "green", "blue", "white", "amber", null, "intensity" }
-                        },
-                    },
-                    Addresses = new List<Config.Dmx.DmxDeviceAddress>()
-                    {
-                        new Config.Dmx.DmxDeviceAddress()
-                        {
-                            Name = "Spotlight",
-                            StartAddress = 1,
-                            Count = 5,
-                        },
-                        new Config.Dmx.DmxDeviceAddress()
-                        {
-                            Name = "RGBW",
-                            StartAddress = 255,
-                        },
-                        new Config.Dmx.DmxDeviceAddress()
-                        {
-                            Name = "Lightbar",
-                            StartAddress = 30,
-                            Count = 14,
-                        }
-                    }
+                Stopwatch sw = Stopwatch.StartNew();
 
-                },
-                Scenes = new List<Scene>()
+                if (!inputActivated)
                 {
-                    new Scene()
-                    {
-                        Name = "Worship",
-                        MidiNote = new Midi.MidiNote()
-                        {
-                            Channel = 0,
-                            Note = 0,
-                        },
-                        Inputs = new List<InputBase>()
-                        {
-                            new ColorInput()
-                            {
-                                RGB = new ColorRGB(255, 255, 255),
-                                FixtureRange = "1-20",
-                                IntensityMode = "50%"
-                            }
-                        }
-                    }
-                },
-            };
-            config.Save();
+                    await sceneManager.ActivateSceneAsync();
+                    inputActivated = true;
+                }
+
+                await sceneManager.UpdateAsync();
+
+                sw.Stop();
+                inputsTimer.Change(Math.Max(0, InputsUpdateRate - sw.ElapsedMilliseconds), Timeout.Infinite);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.ToString());
+            }
         }
 
-        private void Update(object state)
+        // This runs on a different thread
+        private void UpdateDmx(object state)
         {
-            Stopwatch sw = Stopwatch.StartNew();
+            try
+            {
+                Stopwatch sw = Stopwatch.StartNew();
 
-            sceneManager.Update();
-            dmx.Write();
+                dmx.Write();
 
-            timer.Change(Math.Max(0, UpdateRate - sw.ElapsedMilliseconds), Timeout.Infinite);
-            sw.Stop();
+                sw.Stop();
+                dmxTimer.Change(Math.Max(0, DmxUpdateRate - sw.ElapsedMilliseconds), Timeout.Infinite);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.ToString());
+            }
         }
 
-        private async void btnCheckContent_Click(object sender, RoutedEventArgs e)
+
+        /*private async void btnCheckContent_Click(object sender, RoutedEventArgs e)
         {
             /*const int targetMs = 500;
             const double marginTop = 50;
@@ -238,8 +200,8 @@ namespace LightController
                 if (ms > 0)
                     await Task.Delay((int)ms);
                 break;
-            }*/
+            }
             
-        }
+        }*/
     }
 }

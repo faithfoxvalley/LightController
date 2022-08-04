@@ -13,6 +13,7 @@ namespace LightController.Dmx
         private List<DmxChannel> addressMap;
         private bool hasIntensity;
         private Config.Input.InputBase input;
+        private object inputLock = new object();
         private int fixtureId;
 
         public DmxFixture(Config.Dmx.DmxDeviceProfile profile, int dmxStartAddress, int fixtureId)
@@ -29,24 +30,47 @@ namespace LightController.Dmx
             {
                 if (input.FixtureIds.Contains(fixtureId))
                 {
-                    this.input = input;
-                    break;
+                    lock(inputLock)
+                    {
+                        this.input = input;
+                    }
+                    return;
                 }
+            }
+
+            lock(inputLock)
+            {
+                this.input = null;
             }
         }
 
         public DmxFrame GetFrame()
         {
-            ColorRGB rgb = input.GetColor(fixtureId);
-            double intensity = input.GetIntensity(fixtureId, rgb);
+            frame.Reset();
+
+            ColorRGB rgb;
+            double intensity;
+
+            lock (inputLock)
+            {
+                if (input == null)
+                    return frame;
+
+                rgb = input.GetColor(fixtureId);
+                intensity = input.GetIntensity(fixtureId, rgb);
+            }
 
             // Make a copy with maximum intensity
+            double hueIntensity = Math.Max(Math.Max(rgb.Red, rgb.Green), rgb.Blue);
+            if (hueIntensity > 0)
+                hueIntensity = 255d / hueIntensity;
+            else
+                hueIntensity = 1;
             rgb = new ColorRGB(
-                (byte)(rgb.Red / intensity),
-                (byte)(rgb.Green / intensity),
-                (byte)(rgb.Blue / intensity));
+                (byte)(rgb.Red / hueIntensity),
+                (byte)(rgb.Green / hueIntensity),
+                (byte)(rgb.Blue / hueIntensity));
 
-            frame.Reset();
 
             foreach (DmxChannel channel in addressMap)
             {

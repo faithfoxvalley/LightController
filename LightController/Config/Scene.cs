@@ -40,41 +40,47 @@ namespace LightController.Config
         /// <summary>
         /// Called when the scene is activated
         /// </summary>
-        public void Activate()
+        public Task ActivateAsync()
         {
-            if(active)
-                return;
+            if (active)
+                return Task.CompletedTask;
 
-            //if (SceneActivated != null)
-            //    SceneActivated.Invoke(this);
-
-            foreach (InputBase input in Inputs)
-                input.Start();
+            Task[] tasks = new Task[Inputs.Count];
+            for (int i = 0; i < Inputs.Count; i++)
+                tasks[i] = Inputs[i].StartAsync();
 
             active = true;
+
+            return Task.WhenAll(tasks);
         }
 
         /// <summary>
         /// Called when the scene is deactivated
         /// </summary>
-        public void Deactivate()
+        public Task DeactivateAsync()
         {
             if (!active)
-                return;
+                return Task.CompletedTask;
 
-            foreach (InputBase input in Inputs)
-                input.Stop();
+            Task[] tasks = new Task[Inputs.Count];
+            for (int i = 0; i < Inputs.Count; i++)
+                tasks[i] = Inputs[i].StopAsync();
 
             active = false;
+
+            return Task.WhenAll(tasks);
         }
 
-        public void Update()
+        public Task UpdateAsync()
         {
             if (!active)
-                return;
+                return Task.CompletedTask;
 
-            foreach (InputBase input in Inputs)
-                input.Update();
+            Task[] tasks = new Task[Inputs.Count];
+            for (int i = 0; i < Inputs.Count; i++)
+                tasks[i] = Inputs[i].UpdateAsync();
+
+            return Task.WhenAll(tasks);
         }
     }
 }

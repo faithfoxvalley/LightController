@@ -55,11 +55,11 @@ namespace LightController.Pro
                 throw new Exception();
             string cacheFile = Path.Combine(appdata, Path.ChangeExtension(file, "bin"));
             if(File.Exists(cacheFile))
-                return await LoadItem(cacheFile);
-            return await CreateItem(Path.Combine(mediaFolder, file), cacheFile, length);
+                return await LoadItemAsync(cacheFile);
+            return await CreateItemAsync(Path.Combine(mediaFolder, file), cacheFile, length);
         }
 
-        private static async Task<ProMediaItem> CreateItem(string mediaPath, string cacheFile, double fileLength)
+        private static async Task<ProMediaItem> CreateItemAsync(string mediaPath, string cacheFile, double fileLength)
         {
             GetThumbnailOptions options = new GetThumbnailOptions
             {
@@ -83,10 +83,12 @@ namespace LightController.Pro
                     MediaFrame frame = await Task.Run(() => MediaFrame.CreateFrame(thumbnailResult.ThumbnailData, time));
                     frames.Add(frame);
                 }
-                else
-                {
-                    throw new Exception("Error while reading media file!");
-                }
+            }
+
+
+            if(frames.Count == 0)
+            {
+                throw new Exception("Error while reading media file: Unable to get any frames from the media.");
             }
 
             ProMediaItem result = new ProMediaItem();
@@ -98,7 +100,7 @@ namespace LightController.Pro
             return result;
         }
 
-        private static async Task<ProMediaItem> LoadItem(string cacheFile)
+        private static async Task<ProMediaItem> LoadItemAsync(string cacheFile)
         {
             using (FileStream stream = File.OpenRead(cacheFile))
             {

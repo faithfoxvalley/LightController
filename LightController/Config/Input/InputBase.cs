@@ -42,19 +42,19 @@ namespace LightController.Config.Input
 
         }
 
-        public virtual void Start()
+        public virtual Task StartAsync()
         {
-
+            return Task.CompletedTask;
         }
 
-        public virtual void Update()
+        public virtual Task UpdateAsync()
         {
-
+            return Task.CompletedTask;
         }
 
-        public virtual void Stop()
+        public virtual Task StopAsync()
         {
-
+            return Task.CompletedTask;
         }
 
         public abstract ColorRGB GetColor(int fixtureId);

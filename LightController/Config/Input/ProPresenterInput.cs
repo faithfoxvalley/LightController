@@ -13,6 +13,7 @@ namespace LightController.Config.Input
         private ProPresenter pro = null;
         private ProMediaItem media;
         private ColorRGB[] colors;
+        private object colorLock = new object();
         private int min;
         private int max;
 
@@ -27,7 +28,7 @@ namespace LightController.Config.Input
         }
 
 
-        public override async void Start()
+        public override async Task StartAsync()
         {
             // TODO: Initialize info about current background
             media = await pro.GetCurrentMediaAsync();
@@ -58,7 +59,7 @@ namespace LightController.Config.Input
             }*/
         }
 
-        public override async void Update()
+        public override async Task UpdateAsync()
         {
             // TODO: Update the current color based on the background frame and estimated time
             if (media == null)
@@ -66,19 +67,30 @@ namespace LightController.Config.Input
 
             double time = await pro.AsyncGetTransportLayerTime(Layer.Presentation);
 
-            colors = media.GetData((max - min) + 1, time);
+            lock(colorLock)
+            {
+                colors = media.GetData((max - min) + 1, time);
+            }
         }
 
         public override ColorRGB GetColor(int fixtureId)
         {
-            if (colors == null)
-                return new ColorRGB();
-
-            int index = fixtureId - min;
-            if (index >= colors.Length)
-                index = colors.Length - 1;
-
-            return colors[index];
+            ColorRGB result;
+            lock(colorLock)
+            {
+                if (colors == null)
+                {
+                    result = new ColorRGB();
+                }
+                else
+                {
+                    int index = fixtureId - min;
+                    if (index >= colors.Length)
+                        index = colors.Length - 1;
+                    result = colors[index];
+                }
+            }
+            return result;
         }
 
     }

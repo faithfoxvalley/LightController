@@ -7,9 +7,8 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-        <Canvas x:Name="canvas" Background="Transparent" />
-        <Button x:Name="btnCheckContent" Content="Check Content" HorizontalAlignment="Left" Margin="370,27,0,0" VerticalAlignment="Top" Click="btnCheckContent_Click" />
-        <Label x:Name="label" Content="Label" HorizontalAlignment="Left" Margin="300,10,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.585,-0.11"/>
+        <ComboBox x:Name="listScene" Width="120" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="300,36,0,0"/>
+        <Label x:Name="labelScene" Content="Active scene:" HorizontalAlignment="Left" Margin="300,10,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.585,-0.11"/>
         <colorpicker:StandardColorPicker x:Name="colorPicker" Width="200" Height="380" Margin="10,10,590,44"/>
     </Grid>
 </Window>

@@ -53,7 +53,7 @@ namespace LightController.Pro
                 string responseBody = await client.GetStringAsync(url + "transport/" + layer.ToString().ToLowerInvariant() + "/current");
                 return await Task.FromResult(JsonConvert.DeserializeObject<TransportLayerStatus>(responseBody));
             }
-            catch (HttpRequestException e)
+            catch
             {
             }
             return await Task.FromResult(new TransportLayerStatus());
@@ -77,45 +77,6 @@ namespace LightController.Pro
                 sw.Stop();
             }
             return double.NaN;
-        }
-
-        public async Task<byte[]> AsyncGetThumbnail(string uuid, int width)
-        {
-
-            try
-            {
-                return await client.GetByteArrayAsync(url + uuid + "/thumbnail");
-            }
-            catch (HttpRequestException e)
-            {
-            }
-            return new byte[0];
-        }
-
-        public async Task<ItemId[]> AsyncGetLibraries()
-        {
-            try
-            {
-                string responseBody = await client.GetStringAsync(url + "libraries");
-                return await Task.FromResult(JsonConvert.DeserializeObject<ItemId[]>(responseBody));
-            }
-            catch (HttpRequestException e)
-            {
-            }
-            return await Task.FromResult(new ItemId[0]);
-        }
-
-        public async Task<Presentation> AsyncGetCurrentPresentation()
-        {
-            try
-            {
-                string responseBody = await client.GetStringAsync(url + "presentation/active");
-                return await Task.FromResult(JsonConvert.DeserializeObject<Presentation>(responseBody));
-            }
-            catch (HttpRequestException e)
-            {
-            }
-            return await Task.FromResult(new Presentation());
         }
     }
 }
