@@ -1,3 +1,6 @@
 possibility of increasing intensity by using other channels?
 allow multiple inputs and stack them
 show progress for media cache generation
+speed up cache generation - compression?
+try to make transitions more seamless
+better method of computing intensity? HSI?
