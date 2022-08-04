@@ -28,7 +28,6 @@ namespace LightController
         private SceneManager sceneManager;
         private DmxProcessor dmx;
         private Timer timer;
-        private Stopwatch timerWatch = new Stopwatch();
 
         public static MainWindow Instance { get; private set; }
 
@@ -149,13 +148,13 @@ namespace LightController
 
         private void Update(object state)
         {
-            timerWatch.Restart();
+            Stopwatch sw = Stopwatch.StartNew();
 
             sceneManager.Update();
             dmx.Write();
 
-            timer.Change(Math.Max(0, UpdateRate - timerWatch.ElapsedMilliseconds), Timeout.Infinite);
-            timerWatch.Stop();
+            timer.Change(Math.Max(0, UpdateRate - sw.ElapsedMilliseconds), Timeout.Infinite);
+            sw.Stop();
         }
 
         private async void btnCheckContent_Click(object sender, RoutedEventArgs e)
