@@ -31,11 +31,13 @@ namespace LightController.Pro
         {
             TransportLayerStatus status = await GetTransportStatusAsync(Layer.Presentation);
             if(!status.audio_only && status.duration > 0 && !string.IsNullOrWhiteSpace(status.name))
+            if(!status.audio_only && !string.IsNullOrWhiteSpace(status.name))
             {
                 if(media.TryGetValue(status.name, out ProMediaItem existingItem))
                     return existingItem;
 
-                return await ProMediaItem.GetItemAsync(mediaPath, status.name, status.duration);
+                var mediaItem = await ProMediaItem.GetItemAsync(mediaPath, status.name, status.duration);
+                return mediaItem;
             }
             else
             {

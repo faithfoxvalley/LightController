@@ -6,7 +6,9 @@ using LightController.Pro;
 using MediaToolkit.Services;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using System.Windows;
 using System.Windows.Threading;
 
@@ -18,12 +20,15 @@ namespace LightController
     public partial class MainWindow : Window
     {
         private const string FfmpegFilePath = @"C:\Bin\ffmpeg.exe";
+        private const int UpdateRate = 40;
 
         private ProPresenter pro;
         private IMediaToolkitService ffmpeg;
         private ConfigFile config;
         private SceneManager sceneManager;
         private DmxProcessor dmx;
+        private Timer timer;
+        private Stopwatch timerWatch = new Stopwatch();
 
         public static MainWindow Instance { get; private set; }
 
@@ -54,10 +59,9 @@ namespace LightController
             sceneManager = new SceneManager(config.Scenes, config.MidiDevice, config.DefaultScene, dmx);
 
 
-            DispatcherTimer timer = new DispatcherTimer();
-            timer.Interval = TimeSpan.FromMilliseconds(500);
-            timer.Tick += Update;
-            timer.Start();
+            // TODO: Update inputs on 10hz (100ms) and Update dmx on 30hz (33ms) (Or just one timer?)
+            // https://stackoverflow.com/a/12797382
+            timer = new Timer(Update, null, UpdateRate, Timeout.Infinite);
         }
 
         // For debug
@@ -143,10 +147,15 @@ namespace LightController
             config.Save();
         }
 
-        private void Update(object sender, EventArgs e)
+        private void Update(object state)
         {
+            timerWatch.Restart();
+
             sceneManager.Update();
             dmx.Write();
+
+            timer.Change(Math.Max(0, UpdateRate - timerWatch.ElapsedMilliseconds), Timeout.Infinite);
+            timerWatch.Stop();
         }
 
         private async void btnCheckContent_Click(object sender, RoutedEventArgs e)

@@ -55,7 +55,7 @@ namespace LightController.Pro
                 throw new Exception();
             string cacheFile = Path.Combine(appdata, Path.ChangeExtension(file, "bin"));
             if(File.Exists(cacheFile))
-                return LoadItem(cacheFile);
+                return await LoadItem(cacheFile);
             return await CreateItem(Path.Combine(mediaFolder, file), cacheFile, length);
         }
 
@@ -69,7 +69,7 @@ namespace LightController.Pro
             };
 
             List<MediaFrame> frames = new List<MediaFrame>();
-            for (double time = 0; time < fileLength; time += FrameInterval)
+            for (double time = 0; time < fileLength || time == 0; time += FrameInterval)
             {
                 options.SeekSpan = TimeSpan.FromSeconds(time);
 
@@ -93,16 +93,16 @@ namespace LightController.Pro
             result.data = frames.ToArray();
             using (FileStream stream = File.Create(cacheFile))
             {
-                Serializer.Serialize<ProMediaItem>(stream, result);
+                await Task.Run(() => Serializer.Serialize<ProMediaItem>(stream, result));
             }
             return result;
         }
 
-        private static ProMediaItem LoadItem(string cacheFile)
+        private static async Task<ProMediaItem> LoadItem(string cacheFile)
         {
             using (FileStream stream = File.OpenRead(cacheFile))
             {
-                return Serializer.Deserialize<ProMediaItem>(stream);
+                return await Task.Run(() => Serializer.Deserialize<ProMediaItem>(stream));
             }
         }
     }
