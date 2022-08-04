@@ -99,6 +99,11 @@ namespace LightController.Color
             return new ColorRGB((byte)(color.R * 255), (byte)(color.G * 255), (byte)(color.B * 255));
         }
 
+        public byte Max()
+        {
+            return Math.Max(Math.Max(Red, Green), Blue);
+        }
+
         /*public static explicit operator ColorHSI(ColorRGB x)
         {
             if (x == null)

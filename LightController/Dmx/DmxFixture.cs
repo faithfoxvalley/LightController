@@ -61,15 +61,15 @@ namespace LightController.Dmx
             }
 
             // Make a copy with maximum intensity
-            double hueIntensity = Math.Max(Math.Max(rgb.Red, rgb.Green), rgb.Blue);
+            double hueIntensity = rgb.Max();
             if (hueIntensity > 0)
                 hueIntensity = 255d / hueIntensity;
             else
                 hueIntensity = 1;
             rgb = new ColorRGB(
-                (byte)(rgb.Red / hueIntensity),
-                (byte)(rgb.Green / hueIntensity),
-                (byte)(rgb.Blue / hueIntensity));
+                (byte)(rgb.Red * hueIntensity),
+                (byte)(rgb.Green * hueIntensity),
+                (byte)(rgb.Blue * hueIntensity));
 
 
             foreach (DmxChannel channel in addressMap)
