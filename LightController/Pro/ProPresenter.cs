@@ -30,13 +30,13 @@ namespace LightController.Pro
         public async Task<ProMediaItem> GetCurrentMediaAsync ()
         {
             TransportLayerStatus status = await GetTransportStatusAsync(Layer.Presentation);
-            if(!status.audio_only && status.duration > 0 && !string.IsNullOrWhiteSpace(status.name))
             if(!status.audio_only && !string.IsNullOrWhiteSpace(status.name))
             {
                 if(media.TryGetValue(status.name, out ProMediaItem existingItem))
                     return existingItem;
 
                 var mediaItem = await ProMediaItem.GetItemAsync(mediaPath, status.name, status.duration);
+                media[status.name] = mediaItem;
                 return mediaItem;
             }
             else
