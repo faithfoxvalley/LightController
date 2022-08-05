@@ -16,7 +16,7 @@ namespace LightController.Config.Input
 
         private ColorPicker.StandardColorPicker picker;
         private ColorRGB rgb = new ColorRGB();
-        private double intensity = 1;
+        private double pickerIntensity = 1;
 
         public override void Init()
         {
@@ -34,7 +34,7 @@ namespace LightController.Config.Input
         private void Picker_ColorChanged(object sender, RoutedEventArgs e)
         {
             rgb = ColorRGB.FromColor(picker.SelectedColor);
-            intensity = picker.SelectedColor.A / 255d;
+            pickerIntensity = picker.SelectedColor.A / 255d;
         }
 
         public override ColorRGB GetColor(int fixtureId)
@@ -44,7 +44,7 @@ namespace LightController.Config.Input
 
         public override double GetIntensity(int fixtureId, ColorRGB target)
         {
-            return intensity * base.GetIntensity(fixtureId, target);
+            return pickerIntensity * base.GetIntensity(fixtureId, target);
         }
     }
 }
