@@ -59,6 +59,7 @@ namespace LightController
 
             pro = new ProPresenter(config.ProPresenter);
             dmx = new DmxProcessor(config.Dmx);
+            dmx.TurnOff();
             sceneManager = new SceneManager(config.Scenes, config.MidiDevice, config.DefaultScene, dmx, listScene);
 
             // Update scene combobox
@@ -118,6 +119,11 @@ namespace LightController
             }
         }
 
+        private void mainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            dmxTimer.Change(Timeout.Infinite, Timeout.Infinite);
+            dmx.TurnOff();
+        }
 
         /*private async void btnCheckContent_Click(object sender, RoutedEventArgs e)
         {

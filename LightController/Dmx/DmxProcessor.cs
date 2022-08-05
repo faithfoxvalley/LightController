@@ -44,6 +44,18 @@ namespace LightController.Dmx
             }
         }
 
+        /// <summary>
+        /// Turns off all fixtures
+        /// </summary>
+        public void TurnOff()
+        {
+            foreach (DmxFixture fixture in fixtures)
+            {
+                DmxFrame frame = fixture.GetOffFrame();
+                controller.SetChannels(frame.StartAddress, frame.Data);
+            }
+        }
+
         public void SetInputs(IEnumerable<Config.Input.InputBase> inputs)
         {
             foreach (DmxFixture fixture in fixtures)

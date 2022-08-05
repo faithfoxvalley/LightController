@@ -84,5 +84,10 @@ namespace LightController.Dmx
             return frame;
         }
 
+        public DmxFrame GetOffFrame()
+        {
+            frame.Reset();
+            return frame;
+        }
     }
 }
