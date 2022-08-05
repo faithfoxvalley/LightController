@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -11,10 +12,14 @@ namespace LightController.Pro
 {
     public class ProPresenter
     {
+        private const string MotionCache = "Media";
+        private const string ThumbnailCache = "Thumbnails";
+
         private string url;
         private string mediaPath;
         private HttpClient client = new HttpClient();
         private Dictionary<string, ProMediaItem> media = new Dictionary<string, ProMediaItem>();
+        private Dictionary<string, ProMediaItem> thumbnails = new Dictionary<string, ProMediaItem>();
 
         public ProPresenter(Config.ProPresenterConfig config)
         {
@@ -27,16 +32,38 @@ namespace LightController.Pro
                 mediaPath += '/';
         }
 
-        public async Task<ProMediaItem> GetCurrentMediaAsync ()
+        public async Task<ProMediaItem> GetCurrentMediaAsync (bool motion)
         {
             TransportLayerStatus status = await GetTransportStatusAsync(Layer.Presentation);
             if(!status.audio_only && !string.IsNullOrWhiteSpace(status.name))
             {
-                if(media.TryGetValue(status.name, out ProMediaItem existingItem))
-                    return existingItem;
+                ProMediaItem mediaItem;
+                if (motion)
+                {
+                    if (media.TryGetValue(status.name, out ProMediaItem existingItem))
+                        return existingItem;
 
-                var mediaItem = await ProMediaItem.GetItemAsync(mediaPath, status.name, status.duration);
-                media[status.name] = mediaItem;
+                    mediaItem = await ProMediaItem.GetItemAsync(
+                        mediaPath,
+                        Path.Combine(MainWindow.Instance.ApplicationData, MotionCache),
+                        status.name,
+                        status.duration);
+                    media[status.name] = mediaItem;
+                }
+                else
+                {
+                    if (thumbnails.TryGetValue(status.name, out ProMediaItem existingItem))
+                        return existingItem;
+
+                    mediaItem = await ProMediaItem.GetItemAsync(
+                        mediaPath,
+                        Path.Combine(MainWindow.Instance.ApplicationData, ThumbnailCache),
+                        status.name,
+                        0);
+                    thumbnails[status.name] = mediaItem;
+                }
+
+                
                 return mediaItem;
             }
             else

@@ -15,7 +15,6 @@ namespace LightController.Pro
     [ProtoContract(UseProtoMembersOnly = true)]
     public class ProMediaItem
     {
-        private const string AppDataCache = "Media";
         private const double FrameInterval = 0.1;
 
         [ProtoMember(1)]
@@ -47,13 +46,12 @@ namespace LightController.Pro
             return newData;
         }
 
-        public static async Task<ProMediaItem> GetItemAsync(string mediaFolder, string file, double length)
+        public static async Task<ProMediaItem> GetItemAsync(string mediaFolder, string cacheFolder, string file, double length)
         {
-            string appdata = Path.Combine(MainWindow.Instance.ApplicationData, AppDataCache);
-            Directory.CreateDirectory(appdata);
-            if (!Directory.Exists(appdata))
+            Directory.CreateDirectory(cacheFolder);
+            if (!Directory.Exists(cacheFolder))
                 throw new Exception();
-            string cacheFile = Path.Combine(appdata, Path.ChangeExtension(file, "bin"));
+            string cacheFile = Path.Combine(cacheFolder, Path.ChangeExtension(file, "bin"));
             if(File.Exists(cacheFile))
                 return await LoadItemAsync(cacheFile);
             return await CreateItemAsync(Path.Combine(mediaFolder, file), cacheFile, length);

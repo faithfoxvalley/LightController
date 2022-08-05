@@ -21,6 +21,8 @@ namespace LightController.Config.Input
         private int max;
         private InputIntensity minIntensity = new InputIntensity();
 
+        public bool HasMotion { get; set; } = true;
+
         public string MinIntensity
         {
             get
@@ -47,13 +49,22 @@ namespace LightController.Config.Input
         public override async Task StartAsync()
         {
             // Initialize info about current background
-            media = await pro.GetCurrentMediaAsync();
+            media = await pro.GetCurrentMediaAsync(HasMotion);
+            if(!HasMotion)
+            {
+                lock (colorLock)
+                {
+                    colors = media.GetData((max - min) + 1, 0);
+                    maxColorValue = colors.Select(x => x.Max()).Max();
+                    minColorValue = colors.Select(x => x.Max()).Min();
+                }
+            }
         }
 
         public override async Task UpdateAsync()
         {
             // Update the current color based on the background frame and estimated time
-            if (media == null)
+            if (media == null || !HasMotion)
                 return;
 
             double time = await pro.AsyncGetTransportLayerTime(Layer.Presentation);
@@ -62,7 +73,7 @@ namespace LightController.Config.Input
             {
                 colors = media.GetData((max - min) + 1, time);
                 maxColorValue = colors.Select(x => x.Max()).Max();
-                minColorValue = colors.Select(x => x.Min()).Min();
+                minColorValue = colors.Select(x => x.Max()).Min();
             }
         }
 
