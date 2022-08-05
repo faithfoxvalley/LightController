@@ -35,7 +35,6 @@
     <PackageReference Include="OpenDMX.NET" Version="1.0.1" />
     <PackageReference Include="PixiEditor.ColorPicker" Version="3.3.1" />
     <PackageReference Include="protobuf-net" Version="3.1.17" />
-    <PackageReference Include="RestSharp" Version="108.0.1" />
     <PackageReference Include="System.Drawing.Common" Version="6.0.0" />
     <PackageReference Include="YamlDotNet" Version="12.0.0" />
   </ItemGroup>
