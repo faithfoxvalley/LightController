@@ -15,16 +15,22 @@ namespace LightController.Dmx
         private ColorRGB mask;
         private byte? constantValue;
         private string stringValue;
+        private double lumens;
+        private double intensity = 1;
 
+        public double Lumens => mask == null ? double.NaN : lumens;
         public int Index { get; private set; }
+        public byte? Constant => constantValue;
         public bool IsIntensity { get; private set; } = false;
+        public bool IsColor => mask != null;
         public double MaskSize => mask == null ? double.PositiveInfinity : mask.Red + mask.Green + mask.Blue;
 
-        public DmxChannel(ColorRGB mask, string stringValue, int index)
+        public DmxChannel(ColorRGB mask, string stringValue, int index, double lumens)
         {
             this.mask = mask;
             this.stringValue = stringValue;
             Index = index;
+            this.lumens = lumens;
         }
 
         public static DmxChannel Parse(string value, int index)
@@ -35,6 +41,18 @@ namespace LightController.Dmx
             value = value.Trim().ToLowerInvariant();
             if(string.IsNullOrWhiteSpace(value))
                 return null;
+
+            string originalString = value;
+
+            double lumens = double.NaN;
+            int intensityIndex = value.IndexOf('@');
+            if(intensityIndex > 0 && intensityIndex < value.Length - 1)
+            {
+                string intensity = value.Substring(intensityIndex + 1);
+                value = value.Substring(0, intensityIndex);
+                if (!double.TryParse(intensity, out lumens))
+                    lumens = double.NaN;
+            }
 
             if (value[value.Length - 1] == 'k')
             {
@@ -47,7 +65,7 @@ namespace LightController.Dmx
                         .Fromxy(Illuminants.D65).ToRGB().Build();
                     }
                     RGBColor colourfulColor = colourfulConverter.Convert(chromacity).NormalizeIntensity();
-                    return new DmxChannel(ColorRGB.FromColor(colourfulColor), value, index);
+                    return new DmxChannel(ColorRGB.FromColor(colourfulColor), originalString, index, lumens);
                 }
                 return null;
             }
@@ -59,7 +77,7 @@ namespace LightController.Dmx
                     byte r = (byte)Convert.ToInt32(value.Substring(1, 2), 16);
                     byte g = (byte)Convert.ToInt32(value.Substring(3, 2), 16);
                     byte b = (byte)Convert.ToInt32(value.Substring(5, 2), 16);
-                    return new DmxChannel(new ColorRGB(r, g, b), value, index);
+                    return new DmxChannel(new ColorRGB(r, g, b), originalString, index, lumens);
                 }
                 catch
                 {
@@ -86,31 +104,30 @@ namespace LightController.Dmx
                     mask = new ColorRGB(255, 191, 0);
                     break;
                 case "intensity":
-                    return new DmxChannel(null, value, index)
+                    return new DmxChannel(null, originalString, index, lumens)
                     {
                         IsIntensity = true
                     };
                 default:
                     if(byte.TryParse(value, out byte b))
                     {
-                        return new DmxChannel(null, value, index)
+                        return new DmxChannel(null, originalString, index, lumens)
                         {
                             constantValue = b
                         };
                     }
                     return null;
             }
-            return new DmxChannel(mask, value, index);
+            return new DmxChannel(mask, originalString, index, lumens);
         }
 
-        public byte GetValue(ref ColorRGB color, double intensity)
+        public void ApplyIntensityMultiplier(double intensity)
         {
-            if (constantValue.HasValue)
-                return constantValue.Value;
+            this.intensity = intensity;
+        }
 
-            if (IsIntensity)
-                return (byte)(255 * intensity);
-
+        public double GetColorValue(ref ColorRGB color)
+        {
             double r = 0;
             if (mask.Red > 0)
                 r = color.Red / (double)mask.Red;
@@ -132,7 +149,7 @@ namespace LightController.Dmx
                 (byte)(color.Red - (amount * mask.Red)), 
                 (byte)(color.Green - (amount * mask.Green)), 
                 (byte)(color.Blue - (amount * mask.Blue)));
-            return (byte)(amount * 255 * intensity);
+            return amount * intensity;
 
         }
 
