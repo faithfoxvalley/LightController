@@ -45,13 +45,17 @@ namespace LightController
 
             InitializeComponent();
 
+            string appname = typeof(MainWindow).Assembly.GetName().Name;
             string path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             if (!Directory.Exists(path))
                 throw new DirectoryNotFoundException("No /AppData/Local/ folder exists!");
-            path = Path.Combine(path, typeof(MainWindow).Assembly.GetName().Name);
+            path = Path.Combine(path, appname);
             if (!Directory.Exists(path))
                 Directory.CreateDirectory(path);
             ApplicationData = path;
+
+            LogFile.Init(Path.Combine(ApplicationData, "Logs", appname + ".log"));
+            LogFile.Info("Started application");
 
             ffmpeg = MediaToolkitService.CreateInstance(FfmpegFilePath);
 

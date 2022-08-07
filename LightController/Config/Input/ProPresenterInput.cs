@@ -75,7 +75,9 @@ namespace LightController.Config.Input
                     }
                 }
                 catch (OperationCanceledException)
-                { }
+                {
+                    LogFile.Info("Canceled media/thumbnail generation.");
+                }
 
                 if (cts == myCts)
                     cts = null;

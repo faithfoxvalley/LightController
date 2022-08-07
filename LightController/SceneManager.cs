@@ -49,6 +49,7 @@ namespace LightController
                 Scene scene = scenes.Find(x => x.Name == defaultScene.Trim());
                 if (scene != null)
                 {
+                    LogFile.Info("Activating scene " + scene.Name);
                     activeScene = scene;
                     UpdateSceneUI(activeScene.Name);
                     dmx.SetInputs(scene.Inputs);
@@ -74,8 +75,10 @@ namespace LightController
         private async void MidiDevice_NoteEvent(MidiNote note)
         {
             Scene newScene = scenes.Find(s => s.MidiNote == note);
-            if (newScene != null) // TODO: Allow for scene to be reactivated and cancel media creation only when necessary.
+            if (newScene != null)
             {
+                LogFile.Info("Activating scene " + newScene.Name);
+
                 foreach (Scene s in scenes)
                     await s.DeactivateAsync();
 

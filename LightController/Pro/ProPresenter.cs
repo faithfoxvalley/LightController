@@ -39,11 +39,12 @@ namespace LightController.Pro
             if(!status.audio_only && !string.IsNullOrWhiteSpace(status.name))
             {
                 ProMediaItem mediaItem;
-                if (motion)
+                if (motion && status.duration > 0)
                 {
                     if (media.TryGetValue(status.name, out ProMediaItem existingItem))
                         return existingItem;
 
+                    LogFile.Info("Starting media generation for " + status.name);
                     mediaItem = await ProMediaItem.GetItemAsync(
                         mediaPath,
                         Path.Combine(MainWindow.Instance.ApplicationData, MotionCache),
@@ -51,12 +52,14 @@ namespace LightController.Pro
                         status.duration,
                         cancelToken);
                     media[status.name] = mediaItem;
+                    LogFile.Info("Finished media generation for " + status.name);
                 }
                 else
                 {
                     if (thumbnails.TryGetValue(status.name, out ProMediaItem existingItem))
                         return existingItem;
 
+                    LogFile.Info("Starting thumbnail generation for " + status.name);
                     mediaItem = await ProMediaItem.GetItemAsync(
                         mediaPath,
                         Path.Combine(MainWindow.Instance.ApplicationData, ThumbnailCache),
@@ -64,6 +67,7 @@ namespace LightController.Pro
                         0,
                         cancelToken);
                     thumbnails[status.name] = mediaItem;
+                    LogFile.Info("Finished thumbnail generation for " + status.name);
                 }
 
                 
