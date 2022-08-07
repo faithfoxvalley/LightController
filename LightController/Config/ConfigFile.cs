@@ -17,14 +17,19 @@ namespace LightController.Config
     {
         private const string FileName = "config.yml";
 
+        [YamlMember(Description = "Name of the MIDI device, or blank to pick the first one")]
         public string MidiDevice { get; set; }
+
+        [YamlMember(Description = "Scene to load on startup")]
         public string DefaultScene { get; set; }
 
-        [YamlMember(Alias = "Pro")]
+        [YamlMember(Alias = "Pro", Description = "ProPresenter settings")]
         public ProPresenterConfig ProPresenter { get; set; }
 
+        [YamlMember(Description = "DMX settings")]
         public DmxConfig Dmx { get; set; }
 
+        [YamlMember(Description = "List of lighting scenes")]
         public List<Scene> Scenes { get; set; } = new List<Scene>();
 
         public ConfigFile() { }
