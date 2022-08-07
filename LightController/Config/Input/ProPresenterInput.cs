@@ -1,8 +1,10 @@
 ﻿using LightController.Color;
 using LightController.Pro;
 using MediaToolkit.Tasks;
+using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace LightController.Config.Input
@@ -20,6 +22,7 @@ namespace LightController.Config.Input
         private int min;
         private int max;
         private InputIntensity minIntensity = new InputIntensity();
+        private static CancellationTokenSource cts = new CancellationTokenSource();
 
         public bool HasMotion { get; set; } = true;
 
@@ -48,17 +51,37 @@ namespace LightController.Config.Input
 
         public override async Task StartAsync()
         {
+            if(cts != null)
+                cts.Cancel();
+
             // Initialize info about current background
-            media = await pro.GetCurrentMediaAsync(HasMotion);
-            if(!HasMotion)
+
+            using (var myCts = new CancellationTokenSource())
             {
-                lock (colorLock)
+                cts = myCts;
+
+                try
                 {
-                    colors = media.GetData((max - min) + 1, 0);
-                    maxColorValue = colors.Select(x => x.Max()).Max();
-                    minColorValue = colors.Select(x => x.Max()).Min();
+                    ProMediaItem newMedia = await pro.GetCurrentMediaAsync(HasMotion, cts.Token);
+                    media = newMedia;
+                    if (!HasMotion)
+                    {
+                        lock (colorLock)
+                        {
+                            colors = media.GetData((max - min) + 1, 0);
+                            maxColorValue = colors.Select(x => x.Max()).Max();
+                            minColorValue = colors.Select(x => x.Max()).Min();
+                        }
+                    }
                 }
+                catch (OperationCanceledException)
+                { }
+
+                if (cts == myCts)
+                    cts = null;
+
             }
+
         }
 
         public override async Task UpdateAsync()

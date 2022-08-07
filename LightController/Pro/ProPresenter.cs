@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using LightController.Pro.Packet;
 using Newtonsoft.Json;
@@ -32,7 +33,7 @@ namespace LightController.Pro
                 mediaPath += '/';
         }
 
-        public async Task<ProMediaItem> GetCurrentMediaAsync (bool motion)
+        public async Task<ProMediaItem> GetCurrentMediaAsync (bool motion, CancellationToken cancelToken)
         {
             TransportLayerStatus status = await GetTransportStatusAsync(Layer.Presentation);
             if(!status.audio_only && !string.IsNullOrWhiteSpace(status.name))
@@ -47,7 +48,8 @@ namespace LightController.Pro
                         mediaPath,
                         Path.Combine(MainWindow.Instance.ApplicationData, MotionCache),
                         status.name,
-                        status.duration);
+                        status.duration,
+                        cancelToken);
                     media[status.name] = mediaItem;
                 }
                 else
@@ -59,7 +61,8 @@ namespace LightController.Pro
                         mediaPath,
                         Path.Combine(MainWindow.Instance.ApplicationData, ThumbnailCache),
                         status.name,
-                        0);
+                        0,
+                        cancelToken);
                     thumbnails[status.name] = mediaItem;
                 }
 

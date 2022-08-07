@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace LightController.Pro
@@ -31,12 +32,12 @@ namespace LightController.Pro
             this.time = time;
         }
 
-        public static MediaFrame CreateFrame(byte[] data, double time)
+        public static MediaFrame CreateFrame(byte[] data, double time, CancellationToken cancelToken)
         {
-            return new MediaFrame(ReadImage(data), time);
+            return new MediaFrame(ReadImage(data, cancelToken), time);
         }
 
-        private static ColorRGB[] ReadImage(byte[] data)
+        private static ColorRGB[] ReadImage(byte[] data, CancellationToken cancelToken)
         {
             ColorRGB[] result;
             using (var ms = new MemoryStream(data))
@@ -44,7 +45,7 @@ namespace LightController.Pro
             {
                 if (orig.PixelFormat == PixelFormat.Format24bppRgb)
                 {
-                    result = GetPixels(orig, orig.Width);
+                    result = GetPixels(orig, orig.Width, cancelToken);
                 }
                 else
                 {
@@ -54,7 +55,7 @@ namespace LightController.Pro
                         {
                             Rectangle rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
                             gr.DrawImage(orig, rect);
-                            result = GetPixels(bmp, bmp.Width);
+                            result = GetPixels(bmp, bmp.Width, cancelToken);
                         }
                     }
                 }
@@ -106,7 +107,7 @@ namespace LightController.Pro
             return newFrame;
         }
 
-        private static ColorRGB[] GetPixels(Bitmap bmp, int width)
+        private static ColorRGB[] GetPixels(Bitmap bmp, int width, CancellationToken cancelToken)
         {
             if (bmp.PixelFormat != PixelFormat.Format24bppRgb)
                 throw new ArgumentException("Bitmap must be of format 24bpp RGB.");
@@ -120,39 +121,46 @@ namespace LightController.Pro
             Rectangle rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
             BitmapData bmpData = bmp.LockBits(rect, ImageLockMode.ReadOnly, bmp.PixelFormat);
 
-            // Get the address of the first line.
-            IntPtr ptr = bmpData.Scan0;
-
-            // Declare an array to hold the bytes of the bitmap.
-            byte[] rgbValues = new byte[bmp.Height * bmpData.Stride];
-
-            // Copy the RGB values into the array.
-            Marshal.Copy(ptr, rgbValues, 0, rgbValues.Length);
-
-            var fromRgb = new ConverterBuilder().FromRGB().ToXYZ(Illuminants.D65).Build();
-
-            // Set every red value to 255.
-            for (int x = 0; x < bmp.Width; x++)
+            try
             {
-                for (int y = 0; y < bmp.Height; y++)
+                // Get the address of the first line.
+                IntPtr ptr = bmpData.Scan0;
+
+                // Declare an array to hold the bytes of the bitmap.
+                byte[] rgbValues = new byte[bmp.Height * bmpData.Stride];
+
+                // Copy the RGB values into the array.
+                Marshal.Copy(ptr, rgbValues, 0, rgbValues.Length);
+
+                var fromRgb = new ConverterBuilder().FromRGB().ToXYZ(Illuminants.D65).Build();
+
+                // Set every red value to 255.
+                for (int x = 0; x < bmp.Width; x++)
                 {
-                    int pixelIndex = (int)(x * pixelsPerIndex);
+                    for (int y = 0; y < bmp.Height; y++)
+                    {
+                        cancelToken.ThrowIfCancellationRequested();
 
-                    int i = y * bmpData.Stride + x * bytesPerPixel;
-                    double red = rgbValues[i + 2] / 255d;
-                    double green = rgbValues[i + 1] / 255d;
-                    double blue = rgbValues[i] / 255d;
+                        int pixelIndex = (int)(x * pixelsPerIndex);
 
-                    var xyz = fromRgb.Convert(new RGBColor(red, green, blue));
+                        int i = y * bmpData.Stride + x * bytesPerPixel;
+                        double red = rgbValues[i + 2] / 255d;
+                        double green = rgbValues[i + 1] / 255d;
+                        double blue = rgbValues[i] / 255d;
 
-                    pixels[pixelIndex, 0] += xyz.X;
-                    pixels[pixelIndex, 1] += xyz.Y;
-                    pixels[pixelIndex, 2] += xyz.Z;
-                    pixels[pixelIndex, 3]++;
+                        var xyz = fromRgb.Convert(new RGBColor(red, green, blue));
+
+                        pixels[pixelIndex, 0] += xyz.X;
+                        pixels[pixelIndex, 1] += xyz.Y;
+                        pixels[pixelIndex, 2] += xyz.Z;
+                        pixels[pixelIndex, 3]++;
+                    }
                 }
             }
-
-            bmp.UnlockBits(bmpData);
+            finally
+            {
+                bmp.UnlockBits(bmpData);
+            }
 
             var toRgb = new ConverterBuilder().FromXYZ(Illuminants.D65).ToRGB().Build();
 

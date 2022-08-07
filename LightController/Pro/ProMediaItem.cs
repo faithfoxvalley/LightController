@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media;
 
@@ -46,18 +47,18 @@ namespace LightController.Pro
             return newData;
         }
 
-        public static async Task<ProMediaItem> GetItemAsync(string mediaFolder, string cacheFolder, string file, double length)
+        public static Task<ProMediaItem> GetItemAsync(string mediaFolder, string cacheFolder, string file, double length, CancellationToken cancelToken)
         {
             Directory.CreateDirectory(cacheFolder);
             if (!Directory.Exists(cacheFolder))
-                throw new Exception();
+                throw new Exception(); 
             string cacheFile = Path.Combine(cacheFolder, Path.ChangeExtension(file, "bin"));
             if(File.Exists(cacheFile))
-                return await LoadItemAsync(cacheFile);
-            return await CreateItemAsync(Path.Combine(mediaFolder, file), cacheFile, length);
+                return LoadItemAsync(cacheFile);
+            return CreateItemAsync(Path.Combine(mediaFolder, file), cacheFile, length, cancelToken);
         }
 
-        private static async Task<ProMediaItem> CreateItemAsync(string mediaPath, string cacheFile, double fileLength)
+        private static async Task<ProMediaItem> CreateItemAsync(string mediaPath, string cacheFile, double fileLength, CancellationToken cancelToken)
         {
             GetThumbnailOptions options = new GetThumbnailOptions
             {
@@ -66,7 +67,7 @@ namespace LightController.Pro
                 FrameSize = new FrameSize(854, 480)
             };
 
-            List<MediaFrame> frames = new List<MediaFrame>();
+            List<MediaFrame> frames = new List<MediaFrame>(); 
             for (double time = 0; time < fileLength || time == 0; time += FrameInterval)
             {
                 options.SeekSpan = TimeSpan.FromSeconds(time);
@@ -75,16 +76,19 @@ namespace LightController.Pro
                   mediaPath,
                   options
                 ));
+                
+                cancelToken.ThrowIfCancellationRequested();
 
                 if (thumbnailResult.ThumbnailData.Length > 0)
                 {
-                    MediaFrame frame = await Task.Run(() => MediaFrame.CreateFrame(thumbnailResult.ThumbnailData, time));
+                    MediaFrame frame = await Task.Run(() => MediaFrame.CreateFrame(thumbnailResult.ThumbnailData, time, cancelToken));
                     frames.Add(frame);
                 }
             }
 
+            cancelToken.ThrowIfCancellationRequested();
 
-            if(frames.Count == 0)
+            if (frames.Count == 0)
             {
                 throw new Exception("Error while reading media file: Unable to get any frames from the media.");
             }
@@ -95,6 +99,7 @@ namespace LightController.Pro
             {
                 await Task.Run(() => Serializer.Serialize<ProMediaItem>(stream, result));
             }
+
             return result;
         }
 

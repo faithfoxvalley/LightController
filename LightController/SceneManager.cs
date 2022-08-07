@@ -74,14 +74,14 @@ namespace LightController
         private async void MidiDevice_NoteEvent(MidiNote note)
         {
             Scene newScene = scenes.Find(s => s.MidiNote == note);
-            if (newScene != null && newScene != activeScene) // TODO: Allow for scene to be reactivated and cancel media creation only when necessary.
+            if (newScene != null) // TODO: Allow for scene to be reactivated and cancel media creation only when necessary.
             {
                 foreach (Scene s in scenes)
                     await s.DeactivateAsync();
 
+                await newScene.ActivateAsync();
                 activeScene = newScene;
                 UpdateSceneUI(activeScene.Name);
-                await newScene.ActivateAsync();
                 dmx.SetInputs(newScene.Inputs);
             }
         }
