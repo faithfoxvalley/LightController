@@ -16,20 +16,20 @@ namespace LightController.Dmx
 
         public DmxProcessor(DmxConfig config)
         {
-            foreach (OpenDMX.NET.FTDI.Device device in controller.GetDevices())
+            var devices = controller.GetDevices();
+            if(config.DmxDevice < devices.Length)
             {
-                if (string.IsNullOrWhiteSpace(config.DmxDevice) || device.Description == config.DmxDevice)
-                {
-                    controller.Open(device.DeviceIndex);
-                    foundDevice = true;
-                    break;
-                }
+                controller.Open(config.DmxDevice);
+                foundDevice = true;
             }
 
+            if(!foundDevice)
+            {
+                LogFile.Error("No DMX interface detected!");
 #if !DEBUG
-            if (!foundDevice)
                 throw new Exception("No DMX interface detected!");
 #endif
+            }
 
             Dictionary<string, DmxDeviceProfile> profiles = config.Fixtures.ToDictionary(x => x.Name);
             foreach(DmxDeviceAddress fixtureAddress in config.Addresses)
@@ -64,12 +64,6 @@ namespace LightController.Dmx
         
         public void Write()
         {
-
-#if !DEBUG
-            if (!foundDevice)
-                return;
-#endif
-
             foreach (DmxFixture fixture in fixtures)
             {
                 DmxFrame frame = fixture.GetFrame();

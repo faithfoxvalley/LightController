@@ -23,8 +23,18 @@ namespace LightController
 
         public static void Info(string msg)
         {
+            Write(Serilog.Events.LogEventLevel.Information, msg);
+        }
+
+        public static void Error(string msg)
+        {
+            Write(Serilog.Events.LogEventLevel.Error, msg);
+        }
+
+        private static void Write(Serilog.Events.LogEventLevel level, string msg)
+        {
             msg = "[" + Environment.CurrentManagedThreadId.ToString() + "] " + msg;
-            log.Write(Serilog.Events.LogEventLevel.Information, msg);
+            log.Write(level, msg);
         }
     }
 }
