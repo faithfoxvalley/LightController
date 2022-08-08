@@ -112,6 +112,7 @@ namespace LightController.Config
         {
             private int start;
             private int end;
+            private bool reversed = false;
 
             public int Min => start;
             public int Max => end;
@@ -128,6 +129,7 @@ namespace LightController.Config
                         int temp = start;
                         start = end;
                         end = temp;
+                        reversed = true;
                     }
                 }
                 else
@@ -179,12 +181,18 @@ namespace LightController.Config
 
             public IEnumerator<int> GetEnumerator()
             {
-                return Enumerable.Range(start, (start - end) + 1).GetEnumerator();
+                var enumerable = Enumerable.Range(start, (end - start) + 1);
+                if (reversed)
+                    enumerable = enumerable.Reverse();
+                return enumerable.GetEnumerator();
             }
 
             IEnumerator IEnumerable.GetEnumerator()
             {
-                return Enumerable.Range(start, (start - end) + 1).GetEnumerator();
+                var enumerable = Enumerable.Range(start, (end - start) + 1);
+                if (reversed)
+                    enumerable = enumerable.Reverse();
+                return enumerable.GetEnumerator();
             }
         }
     }

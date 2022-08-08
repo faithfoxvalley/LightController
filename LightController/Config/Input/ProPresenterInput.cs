@@ -2,6 +2,7 @@
 using LightController.Pro;
 using MediaToolkit.Tasks;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -18,11 +19,11 @@ namespace LightController.Config.Input
         private ColorRGB[] colors;
         private byte maxColorValue;
         private byte minColorValue;
+        private int pixelWidth;
         private object colorLock = new object();
-        private int min;
-        private int max;
         private InputIntensity minIntensity = new InputIntensity();
         private static CancellationTokenSource cts = new CancellationTokenSource();
+        private Dictionary<int, int> idToIndex = new Dictionary<int, int>();
 
         public bool HasMotion { get; set; } = true;
 
@@ -44,8 +45,14 @@ namespace LightController.Config.Input
         public override void Init()
         {
             pro = MainWindow.Instance.Pro;
-            min = FixtureIds.Min();
-            max = FixtureIds.Max();
+
+            int count = 0;
+            foreach(int id in FixtureIds.EnumerateValues())
+            {
+                idToIndex[id] = count;
+                count++;
+            }
+            pixelWidth = count;
         }
 
 
@@ -68,7 +75,7 @@ namespace LightController.Config.Input
                     {
                         lock (colorLock)
                         {
-                            colors = media.GetData((max - min) + 1, 0);
+                            colors = media.GetData(pixelWidth, 0);
                             maxColorValue = colors.Select(x => x.Max()).Max();
                             minColorValue = colors.Select(x => x.Max()).Min();
                         }
@@ -96,7 +103,7 @@ namespace LightController.Config.Input
 
             lock(colorLock)
             {
-                colors = media.GetData((max - min) + 1, time);
+                colors = media.GetData(pixelWidth, time);
                 maxColorValue = colors.Select(x => x.Max()).Max();
                 minColorValue = colors.Select(x => x.Max()).Min();
             }
@@ -104,6 +111,7 @@ namespace LightController.Config.Input
 
         public override ColorRGB GetColor(int fixtureId)
         {
+            int index = idToIndex[fixtureId];
             ColorRGB result;
             lock(colorLock)
             {
@@ -111,9 +119,8 @@ namespace LightController.Config.Input
                 {
                     result = new ColorRGB();
                 }
-                else
+                else 
                 {
-                    int index = fixtureId - min;
                     if (index >= colors.Length)
                         index = colors.Length - 1;
                     result = colors[index];
