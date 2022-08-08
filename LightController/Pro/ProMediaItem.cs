@@ -50,11 +50,9 @@ namespace LightController.Pro
         public static Task<ProMediaItem> GetItemAsync(string mediaFolder, string cacheFolder, string file, double length, CancellationToken cancelToken)
         {
             Directory.CreateDirectory(cacheFolder);
-            if (!Directory.Exists(cacheFolder))
-                throw new Exception(); 
             string cacheFile = Path.Combine(cacheFolder, Path.ChangeExtension(file, "bin"));
             if(File.Exists(cacheFile))
-                return LoadItemAsync(cacheFile);
+                return LoadItemAsync(cacheFile, cancelToken);
             return CreateItemAsync(Path.Combine(mediaFolder, file), cacheFile, length, cancelToken);
         }
 
@@ -103,10 +101,11 @@ namespace LightController.Pro
             return result;
         }
 
-        private static async Task<ProMediaItem> LoadItemAsync(string cacheFile)
+        private static async Task<ProMediaItem> LoadItemAsync(string cacheFile, CancellationToken cancelToken)
         {
             using (FileStream stream = File.OpenRead(cacheFile))
             {
+                cancelToken.ThrowIfCancellationRequested();
                 return await Task.Run(() => Serializer.Deserialize<ProMediaItem>(stream));
             }
         }
