@@ -64,6 +64,9 @@ namespace LightController.Dmx
         
         public void Write()
         {
+            if (!controller.IsOpen)
+                return;
+
             foreach (DmxFixture fixture in fixtures)
             {
                 DmxFrame frame = fixture.GetFrame();
