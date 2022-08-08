@@ -20,7 +20,6 @@ namespace LightController
     /// </summary>
     public partial class MainWindow : Window
     {
-        private const string FfmpegFilePath = @"C:\Bin\ffmpeg.exe";
         private const int DmxUpdateRate = 40;
         private const int InputsUpdateRate = 200;
 
@@ -35,7 +34,7 @@ namespace LightController
 
         public static MainWindow Instance { get; private set; }
 
-        public string ApplicationData { get; }
+        public string ApplicationData { get; private set; }
         public ProPresenter Pro => pro;
         public IMediaToolkitService Ffmpeg => ffmpeg;
 
@@ -45,19 +44,8 @@ namespace LightController
 
             InitializeComponent();
 
-            string appname = typeof(MainWindow).Assembly.GetName().Name;
-            string path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            if (!Directory.Exists(path))
-                throw new DirectoryNotFoundException("No /AppData/Local/ folder exists!");
-            path = Path.Combine(path, appname);
-            if (!Directory.Exists(path))
-                Directory.CreateDirectory(path);
-            ApplicationData = path;
-
-            LogFile.Init(Path.Combine(ApplicationData, "Logs", appname + ".log"));
-            LogFile.Info("Started application");
-
-            ffmpeg = MediaToolkitService.CreateInstance(FfmpegFilePath);
+            InitAppData();
+            InitFfmpeg();
 
             config = ConfigFile.Load();
 
@@ -76,6 +64,33 @@ namespace LightController
             inputsTimer = new Timer(UpdateInputs, null, InputsUpdateRate, Timeout.Infinite);
 
         }
+
+        private void InitFfmpeg()
+        {
+            string appLocation = typeof(MainWindow).Assembly.Location;
+            if (string.IsNullOrEmpty(appLocation))
+                throw new Exception("Unable to find ffmpeg location");
+            string ffmpegPath = Path.Combine(Path.GetDirectoryName(appLocation), "ffmpeg.exe");
+            if (!File.Exists(ffmpegPath))
+                throw new Exception("Unable to find ffmpeg.exe");
+            ffmpeg = MediaToolkitService.CreateInstance(ffmpegPath);
+        }
+
+        private void InitAppData()
+        {
+            string appname = typeof(MainWindow).Assembly.GetName().Name;
+            string path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            if (!Directory.Exists(path))
+                throw new DirectoryNotFoundException("No /AppData/Local/ folder exists!");
+            path = Path.Combine(path, appname);
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+            ApplicationData = path;
+
+            LogFile.Init(Path.Combine(ApplicationData, "Logs", appname + ".log"));
+            LogFile.Info("Started application");
+        }
+
         private void ListScene_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
 
