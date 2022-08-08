@@ -4,4 +4,3 @@ show progress for media cache generation
 speed up cache generation - compression?
 try to make transitions more seamless
 better method of computing intensity? HSI?
-Find a way to turn off all the lights automatically
