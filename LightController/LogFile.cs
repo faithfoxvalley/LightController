@@ -2,8 +2,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace LightController
 {
@@ -13,12 +15,21 @@ namespace LightController
 
         public static void Init(string file)
         {
+            AppDomain.CurrentDomain.UnhandledException += UnhandledException;
+
             log = new LoggerConfiguration()
 #if DEBUG
                 .WriteTo.Debug()
 #endif
                 .WriteTo.File(file, rollingInterval: RollingInterval.Day)
                 .CreateLogger();
+        }
+
+        private static void UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            if (e.ExceptionObject is Exception ex)
+                log.Fatal(ex,
+                    "[" + Environment.CurrentManagedThreadId.ToString() + "] An exception was thrown.");
         }
 
         public static void Info(string msg)
