@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -80,6 +81,10 @@ namespace LightController.Config.Input
                             minColorValue = colors.Select(x => x.Max()).Min();
                         }
                     }
+                }
+                catch (HttpRequestException)
+                {
+                    LogFile.Error("Unable to communicate with ProPresenter");
                 }
                 catch (OperationCanceledException)
                 {

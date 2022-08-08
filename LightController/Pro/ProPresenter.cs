@@ -75,7 +75,7 @@ namespace LightController.Pro
             }
             else
             {
-                throw new Exception("No media available!");
+                throw new HttpRequestException("No ProPresenter media available!");
             }
         }    
 
