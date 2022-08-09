@@ -2,6 +2,7 @@
 using LightController.Pro;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -67,6 +68,7 @@ namespace LightController.Config.Input
 
                 try
                 {
+                    Stopwatch sw = Stopwatch.StartNew();
                     ProMediaItem newMedia = await pro.GetCurrentMediaAsync(HasMotion, cts.Token);
                     media = newMedia;
                     if (!HasMotion)
@@ -78,6 +80,7 @@ namespace LightController.Config.Input
                             minColorValue = colors.Select(x => x.Max()).Min();
                         }
                     }
+                    LogFile.Info($"{(HasMotion ? "Media" : "Thumbnail")} generation took {sw.ElapsedMilliseconds}ms");
                 }
                 catch (HttpRequestException)
                 {
@@ -85,7 +88,7 @@ namespace LightController.Config.Input
                 }
                 catch (OperationCanceledException)
                 {
-                    LogFile.Info("Canceled media/thumbnail generation.");
+                    LogFile.Info($"Canceled {(HasMotion ? "media" : "thumbnail")} generation");
                 }
 
                 if (cts == myCts)
