@@ -4,6 +4,7 @@ using System.IO;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using LightController.Pro.Packet;
 using Newtonsoft.Json;
 
@@ -20,8 +21,9 @@ namespace LightController.Pro
         private Dictionary<int, string> mediaNames = new Dictionary<int, string>();
         private Dictionary<string, ProMediaItem> media = new Dictionary<string, ProMediaItem>();
         private Dictionary<string, ProMediaItem> thumbnails = new Dictionary<string, ProMediaItem>();
+        private System.Windows.Controls.ListBox mediaList;
 
-        public ProPresenter(Config.ProPresenterConfig config)
+        public ProPresenter(Config.ProPresenterConfig config, System.Windows.Controls.ListBox mediaList)
         {
             url = config.ApiUrl;
             if(!url.EndsWith('/'))
@@ -30,6 +32,8 @@ namespace LightController.Pro
             mediaPath = config.MediaAssetsPath;
             if (!mediaPath.EndsWith('/'))
                 mediaPath += '/';
+
+            this.mediaList = mediaList;
         }
 
         public async Task<ProMediaItem> GetCurrentMediaAsync (bool motion, CancellationToken cancelToken, int? id = null)
@@ -70,6 +74,7 @@ namespace LightController.Pro
                     status.duration,
                     cancelToken);
                 media[mediaName] = mediaItem;
+                AddToMediaList(mediaName + " (motion)");
                 LogFile.Info("Finished media generation for " + mediaName);
             }
             else
@@ -85,6 +90,7 @@ namespace LightController.Pro
                     0,
                     cancelToken);
                 thumbnails[mediaName] = mediaItem;
+                AddToMediaList(mediaName + " (thumbnail)");
                 LogFile.Info("Finished thumbnail generation for " + mediaName);
             }
 
@@ -124,6 +130,14 @@ namespace LightController.Pro
                 sw.Stop();
             }
             return double.NaN;
+        }
+
+        private void AddToMediaList(string mediaName)
+        {
+            Application.Current.Dispatcher.BeginInvoke(() =>
+            {
+                mediaList.Items.Add(mediaName);
+            });
         }
     }
 }
