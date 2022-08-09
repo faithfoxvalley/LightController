@@ -122,7 +122,14 @@ namespace LightController
             {
                 Stopwatch sw = Stopwatch.StartNew();
 
-                dmx.Write();
+                try
+                {
+                    dmx.Write();
+                }
+                catch (OpenDMX.NET.OpenDMXException ex)
+                {
+                    LogFile.Error(ex);
+                }
 
                 sw.Stop();
                 dmxTimer.Change(Math.Max(0, DmxUpdateRate - sw.ElapsedMilliseconds), Timeout.Infinite);

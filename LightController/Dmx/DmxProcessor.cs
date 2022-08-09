@@ -69,6 +69,8 @@ namespace LightController.Dmx
                 DmxFrame frame = fixture.GetFrame();
                 controller.SetChannels(frame.StartAddress, frame.Data);
             }
+
+            controller.WriteData();
         }
     }
 }

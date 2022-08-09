@@ -23,7 +23,7 @@ namespace LightController
         {
             if (e.ExceptionObject is Exception ex)
                 log.Fatal(ex,
-                    "[" + Environment.CurrentManagedThreadId.ToString() + "] An exception was thrown.");
+                    "[" + Environment.CurrentManagedThreadId.ToString() + "] An exception was thrown:");
         }
 
         public static void Info(string msg)
@@ -34,6 +34,12 @@ namespace LightController
         public static void Error(string msg)
         {
             Write(Serilog.Events.LogEventLevel.Error, msg);
+        }
+
+        public static void Error(Exception ex)
+        {
+            log.Error(ex,
+                "[" + Environment.CurrentManagedThreadId.ToString() + "] An exception was thrown:");
         }
 
         private static void Write(Serilog.Events.LogEventLevel level, string msg)
