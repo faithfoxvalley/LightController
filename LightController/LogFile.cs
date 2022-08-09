@@ -24,6 +24,8 @@ namespace LightController
             if (e.ExceptionObject is Exception ex)
                 log.Fatal(ex,
                     "[" + Environment.CurrentManagedThreadId.ToString() + "] An exception was thrown:");
+            else
+                log.Fatal("[" + Environment.CurrentManagedThreadId.ToString() + "] An unhandled exception occurred.");
         }
 
         public static void Info(string msg)
