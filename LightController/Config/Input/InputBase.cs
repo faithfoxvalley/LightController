@@ -42,7 +42,7 @@ namespace LightController.Config.Input
 
         }
 
-        public virtual Task StartAsync()
+        public virtual Task StartAsync(Midi.MidiNote note)
         {
             return Task.CompletedTask;
         }

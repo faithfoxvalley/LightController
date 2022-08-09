@@ -34,18 +34,18 @@ namespace LightController.Config
                 input.Init();
         }
 
-
         /// <summary>
         /// Called when the scene is activated
         /// </summary>
-        public Task ActivateAsync()
+        /// <param name="note">The note used to activate this scene</param>
+        public Task ActivateAsync(MidiNote note = null)
         {
             if (active)
                 return Task.CompletedTask;
 
             Task[] tasks = new Task[Inputs.Count];
             for (int i = 0; i < Inputs.Count; i++)
-                tasks[i] = Inputs[i].StartAsync();
+                tasks[i] = Inputs[i].StartAsync(note);
 
             active = true;
 

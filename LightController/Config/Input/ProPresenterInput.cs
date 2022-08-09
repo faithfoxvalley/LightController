@@ -55,10 +55,14 @@ namespace LightController.Config.Input
         }
 
 
-        public override async Task StartAsync()
+        public override async Task StartAsync(Midi.MidiNote note)
         {
             if(cts != null)
                 cts.Cancel();
+
+            int? id = null;
+            if (note != null && note.Intensity.HasValue && note.Intensity.Value > 0)
+                id = note.Intensity.Value;
 
             // Initialize info about current background
 
@@ -69,7 +73,7 @@ namespace LightController.Config.Input
                 try
                 {
                     Stopwatch sw = Stopwatch.StartNew();
-                    ProMediaItem newMedia = await pro.GetCurrentMediaAsync(HasMotion, cts.Token);
+                    ProMediaItem newMedia = await pro.GetCurrentMediaAsync(HasMotion, cts.Token, id);
                     media = newMedia;
                     if (!HasMotion)
                     {

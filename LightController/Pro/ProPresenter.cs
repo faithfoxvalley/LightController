@@ -17,6 +17,7 @@ namespace LightController.Pro
         private string url;
         private string mediaPath;
         private HttpClient client = new HttpClient();
+        private Dictionary<int, string> mediaNames = new Dictionary<int, string>();
         private Dictionary<string, ProMediaItem> media = new Dictionary<string, ProMediaItem>();
         private Dictionary<string, ProMediaItem> thumbnails = new Dictionary<string, ProMediaItem>();
 
@@ -31,51 +32,65 @@ namespace LightController.Pro
                 mediaPath += '/';
         }
 
-        public async Task<ProMediaItem> GetCurrentMediaAsync (bool motion, CancellationToken cancelToken)
+        public async Task<ProMediaItem> GetCurrentMediaAsync (bool motion, CancellationToken cancelToken, int? id = null)
         {
-            TransportLayerStatus status = await GetTransportStatusAsync(Layer.Presentation);
-            if(!status.audio_only && !string.IsNullOrWhiteSpace(status.name))
+            string mediaName;
+            if(id.HasValue && mediaNames.TryGetValue(id.Value, out mediaName))
             {
-                ProMediaItem mediaItem;
-                if (motion && status.duration > 0)
+                ProMediaItem existingItem;
+                if (motion)
                 {
-                    if (media.TryGetValue(status.name, out ProMediaItem existingItem))
+                    if(media.TryGetValue(mediaName, out existingItem))
                         return existingItem;
-
-                    LogFile.Info("Starting media generation for " + status.name);
-                    mediaItem = await ProMediaItem.GetItemAsync(
-                        mediaPath,
-                        Path.Combine(MainWindow.Instance.ApplicationData, MotionCache),
-                        status.name,
-                        status.duration,
-                        cancelToken);
-                    media[status.name] = mediaItem;
-                    LogFile.Info("Finished media generation for " + status.name);
                 }
-                else
+                else if (thumbnails.TryGetValue(mediaName, out existingItem))
                 {
-                    if (thumbnails.TryGetValue(status.name, out ProMediaItem existingItem))
-                        return existingItem;
-
-                    LogFile.Info("Starting thumbnail generation for " + status.name);
-                    mediaItem = await ProMediaItem.GetItemAsync(
-                        mediaPath,
-                        Path.Combine(MainWindow.Instance.ApplicationData, ThumbnailCache),
-                        status.name,
-                        0,
-                        cancelToken);
-                    thumbnails[status.name] = mediaItem;
-                    LogFile.Info("Finished thumbnail generation for " + status.name);
+                    return existingItem;
                 }
+            }
 
-                
-                return mediaItem;
+            TransportLayerStatus status = await GetTransportStatusAsync(Layer.Presentation);
+            if (status.audio_only || string.IsNullOrWhiteSpace(status.name))
+                throw new HttpRequestException("No ProPresenter media available!");
+            mediaName = status.name;
+            if (id.HasValue)
+                mediaNames[id.Value] = mediaName;
+
+            ProMediaItem mediaItem;
+            if (motion && status.duration > 0)
+            {
+                if (media.TryGetValue(mediaName, out ProMediaItem existingItem))
+                    return existingItem;
+
+                LogFile.Info("Starting media generation for " + mediaName);
+                mediaItem = await ProMediaItem.GetItemAsync(
+                    mediaPath,
+                    Path.Combine(MainWindow.Instance.ApplicationData, MotionCache),
+                    mediaName,
+                    status.duration,
+                    cancelToken);
+                media[mediaName] = mediaItem;
+                LogFile.Info("Finished media generation for " + mediaName);
             }
             else
             {
-                throw new HttpRequestException("No ProPresenter media available!");
+                if (thumbnails.TryGetValue(mediaName, out ProMediaItem existingItem))
+                    return existingItem;
+
+                LogFile.Info("Starting thumbnail generation for " + mediaName);
+                mediaItem = await ProMediaItem.GetItemAsync(
+                    mediaPath,
+                    Path.Combine(MainWindow.Instance.ApplicationData, ThumbnailCache),
+                    mediaName,
+                    0,
+                    cancelToken);
+                thumbnails[mediaName] = mediaItem;
+                LogFile.Info("Finished thumbnail generation for " + mediaName);
             }
-        }    
+
+            return mediaItem;
+        }
+
 
 
         public async Task<TransportLayerStatus> GetTransportStatusAsync(Layer layer)

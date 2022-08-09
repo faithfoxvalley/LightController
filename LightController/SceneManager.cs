@@ -78,7 +78,7 @@ namespace LightController
                 foreach (Scene s in scenes)
                     await s.DeactivateAsync();
 
-                await newScene.ActivateAsync();
+                await newScene.ActivateAsync(note);
                 activeScene = newScene;
                 UpdateSceneUI(activeScene.Name);
                 dmx.SetInputs(newScene.Inputs);
