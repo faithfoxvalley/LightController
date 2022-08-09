@@ -1,6 +1,7 @@
 ﻿using NAudio.Midi;
 using System;
 using System.Collections.Generic;
+using YamlDotNet.Serialization;
 
 namespace LightController.Midi
 {
@@ -11,6 +12,8 @@ namespace LightController.Midi
     {
         public int Channel { get; set; }
         public int Note { get; set; }
+        [YamlIgnore]
+        public int? Intensity { get; set; }
 
         public MidiNote()
         {
@@ -21,6 +24,8 @@ namespace LightController.Midi
         {
             Channel = note.Channel;
             Note = note.NoteNumber;
+            if (note.CommandCode == MidiCommandCode.NoteOn)
+                Intensity = note.Velocity;
         }
 
         public override bool Equals(object obj)
