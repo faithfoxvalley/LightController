@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 
 namespace LightController.Config.Input
 {
-    // TODO
     [YamlTag("!propresenter_input")]
     public class ProPresenterInput : InputBase
     {
