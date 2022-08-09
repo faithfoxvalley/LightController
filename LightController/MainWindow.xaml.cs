@@ -1,17 +1,12 @@
-﻿using LightController.Color;
-using LightController.Config;
-using LightController.Config.Input;
+﻿using LightController.Config;
 using LightController.Dmx;
 using LightController.Pro;
 using MediaToolkit.Services;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Threading;
 
 namespace LightController
 {

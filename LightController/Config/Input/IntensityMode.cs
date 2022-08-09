@@ -1,5 +1,4 @@
 ﻿using LightController.Color;
-using System;
 
 namespace LightController.Config.Input
 {

@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace LightController.Dmx
+﻿namespace LightController.Dmx
 {
     public class DmxFrame
     {
