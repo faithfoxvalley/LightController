@@ -7,9 +7,11 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800" Closing="mainWindow_Closing">
     <Grid>
-        <ComboBox x:Name="listScene" Width="120" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="300,36,0,0" IsEnabled="False"/>
-        <Label x:Name="labelScene" Content="Active scene:" HorizontalAlignment="Left" Margin="300,10,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.585,-0.11"/>
-        <colorpicker:StandardColorPicker x:Name="colorPicker" Width="200" Height="380" Margin="10,10,590,44"/>
-        <ListBox x:Name="mediaList" Margin="300,63,10,10"/>
+        <ComboBox x:Name="listScene" Width="120" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="331,33,0,0" IsEnabled="False"/>
+        <Label x:Name="labelScene" Content="Active scene:" HorizontalAlignment="Left" Margin="331,7,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.585,-0.11"/>
+        <colorpicker:StandardColorPicker x:Name="colorPicker" Width="200" Height="380" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="108,33,0,0"/>
+        <ListBox x:Name="mediaList" Margin="331,63,10,10"/>
+        <Button x:Name="btnOpenConfig" Content="Open Config" HorizontalAlignment="Left" Margin="24,23,0,0" VerticalAlignment="Top" Click="btnOpenConfig_Click"/>
+        <Button x:Name="btnRestart" Content="Restart" HorizontalAlignment="Left" Margin="24,48,0,0" VerticalAlignment="Top" Click="btnRestart_Click"/>
     </Grid>
 </Window>

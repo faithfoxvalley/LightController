@@ -5,6 +5,7 @@ using MediaToolkit.Services;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Threading;
 using System.Windows;
 
@@ -146,6 +147,17 @@ namespace LightController
         {
             dmxTimer.Change(Timeout.Infinite, Timeout.Infinite);
             dmx.TurnOff();
+        }
+
+        private void btnRestart_Click(object sender, RoutedEventArgs e)
+        {
+            Process.Start(Process.GetCurrentProcess().MainModule.FileName);
+            Application.Current.Shutdown();
+        }
+
+        private void btnOpenConfig_Click(object sender, RoutedEventArgs e)
+        {
+            config.Open();
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using LightController.Config.Dmx;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using YamlDotNet.Core;
@@ -85,6 +86,15 @@ namespace LightController.Config
                     yield return new Tuple<TagName, Type>(attr.Tag, t);
                 }
             }
+        }
+
+        public void Open()
+        {
+            using Process fileopener = new Process();
+
+            fileopener.StartInfo.FileName = "explorer";
+            fileopener.StartInfo.Arguments = "\"" + GetUserFileLocation() + "\"";
+            fileopener.Start();
         }
     }
 }
