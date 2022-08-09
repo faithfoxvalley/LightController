@@ -109,9 +109,10 @@ namespace LightController
                 sw.Stop();
                 inputsTimer.Change(Math.Max(0, InputsUpdateRate - sw.ElapsedMilliseconds), Timeout.Infinite);
             }
-            catch (Exception e)
+            catch
             {
-                MessageBox.Show(e.ToString());
+                LogFile.Error("An error occurred while updating inputs!");
+                throw;
             }
         }
 
@@ -134,9 +135,10 @@ namespace LightController
                 sw.Stop();
                 dmxTimer.Change(Math.Max(0, DmxUpdateRate - sw.ElapsedMilliseconds), Timeout.Infinite);
             }
-            catch (Exception e)
+            catch
             {
-                MessageBox.Show(e.ToString());
+                LogFile.Error("An error occurred while updating dmx!");
+                throw;
             }
         }
 
