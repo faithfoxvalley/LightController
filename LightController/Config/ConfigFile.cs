@@ -21,10 +21,10 @@ namespace LightController.Config
         public string DefaultScene { get; set; }
 
         [YamlMember(Alias = "Pro", Description = "ProPresenter settings")]
-        public ProPresenterConfig ProPresenter { get; set; }
+        public ProPresenterConfig ProPresenter { get; set; } = new ProPresenterConfig();
 
         [YamlMember(Description = "DMX settings")]
-        public DmxConfig Dmx { get; set; }
+        public DmxConfig Dmx { get; set; } = new DmxConfig();
 
         [YamlMember(Description = "List of lighting scenes")]
         public List<Scene> Scenes { get; set; } = new List<Scene>();
