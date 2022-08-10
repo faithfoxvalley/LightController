@@ -13,5 +13,6 @@
         <ListBox x:Name="mediaList" Margin="331,63,10,10"/>
         <Button x:Name="btnOpenConfig" Content="Open Config" HorizontalAlignment="Left" Margin="24,23,0,0" VerticalAlignment="Top" Click="btnOpenConfig_Click"/>
         <Button x:Name="btnRestart" Content="Restart" HorizontalAlignment="Left" Margin="24,48,0,0" VerticalAlignment="Top" Click="btnRestart_Click"/>
+        <Button x:Name="btnTurnOff" Content="Exit" HorizontalAlignment="Left" Margin="24,73,0,0" VerticalAlignment="Top" Click="btnTurnOff_Click"/>
     </Grid>
 </Window>

@@ -159,5 +159,12 @@ namespace LightController
         {
             config.Open();
         }
+
+        private void btnTurnOff_Click(object sender, RoutedEventArgs e)
+        {
+            dmxTimer.Change(Timeout.Infinite, Timeout.Infinite);
+            dmx.TurnOff();
+            Application.Current.Shutdown();
+        }
     }
 }
