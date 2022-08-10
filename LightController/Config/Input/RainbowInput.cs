@@ -26,29 +26,18 @@ namespace LightController.Config.Input
 
         private Percent saturation;
         private DateTime startTime;
-        private ColorHSV color = new ColorHSV(0, 1, 1);
-        private object colorLock = new object();
 
         public override void Init()
         {
             startTime = DateTime.Now;
         }
 
-        public override Task UpdateAsync()
+        public override ColorRGB GetColor(int fixtureId)
         {
             double currentPosition = ((DateTime.Now - startTime).TotalSeconds) % CycleLength;
             double hue = (currentPosition / CycleLength) * 360;
-            lock(colorLock)
-                color = new ColorHSV(hue, saturation.Value, 1);
-            return Task.CompletedTask;
-        }
-
-        public override ColorRGB GetColor(int fixtureId)
-        {
-            ColorRGB result;
-            lock (colorLock)
-                result = (ColorRGB)color;
-            return result;
+            ColorHSV color = new ColorHSV(hue, saturation.Value, 1);
+            return (ColorRGB)color;
             
         }
     }
