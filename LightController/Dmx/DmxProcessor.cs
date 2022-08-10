@@ -10,11 +10,15 @@ namespace LightController.Dmx
     {
         private List<DmxFixture> fixtures = new List<DmxFixture>();
         private DmxController controller = new DmxController();
-        private bool foundDevice = false;
 
         public DmxProcessor(DmxConfig config)
         {
-
+            if(config == null)
+            {
+                MessageBox.Show("No DMX settings found, please check your config.");
+                Application.Current.Shutdown();
+                return;
+            }
 
             while (!OpenDevice(config.DmxDevice))
             {
