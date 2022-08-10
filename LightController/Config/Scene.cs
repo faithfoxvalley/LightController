@@ -30,6 +30,8 @@ namespace LightController.Config
         /// </summary>
         public void Init()
         {
+            if(Inputs == null)
+                Inputs = new List<InputBase>();
             foreach(InputBase input in Inputs)
                 input.Init();
         }
