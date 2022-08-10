@@ -14,5 +14,6 @@
         <Button x:Name="btnOpenConfig" Content="Open Config" HorizontalAlignment="Left" Margin="24,23,0,0" VerticalAlignment="Top" Click="btnOpenConfig_Click"/>
         <Button x:Name="btnRestart" Content="Restart" HorizontalAlignment="Left" Margin="24,48,0,0" VerticalAlignment="Top" Click="btnRestart_Click"/>
         <Button x:Name="btnTurnOff" Content="Exit" HorizontalAlignment="Left" Margin="24,73,0,0" VerticalAlignment="Top" Click="btnTurnOff_Click"/>
+        <Button x:Name="btnSaveConfig" Content="Save" HorizontalAlignment="Left" Margin="100,23,0,0" VerticalAlignment="Top" Click="btnSaveConfig_Click"/>
     </Grid>
 </Window>

@@ -160,5 +160,10 @@ namespace LightController
             dmx.TurnOff();
             Application.Current.Shutdown();
         }
+
+        private void btnSaveConfig_Click(object sender, RoutedEventArgs e)
+        {
+            config.Save();
+        }
     }
 }
