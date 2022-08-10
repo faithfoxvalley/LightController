@@ -11,6 +11,12 @@ namespace LightController.Config
         public double Value { get; private set; }
         private string stringValue;
 
+        public Percent(double value)
+        {
+            Value = Math.Clamp(value, 0, 1);
+            stringValue = $"{Value * 100:0.#}%";
+        }
+
         private Percent(string valueString, double value)
         {
             Value = Math.Clamp(value, 0, 1);
@@ -34,7 +40,7 @@ namespace LightController.Config
                 }
             }
 
-            return new Percent($"{defaultValue * 100:0.#}%", defaultValue);
+            return new Percent(defaultValue);
         }
 
         public override string ToString()
