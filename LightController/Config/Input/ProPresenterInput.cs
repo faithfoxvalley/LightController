@@ -118,27 +118,27 @@ namespace LightController.Config.Input
             }
         }
 
-        public override ColorRGB GetColor(int fixtureId)
+        public override ColorHSV GetColor(int fixtureId)
         {
             int index = idToIndex[fixtureId];
-            ColorRGB result;
+            ColorHSV result;
             lock(colorLock)
             {
                 if (colors == null)
                 {
-                    result = new ColorRGB();
+                    result = new ColorHSV(0, 1, 1);
                 }
                 else 
                 {
                     if (index >= colors.Length)
                         index = colors.Length - 1;
-                    result = colors[index];
+                    result = (ColorHSV)colors[index];
                 }
             }
             return result;
         }
 
-        public override double GetIntensity(int fixtureid, ColorRGB color)
+        public override double GetIntensity(int fixtureid, ColorHSV color)
         {
             // intensity provided by user
             double targetMaxIntensity = intensity.Value ?? 1;
@@ -153,7 +153,7 @@ namespace LightController.Config.Input
                 minChannelValue = minColorValue / 255d;
             }
 
-            double thisIntensity = color.Max() / 255d;
+            double thisIntensity = color.Value;
 
             if(minChannelValue == maxChannelValue || targetMinIntensity == targetMaxIntensity)
                 return targetMaxIntensity;

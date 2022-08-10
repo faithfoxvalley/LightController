@@ -9,7 +9,7 @@ namespace LightController.Config.Input
         private const string pickerName = "colorPicker";
 
         private ColorPicker.StandardColorPicker picker;
-        private ColorRGB rgb = new ColorRGB();
+        private ColorHSV hsv = new ColorHSV(0, 1, 1);
         private double pickerIntensity = 1;
 
         public override void Init()
@@ -27,16 +27,16 @@ namespace LightController.Config.Input
 
         private void Picker_ColorChanged(object sender, RoutedEventArgs e)
         {
-            rgb = ColorRGB.FromColor(picker.SelectedColor);
+            hsv = (ColorHSV)ColorRGB.FromColor(picker.SelectedColor);
             pickerIntensity = picker.SelectedColor.A / 255d;
         }
 
-        public override ColorRGB GetColor(int fixtureId)
+        public override ColorHSV GetColor(int fixtureId)
         {
-            return rgb;
+            return hsv;
         }
 
-        public override double GetIntensity(int fixtureId, ColorRGB target)
+        public override double GetIntensity(int fixtureId, ColorHSV target)
         {
             return pickerIntensity * base.GetIntensity(fixtureId, target);
         }

@@ -32,12 +32,11 @@ namespace LightController.Config.Input
             startTime = DateTime.Now;
         }
 
-        public override ColorRGB GetColor(int fixtureId)
+        public override ColorHSV GetColor(int fixtureId)
         {
             double currentPosition = ((DateTime.Now - startTime).TotalSeconds) % CycleLength;
             double hue = (currentPosition / CycleLength) * 360;
-            ColorHSV color = new ColorHSV(hue, saturation.Value, 1);
-            return (ColorRGB)color;
+            return new ColorHSV(hue, saturation.Value, 1);
             
         }
     }

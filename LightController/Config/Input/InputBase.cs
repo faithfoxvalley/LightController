@@ -57,9 +57,9 @@ namespace LightController.Config.Input
             return Task.CompletedTask;
         }
 
-        public abstract ColorRGB GetColor(int fixtureId);
+        public abstract ColorHSV GetColor(int fixtureId);
 
-        public virtual double GetIntensity(int fixtureid, ColorRGB target)
+        public virtual double GetIntensity(int fixtureid, ColorHSV target)
         {
             return intensity.GetIntensity(target);
         }

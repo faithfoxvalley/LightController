@@ -89,7 +89,7 @@ namespace LightController.Dmx
         {
             frame.Reset();
 
-            ColorRGB rgb;
+            ColorHSV hsv;
             double intensity;
 
             lock (inputLock)
@@ -97,20 +97,12 @@ namespace LightController.Dmx
                 if (input == null)
                     return frame;
 
-                rgb = input.GetColor(fixtureId);
-                intensity = input.GetIntensity(fixtureId, rgb);
+                hsv = input.GetColor(fixtureId);
+                intensity = input.GetIntensity(fixtureId, hsv);
             }
 
             // Make a copy with maximum intensity
-            double hueIntensity = rgb.Max();
-            if (hueIntensity > 0)
-                hueIntensity = 255d / hueIntensity;
-            else
-                hueIntensity = 1;
-            rgb = new ColorRGB(
-                (byte)(rgb.Red * hueIntensity),
-                (byte)(rgb.Green * hueIntensity),
-                (byte)(rgb.Blue * hueIntensity));
+            ColorRGB rgb = (ColorRGB)new ColorHSV(hsv.Hue, hsv.Saturation, 1);
 
 
             double maxValue = double.NegativeInfinity;

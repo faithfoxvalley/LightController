@@ -52,6 +52,14 @@ namespace LightController.Config.Input
             return rgb.Max() / 255d;
         }
 
+        public double GetIntensity(ColorHSV hsv)
+        {
+            if (intensity.HasValue)
+                return intensity.Value;
+
+            return hsv.Value;
+        }
+
         public override string ToString()
         {
             return intensity.HasValue ? intensityString : "auto";
