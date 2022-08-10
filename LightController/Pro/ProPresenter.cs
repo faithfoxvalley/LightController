@@ -25,10 +25,22 @@ namespace LightController.Pro
 
         public ProPresenter(Config.ProPresenterConfig config, System.Windows.Controls.ListBox mediaList)
         {
+            if(config?.ApiUrl == null)
+            {
+                MessageBox.Show("No ProPresenter api url found, please check your config.");
+                Application.Current.Shutdown();
+                return;
+            }
             url = config.ApiUrl;
             if(!url.EndsWith('/'))
                 url += '/';
 
+            if (config.MediaAssetsPath == null)
+            {
+                MessageBox.Show("No ProPresenter media assets path found, please check your config.");
+                Application.Current.Shutdown();
+                return;
+            }
             mediaPath = config.MediaAssetsPath;
             if (!mediaPath.EndsWith('/'))
                 mediaPath += '/';
