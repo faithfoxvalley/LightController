@@ -19,6 +19,7 @@ namespace LightController.Config.Input
         private byte maxColorValue;
         private byte minColorValue;
         private int pixelWidth;
+        private Percent saturation = new Percent(1);
         private object colorLock = new object();
         private InputIntensity minIntensity = new InputIntensity();
         private static CancellationTokenSource cts = new CancellationTokenSource();
@@ -36,6 +37,12 @@ namespace LightController.Config.Input
             {
                 minIntensity = InputIntensity.Parse(value);
             }
+        }
+
+        public string Saturation
+        {
+            get => saturation.ToString();
+            set => saturation = Percent.Parse(value, 1);
         }
 
         public ProPresenterInput() { }
@@ -135,6 +142,8 @@ namespace LightController.Config.Input
                     result = (ColorHSV)colors[index];
                 }
             }
+            if (result.Saturation > saturation.Value)
+                result.Saturation = saturation.Value;
             return result;
         }
 
