@@ -15,8 +15,7 @@ namespace LightController.Dmx
         {
             if(config == null)
             {
-                MessageBox.Show("No DMX settings found, please check your config.");
-                Application.Current.Shutdown();
+                ErrorBox.Show("No DMX settings found, please check your config.");
                 return;
             }
 
@@ -25,13 +24,7 @@ namespace LightController.Dmx
 #if DEBUG
                 break;
 #else
-                var result = MessageBox.Show("DMX Device not found. Press OK to try again or Cancel to exit.", 
-                    "Light Controller", MessageBoxButton.OKCancel);
-                if(result == MessageBoxResult.Cancel)
-                {
-                    Application.Current.Shutdown();
-                    return;
-                }
+                ErrorBox.ExitOnCancel("DMX Device not found. Press OK to try again or Cancel to exit."); 
 #endif
             }
 

@@ -27,8 +27,7 @@ namespace LightController.Pro
         {
             if(config?.ApiUrl == null)
             {
-                MessageBox.Show("No ProPresenter api url found, please check your config.");
-                Application.Current.Shutdown();
+                ErrorBox.Show("No ProPresenter api url found, please check your config.");
                 return;
             }
             url = config.ApiUrl;
@@ -37,8 +36,7 @@ namespace LightController.Pro
 
             if (config.MediaAssetsPath == null)
             {
-                MessageBox.Show("No ProPresenter media assets path found, please check your config.");
-                Application.Current.Shutdown();
+                ErrorBox.Show("No ProPresenter media assets path found, please check your config.");
                 return;
             }
             mediaPath = config.MediaAssetsPath;
