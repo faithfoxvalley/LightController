@@ -2,6 +2,7 @@
 using OpenDMX.NET;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
 
 namespace LightController.Dmx
 {
@@ -13,18 +14,20 @@ namespace LightController.Dmx
 
         public DmxProcessor(DmxConfig config)
         {
-            var devices = controller.GetDevices();
-            if(config.DmxDevice < devices.Length)
-            {
-                controller.Open(config.DmxDevice);
-                foundDevice = true;
-            }
 
-            if(!foundDevice)
+
+            while (!OpenDevice(config.DmxDevice))
             {
-                LogFile.Error("No DMX interface detected!");
-#if !DEBUG
-                throw new Exception("No DMX interface detected!");
+#if DEBUG
+                break;
+#else
+                var result = MessageBox.Show("DMX Device not found. Press OK to try again or Cancel to exit.", 
+                    "Light Controller", MessageBoxButton.OKCancel);
+                if(result == MessageBoxResult.Cancel)
+                {
+                    Application.Current.Shutdown();
+                    return;
+                }
 #endif
             }
 
@@ -41,16 +44,36 @@ namespace LightController.Dmx
             }
         }
 
+        private bool OpenDevice(uint deviceIndex)
+        {
+            var devices = controller.GetDevices();
+            if (deviceIndex < devices.Length)
+            {
+                try
+                {
+                    controller.Open(deviceIndex);
+                    return true;
+                }
+                catch { }
+            }
+            return false;
+        }
+
         /// <summary>
         /// Turns off all fixtures
         /// </summary>
         public void TurnOff()
         {
+            if (!controller.IsOpen)
+                return;
+
             foreach (DmxFixture fixture in fixtures)
             {
                 DmxFrame frame = fixture.GetOffFrame();
                 controller.SetChannels(frame.StartAddress, frame.Data);
             }
+
+            controller.WriteData();
         }
 
         public void SetInputs(IEnumerable<Config.Input.InputBase> inputs)
