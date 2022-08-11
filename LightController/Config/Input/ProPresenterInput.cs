@@ -80,7 +80,7 @@ namespace LightController.Config.Input
 
                 Progress<double> progress = new Progress<double>();
                 progress.ProgressChanged += ReportMediaProgress;
-                ReportMediaProgress(null, 0);
+                ReportMediaProgress(null, double.NaN);
 
                 try
                 {
