@@ -44,6 +44,12 @@ namespace LightController
                 "[" + Environment.CurrentManagedThreadId.ToString() + "] An exception was thrown:");
         }
 
+        public static void Error(Exception ex, string msg)
+        {
+            log.Error(ex,
+                "[" + Environment.CurrentManagedThreadId.ToString() + "] " + msg);
+        }
+
         private static void Write(Serilog.Events.LogEventLevel level, string msg)
         {
             msg = "[" + Environment.CurrentManagedThreadId.ToString() + "] " + msg;

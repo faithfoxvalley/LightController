@@ -18,6 +18,7 @@ namespace LightController
     {
         private const int DmxUpdateRate = 40;
         private const int InputsUpdateRate = 200;
+        private const int ErrorTimeout = 5000;
 
         private ProPresenter pro;
         private IMediaToolkitService ffmpeg;
@@ -105,16 +106,17 @@ namespace LightController
                     await sceneManager.ActivateSceneAsync();
                     inputActivated = true;
                 }
+                throw new Exception();
 
                 await sceneManager.UpdateAsync();
 
                 sw.Stop();
                 inputsTimer.Change(Math.Max(0, InputsUpdateRate - sw.ElapsedMilliseconds), Timeout.Infinite);
             }
-            catch
+            catch (Exception ex)
             {
-                LogFile.Error("An error occurred while updating inputs!");
-                throw;
+                LogFile.Error(ex, "An error occurred while updating inputs!");
+                inputsTimer.Change(ErrorTimeout, Timeout.Infinite);
             }
         }
 
@@ -132,9 +134,8 @@ namespace LightController
             }
             catch(Exception ex)
             {
-                LogFile.Error("An error occurred while updating dmx!");
-                LogFile.Error(ex);
-                throw;
+                LogFile.Error(ex, "An error occurred while updating dmx!");
+                dmxTimer.Change(ErrorTimeout, Timeout.Infinite);
             }
         }
 
