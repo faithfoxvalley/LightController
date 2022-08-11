@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:LightController" xmlns:colorpicker="clr-namespace:ColorPicker;assembly=ColorPicker"
         mc:Ignorable="d"
         Title="Light Controller" Height="450" Width="800" Closing="mainWindow_Closing"
-        MinHeight="200px" MinWidth="400px">
+        MinHeight="200px" MinWidth="500px">
 
     <DockPanel>
         <Menu DockPanel.Dock="Top">
@@ -27,19 +27,23 @@
             <Label Content="Fixtures" Grid.Row="0"/>
             <ListBox x:Name="fixtureList" Grid.Row="1"/>
         </Grid>
+        <Grid DockPanel.Dock="Left" MaxWidth="100px" Margin="10,10,0,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Label Content="Scenes" Grid.Row="0"/>
+            <ListBox x:Name="sceneList" HorizontalAlignment="Left" Grid.Row="1" PreviewMouseDown="sceneList_PreviewMouseDown"/>
+        </Grid>
         <Grid Margin="10,10,10,10">
             <Grid.RowDefinitions>
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
-                <RowDefinition Height="auto"/>
-                <RowDefinition Height="auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
-            <Label Content="Scene" Grid.Row="0"/>
-            <ComboBox x:Name="listScene" HorizontalAlignment="Left" Width="120" IsEnabled="False" Grid.Row="1"/>
-            <Label Content="ProPresenter Media" HorizontalAlignment="Left" Grid.Row="2"/>
-            <ProgressBar x:Name="mediaProgress" Height="15" Grid.Row="3" Minimum="0" Maximum="1"/>
-            <ListBox x:Name="mediaList" Grid.Row="4"/>
+            <Label Content="ProPresenter Media" HorizontalAlignment="Left" Grid.Row="0"/>
+            <ProgressBar x:Name="mediaProgress" Height="15" Grid.Row="1" Minimum="0" Maximum="1"/>
+            <ListBox x:Name="mediaList" Grid.Row="2"/>
         </Grid>
     </DockPanel>
 </Window>

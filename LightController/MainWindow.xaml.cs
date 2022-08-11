@@ -50,14 +50,10 @@ namespace LightController
             pro = new ProPresenter(config.ProPresenter, mediaList);
             dmx = new DmxProcessor(config.Dmx, config.SceneTransitionTime);
             dmx.TurnOff();
-            sceneManager = new SceneManager(config.Scenes, config.MidiDevice, config.DefaultScene, dmx, listScene);
+            sceneManager = new SceneManager(config.Scenes, config.MidiDevice, config.DefaultScene, dmx, sceneList);
 
+            // Update fixture list
             dmx.AppendToListbox(fixtureList);
-
-            // Update scene combobox
-            foreach (var scene in config.Scenes)
-                listScene.Items.Add(scene.Name);
-            listScene.SelectionChanged += ListScene_SelectionChanged;
 
             // https://stackoverflow.com/a/12797382
             dmxTimer = new Timer(UpdateDmx, null, DmxUpdateRate, Timeout.Infinite);
@@ -89,11 +85,6 @@ namespace LightController
 
             LogFile.Init(Path.Combine(ApplicationData, "Logs", appname + ".log"));
             LogFile.Info("Started application");
-        }
-
-        private void ListScene_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
-        {
-
         }
 
         // This runs on a different thread
@@ -172,6 +163,12 @@ namespace LightController
         private void btnSaveConfig_Click(object sender, RoutedEventArgs e)
         {
             config.Save();
+        }
+
+        private void sceneList_PreviewMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            // Disables selection
+            e.Handled = true;
         }
     }
 }

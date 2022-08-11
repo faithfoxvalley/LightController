@@ -13,13 +13,15 @@ namespace LightController
         private Scene activeScene;
         private MidiInput midiDevice;
         private DmxProcessor dmx;
-        private System.Windows.Controls.ComboBox sceneList;
+        private System.Windows.Controls.ListBox sceneList;
 
-        public SceneManager(List<Scene> scenes, string midiDevice, string defaultScene, DmxProcessor dmx, System.Windows.Controls.ComboBox sceneList)
+        public SceneManager(List<Scene> scenes, string midiDevice, string defaultScene, DmxProcessor dmx, System.Windows.Controls.ListBox sceneList)
         {
             this.scenes = scenes;
             this.dmx = dmx;
             this.sceneList = sceneList;
+            foreach (var scene in scenes)
+                sceneList.Items.Add(scene.Name);
 
             MidiDeviceList midiDevices = new MidiDeviceList();
 
