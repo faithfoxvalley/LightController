@@ -11,7 +11,7 @@ namespace LightController.Dmx
         private List<DmxFixture> fixtures = new List<DmxFixture>();
         private DmxController controller = new DmxController();
 
-        public DmxProcessor(DmxConfig config)
+        public DmxProcessor(DmxConfig config, double mixLength)
         {
             if(config == null)
             {
@@ -28,6 +28,9 @@ namespace LightController.Dmx
 #endif
             }
 
+            if (double.IsNaN(mixLength) || double.IsInfinity(mixLength))
+                mixLength = 0;
+
             Dictionary<string, DmxDeviceProfile> profiles = config.Fixtures.ToDictionary(x => x.Name);
             foreach(DmxDeviceAddress fixtureAddress in config.Addresses)
             {
@@ -35,7 +38,7 @@ namespace LightController.Dmx
                 int address = fixtureAddress.StartAddress;
                 for (int i = 0; i < fixtureAddress.Count; i++)
                 {
-                    fixtures.Add(new DmxFixture(profile, address, fixtures.Count + 1));
+                    fixtures.Add(new DmxFixture(profile, address, fixtures.Count + 1, mixLength));
                     address += profile.DmxLength;
                 }
             }

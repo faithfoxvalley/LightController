@@ -48,7 +48,7 @@ namespace LightController
             config = ConfigFile.Load();
 
             pro = new ProPresenter(config.ProPresenter, mediaList);
-            dmx = new DmxProcessor(config.Dmx);
+            dmx = new DmxProcessor(config.Dmx, config.SceneTransitionTime);
             dmx.TurnOff();
             sceneManager = new SceneManager(config.Scenes, config.MidiDevice, config.DefaultScene, dmx, listScene);
 

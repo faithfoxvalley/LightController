@@ -12,16 +12,19 @@ namespace LightController.Dmx
         private List<int> colorChannels;
         private bool hasIntensity;
         private Config.Input.InputBase input;
+        private bool newInput;
         private object inputLock = new object();
         private int fixtureId;
+        private double mixLength;
 
-        public DmxFixture(Config.Dmx.DmxDeviceProfile profile, int dmxStartAddress, int fixtureId)
+        public DmxFixture(Config.Dmx.DmxDeviceProfile profile, int dmxStartAddress, int fixtureId, double mixLength)
         {
             frame = new DmxFrame(profile.DmxLength, dmxStartAddress);
             addressMap = profile.AddressMap.Where(x => x != null).OrderByDescending(x => x.MaskSize).ToList();
             colorChannels = addressMap.Where(x => x.IsColor).Select(x => x.Index).ToList();
             hasIntensity = addressMap.Find(x => x.IsIntensity) != null;
             this.fixtureId = fixtureId;
+            this.mixLength = mixLength;
 
             CompensateForLumens();
         }
@@ -74,6 +77,7 @@ namespace LightController.Dmx
                     lock(inputLock)
                     {
                         this.input = input;
+                        newInput = true;
                     }
                     return;
                 }
@@ -82,7 +86,9 @@ namespace LightController.Dmx
             lock(inputLock)
             {
                 this.input = null;
+                newInput = true;
             }
+
         }
 
         public DmxFrame GetFrame()
@@ -94,8 +100,17 @@ namespace LightController.Dmx
 
             lock (inputLock)
             {
+                if (newInput)
+                {
+                    frame.StartMix(mixLength);
+                    newInput = false;
+                }
+
                 if (input == null)
+                {
+                    frame.Mix();
                     return frame;
+                }
 
                 hsv = input.GetColor(fixtureId);
                 intensity = input.GetIntensity(fixtureId, hsv);
@@ -137,6 +152,7 @@ namespace LightController.Dmx
                     frame.Set(colorIndex, frame.Get(colorIndex) * maxValue);
             }
 
+            frame.Mix();
             return frame;
         }
 

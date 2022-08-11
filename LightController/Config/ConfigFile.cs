@@ -29,6 +29,9 @@ namespace LightController.Config
         [YamlMember(Description = "List of lighting scenes")]
         public List<Scene> Scenes { get; set; } = new List<Scene>();
 
+        [YamlMember(Description = "Transition time in seconds for switching scenes")]
+        public double SceneTransitionTime { get; set; } = 1;
+
         public ConfigFile() { }
 
 
