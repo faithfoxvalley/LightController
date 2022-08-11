@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
@@ -46,7 +47,7 @@ namespace LightController.Pro
             this.mediaList = mediaList;
         }
 
-        public async Task<ProMediaItem> GetCurrentMediaAsync (bool motion, CancellationToken cancelToken, int? id = null)
+        public async Task<ProMediaItem> GetCurrentMediaAsync (bool motion, IProgress<double> progress, CancellationToken cancelToken, int? id = null)
         {
             string mediaName;
             if(id.HasValue && mediaNames.TryGetValue(id.Value, out mediaName))
@@ -82,7 +83,7 @@ namespace LightController.Pro
                     Path.Combine(MainWindow.Instance.ApplicationData, MotionCache),
                     mediaName,
                     status.duration,
-                    cancelToken);
+                    progress, cancelToken);
                 media[mediaName] = mediaItem;
                 AddToMediaList(mediaName + " (motion)");
                 LogFile.Info("Finished media generation for " + mediaName);
@@ -98,7 +99,7 @@ namespace LightController.Pro
                     Path.Combine(MainWindow.Instance.ApplicationData, ThumbnailCache),
                     mediaName,
                     0,
-                    cancelToken);
+                    progress, cancelToken);
                 thumbnails[mediaName] = mediaItem;
                 AddToMediaList(mediaName + " (thumbnail)");
                 LogFile.Info("Finished thumbnail generation for " + mediaName);

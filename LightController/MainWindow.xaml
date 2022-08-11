@@ -37,8 +37,8 @@
             </Grid.RowDefinitions>
             <Label Content="Scene" Grid.Row="0"/>
             <ComboBox x:Name="listScene" HorizontalAlignment="Left" Width="120" IsEnabled="False" Grid.Row="1"/>
-            <Label Content="ProPresenter" HorizontalAlignment="Left" Grid.Row="2"/>
-            <ProgressBar HorizontalAlignment="Center" Height="13"  VerticalAlignment="Top" Width="719" Grid.Row="3"/>
+            <Label Content="ProPresenter Media" HorizontalAlignment="Left" Grid.Row="2"/>
+            <ProgressBar x:Name="mediaProgress" Height="15" Grid.Row="3" Minimum="0" Maximum="1"/>
             <ListBox x:Name="mediaList" Grid.Row="4"/>
         </Grid>
     </DockPanel>

@@ -43,16 +43,19 @@ namespace LightController.Pro
             return newData;
         }
 
-        public static Task<ProMediaItem> GetItemAsync(string mediaFolder, string cacheFolder, string file, double length, CancellationToken cancelToken)
+        public static Task<ProMediaItem> GetItemAsync(string mediaFolder, string cacheFolder, string file, double length, IProgress<double> progress, CancellationToken cancelToken)
         {
             Directory.CreateDirectory(cacheFolder);
             string cacheFile = Path.Combine(cacheFolder, Path.ChangeExtension(file, "bin"));
             if(File.Exists(cacheFile))
+            {
+                progress.Report(double.NaN);
                 return LoadItemAsync(cacheFile, cancelToken);
-            return CreateItemAsync(Path.Combine(mediaFolder, file), cacheFile, length, cancelToken);
+            }
+            return CreateItemAsync(Path.Combine(mediaFolder, file), cacheFile, length, progress, cancelToken);
         }
 
-        private static async Task<ProMediaItem> CreateItemAsync(string mediaPath, string cacheFile, double fileLength, CancellationToken cancelToken)
+        private static async Task<ProMediaItem> CreateItemAsync(string mediaPath, string cacheFile, double fileLength, IProgress<double> progress, CancellationToken cancelToken)
         {
             GetThumbnailOptions options = new GetThumbnailOptions
             {
@@ -64,6 +67,8 @@ namespace LightController.Pro
             List<MediaFrame> frames = new List<MediaFrame>(); 
             for (double time = 0; time < fileLength || time == 0; time += FrameInterval)
             {
+                progress.Report(fileLength > 0 ? time / fileLength : 0);
+
                 options.SeekSpan = TimeSpan.FromSeconds(time);
 
                 GetThumbnailResult thumbnailResult = await MainWindow.Instance.Ffmpeg.ExecuteAsync(new FfTaskGetThumbnail(
@@ -79,6 +84,8 @@ namespace LightController.Pro
                     frames.Add(frame);
                 }
             }
+
+            progress.Report(double.NaN);
 
             cancelToken.ThrowIfCancellationRequested();
 

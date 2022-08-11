@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace LightController.Config.Input
 {
@@ -77,10 +78,14 @@ namespace LightController.Config.Input
             {
                 cts = myCts;
 
+                Progress<double> progress = new Progress<double>();
+                progress.ProgressChanged += ReportMediaProgress;
+                ReportMediaProgress(null, 0);
+
                 try
                 {
                     Stopwatch sw = Stopwatch.StartNew();
-                    ProMediaItem newMedia = await pro.GetCurrentMediaAsync(HasMotion, cts.Token, id);
+                    ProMediaItem newMedia = await pro.GetCurrentMediaAsync(HasMotion, progress, cts.Token, id);
                     media = newMedia;
                     if (!HasMotion)
                     {
@@ -102,11 +107,28 @@ namespace LightController.Config.Input
                     LogFile.Info($"Canceled {(HasMotion ? "media" : "thumbnail")} generation");
                 }
 
+                ReportMediaProgress(null, 0);
                 if (cts == myCts)
                     cts = null;
 
             }
 
+        }
+
+        private void ReportMediaProgress(object sender, double percent)
+        {
+            Application.Current.Dispatcher.BeginInvoke(() =>
+            {
+                if (double.IsNaN(percent))
+                {
+                    MainWindow.Instance.mediaProgress.IsIndeterminate = true;
+                }
+                else
+                {
+                    MainWindow.Instance.mediaProgress.IsIndeterminate = false;
+                    MainWindow.Instance.mediaProgress.Value = percent;
+                }
+            });
         }
 
         public override async Task UpdateAsync()
