@@ -44,6 +44,13 @@ namespace LightController.Dmx
             }
         }
 
+        public void AppendToListbox(System.Windows.Controls.ListBox list)
+        {
+            list.Items.Clear();
+            foreach (DmxFixture fixture in fixtures)
+                list.Items.Add(fixture);
+        }
+
         private bool OpenDevice(uint deviceIndex)
         {
             var devices = controller.GetDevices();

@@ -16,9 +16,12 @@ namespace LightController.Dmx
         private object inputLock = new object();
         private int fixtureId;
         private double mixLength;
+        private string detailString;
 
         public DmxFixture(Config.Dmx.DmxDeviceProfile profile, int dmxStartAddress, int fixtureId, double mixLength)
         {
+            detailString = $"{fixtureId} - {profile.Name} - {dmxStartAddress}-{dmxStartAddress + profile.DmxLength - 1}";
+
             frame = new DmxFrame(profile.DmxLength, dmxStartAddress);
             addressMap = profile.AddressMap.Where(x => x != null).OrderByDescending(x => x.MaskSize).ToList();
             colorChannels = addressMap.Where(x => x.IsColor).Select(x => x.Index).ToList();
@@ -160,6 +163,11 @@ namespace LightController.Dmx
         {
             frame.Reset();
             return frame;
+        }
+
+        public override string ToString()
+        {
+            return detailString;
         }
     }
 }

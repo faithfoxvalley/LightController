@@ -52,6 +52,8 @@ namespace LightController
             dmx.TurnOff();
             sceneManager = new SceneManager(config.Scenes, config.MidiDevice, config.DefaultScene, dmx, listScene);
 
+            dmx.AppendToListbox(fixtureList);
+
             // Update scene combobox
             foreach (var scene in config.Scenes)
                 listScene.Items.Add(scene.Name);
