@@ -3,7 +3,7 @@ using System.Windows;
 
 namespace LightController.Config.Input
 {
-    [YamlTag("!debug_input")]
+    //[YamlTag("!debug_input")]
     public class DebugInput : InputBase
     {
         private const string pickerName = "colorPicker";
