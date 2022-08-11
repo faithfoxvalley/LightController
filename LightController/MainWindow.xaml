@@ -25,7 +25,7 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             <Label Content="Fixtures" Grid.Row="0"/>
-            <ListBox x:Name="fixtureList" Grid.Row="1"/>
+            <ListBox x:Name="fixtureList" Grid.Row="1" PreviewMouseDown="ListBox_DisableMouseDown"/>
         </Grid>
         <Grid DockPanel.Dock="Left" MaxWidth="100px" Margin="10,10,0,0">
             <Grid.RowDefinitions>
@@ -33,7 +33,7 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             <Label Content="Scenes" Grid.Row="0"/>
-            <ListBox x:Name="sceneList" HorizontalAlignment="Left" Grid.Row="1" PreviewMouseDown="sceneList_PreviewMouseDown"/>
+            <ListBox x:Name="sceneList" HorizontalAlignment="Left" Grid.Row="1" PreviewMouseDown="ListBox_DisableMouseDown"/>
         </Grid>
         <Grid Margin="10,10,10,10">
             <Grid.RowDefinitions>
@@ -43,7 +43,7 @@
             </Grid.RowDefinitions>
             <Label Content="ProPresenter Media" HorizontalAlignment="Left" Grid.Row="0"/>
             <ProgressBar x:Name="mediaProgress" Height="15" Grid.Row="1" Minimum="0" Maximum="1"/>
-            <ListBox x:Name="mediaList" Grid.Row="2"/>
+            <ListBox x:Name="mediaList" Grid.Row="2" PreviewMouseDown="ListBox_DisableMouseDown"/>
         </Grid>
     </DockPanel>
 </Window>

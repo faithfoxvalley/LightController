@@ -165,7 +165,7 @@ namespace LightController
             config.Save();
         }
 
-        private void sceneList_PreviewMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void ListBox_DisableMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             // Disables selection
             e.Handled = true;
