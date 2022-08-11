@@ -106,7 +106,6 @@ namespace LightController
                     await sceneManager.ActivateSceneAsync();
                     inputActivated = true;
                 }
-                throw new Exception();
 
                 await sceneManager.UpdateAsync();
 
