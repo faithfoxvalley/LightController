@@ -5,15 +5,41 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LightController" xmlns:colorpicker="clr-namespace:ColorPicker;assembly=ColorPicker"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800" Closing="mainWindow_Closing">
-    <Grid>
-        <ComboBox x:Name="listScene" Width="120" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="331,33,0,0" IsEnabled="False"/>
-        <Label x:Name="labelScene" Content="Active scene:" HorizontalAlignment="Left" Margin="331,7,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.585,-0.11"/>
-        <colorpicker:StandardColorPicker x:Name="colorPicker" Width="200" Height="380" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="108,33,0,0"/>
-        <ListBox x:Name="mediaList" Margin="331,63,10,10"/>
-        <Button x:Name="btnOpenConfig" Content="Open Config" HorizontalAlignment="Left" Margin="24,23,0,0" VerticalAlignment="Top" Click="btnOpenConfig_Click"/>
-        <Button x:Name="btnRestart" Content="Restart" HorizontalAlignment="Left" Margin="24,48,0,0" VerticalAlignment="Top" Click="btnRestart_Click"/>
-        <Button x:Name="btnTurnOff" Content="Exit" HorizontalAlignment="Left" Margin="24,73,0,0" VerticalAlignment="Top" Click="btnTurnOff_Click"/>
-        <Button x:Name="btnSaveConfig" Content="Save" HorizontalAlignment="Left" Margin="100,23,0,0" VerticalAlignment="Top" Click="btnSaveConfig_Click"/>
-    </Grid>
+        Title="Light Controller" Height="450" Width="800" Closing="mainWindow_Closing"
+        MinHeight="200px" MinWidth="400px">
+
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_Application">
+                <MenuItem Header="_Restart" Click="btnRestart_Click"/>
+                <MenuItem Header="_Close" Click="btnTurnOff_Click"/>
+            </MenuItem>
+            <MenuItem Header="_Config">
+                <MenuItem Header="_Open" Click="btnOpenConfig_Click"/>
+                <MenuItem Header="_Save" Click="btnSaveConfig_Click"/>
+            </MenuItem>
+        </Menu>
+        <Grid DockPanel.Dock="Right" MaxWidth="200px" Margin="0,0,10,10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Label Content="Fixtures" Grid.Row="0"/>
+            <ListBox x:Name="fixtureList" Grid.Row="1"/>
+        </Grid>
+        <Grid Margin="10,10,10,10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Label Content="Scene" Grid.Row="0"/>
+            <ComboBox x:Name="listScene" HorizontalAlignment="Left" Width="120" IsEnabled="False" Grid.Row="1"/>
+            <Label Content="ProPresenter" HorizontalAlignment="Left" Grid.Row="2"/>
+            <ProgressBar HorizontalAlignment="Center" Height="13"  VerticalAlignment="Top" Width="719" Grid.Row="3"/>
+            <ListBox x:Name="mediaList" Grid.Row="4"/>
+        </Grid>
+    </DockPanel>
 </Window>
