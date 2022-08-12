@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LightController" xmlns:colorpicker="clr-namespace:ColorPicker;assembly=ColorPicker"
         mc:Ignorable="d"
-        Title="Light Controller" Height="450" Width="800" Closing="mainWindow_Closing"
+        Title="Light Controller" Height="450" Width="800"
         MinHeight="200px" MinWidth="500px">
 
     <DockPanel>

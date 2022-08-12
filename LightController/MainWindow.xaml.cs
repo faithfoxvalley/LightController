@@ -28,7 +28,6 @@ namespace LightController
         private Timer dmxTimer; // Runs on different thread
         private Timer inputsTimer; // Runs on different thread
         private bool inputActivated = false;
-        private bool shutdown = false;
 
         public static MainWindow Instance { get; private set; }
 
@@ -131,18 +130,8 @@ namespace LightController
             }
         }
 
-        private void mainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-            if(!shutdown)
-            {
-                dmxTimer.Change(Timeout.Infinite, Timeout.Infinite);
-                dmx.TurnOff();
-            }
-        }
-
         private void btnRestart_Click(object sender, RoutedEventArgs e)
         {
-            shutdown = true;
             Process.Start(Process.GetCurrentProcess().MainModule.FileName);
             Application.Current.Shutdown();
         }
@@ -156,7 +145,6 @@ namespace LightController
         {
             dmxTimer.Change(Timeout.Infinite, Timeout.Infinite);
             dmx.TurnOff();
-            shutdown = true;
             Application.Current.Shutdown();
         }
 
