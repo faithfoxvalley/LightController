@@ -170,5 +170,12 @@ namespace LightController
             // Disables selection
             e.Handled = true;
         }
+
+        private void ShowLogs_Click(object sender, RoutedEventArgs e)
+        {
+            string logs = Path.Combine(ApplicationData, "Logs");
+            if(Directory.Exists(logs))
+                Process.Start("explorer.exe", "\"" + logs + "\"");
+        }
     }
 }
