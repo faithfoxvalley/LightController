@@ -71,16 +71,8 @@ namespace LightController.Dmx
         /// </summary>
         public void TurnOff()
         {
-            if (!controller.IsOpen)
-                return;
-
             foreach (DmxFixture fixture in fixtures)
-            {
-                DmxFrame frame = fixture.GetOffFrame();
-                controller.SetChannels(frame.StartAddress, frame.Data);
-            }
-
-            controller.WriteData();
+                fixture.TurnOff();
         }
 
         public void SetInputs(IEnumerable<Config.Input.InputBase> inputs)

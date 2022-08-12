@@ -12,6 +12,7 @@ namespace LightController.Dmx
         private List<int> colorChannels;
         private bool hasIntensity;
         private Config.Input.InputBase input;
+        private bool disabled;
         private bool newInput;
         private object inputLock = new object();
         private int fixtureId;
@@ -71,6 +72,16 @@ namespace LightController.Dmx
             }
         }
 
+        public void TurnOff()
+        {
+            lock(inputLock)
+            {
+                disabled = true;
+                input = null;
+                newInput = true;
+            }
+        }
+
         public void SetInput(IEnumerable<Config.Input.InputBase> inputs)
         {
             foreach(var input in inputs)
@@ -79,8 +90,11 @@ namespace LightController.Dmx
                 {
                     lock(inputLock)
                     {
-                        this.input = input;
-                        newInput = true;
+                        if(!disabled)
+                        {
+                            this.input = input;
+                            newInput = true;
+                        }
                     }
                     return;
                 }
@@ -88,8 +102,11 @@ namespace LightController.Dmx
 
             lock(inputLock)
             {
-                this.input = null;
-                newInput = true;
+                if (!disabled)
+                {
+                    this.input = null;
+                    newInput = true;
+                }
             }
 
         }
@@ -111,6 +128,11 @@ namespace LightController.Dmx
 
                 if (input == null)
                 {
+                    foreach (DmxChannel channel in addressMap)
+                    {
+                        if (channel.Constant.HasValue)
+                            frame.Set(channel.Index, channel.Constant.Value);
+                    }
                     frame.Mix();
                     return frame;
                 }

@@ -48,7 +48,6 @@ namespace LightController
 
             pro = new ProPresenter(config.ProPresenter, mediaList);
             dmx = new DmxProcessor(config.Dmx, config.SceneTransitionTime);
-            dmx.TurnOff();
             sceneManager = new SceneManager(config.Scenes, config.MidiDevice, config.DefaultScene, dmx, sceneList);
 
             // Update fixture list
@@ -133,7 +132,7 @@ namespace LightController
         private void btnRestart_Click(object sender, RoutedEventArgs e)
         {
             Process.Start(Process.GetCurrentProcess().MainModule.FileName);
-            Application.Current.Shutdown();
+            Process.GetCurrentProcess().Kill();
         }
 
         private void btnOpenConfig_Click(object sender, RoutedEventArgs e)
@@ -143,8 +142,6 @@ namespace LightController
 
         private void btnTurnOff_Click(object sender, RoutedEventArgs e)
         {
-            dmxTimer.Change(Timeout.Infinite, Timeout.Infinite);
-            dmx.TurnOff();
             Application.Current.Shutdown();
         }
 
@@ -164,6 +161,18 @@ namespace LightController
             string logs = Path.Combine(ApplicationData, "Logs");
             if(Directory.Exists(logs))
                 Process.Start("explorer.exe", "\"" + logs + "\"");
+        }
+
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            if (dmx == null)
+                return;
+
+            inputsTimer.Change(Timeout.Infinite, Timeout.Infinite);
+            sceneManager.Disable();
+
+            dmx.TurnOff();
+            dmx.Write();
         }
     }
 }

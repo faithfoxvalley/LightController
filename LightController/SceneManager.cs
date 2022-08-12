@@ -110,5 +110,11 @@ namespace LightController
                 }
             });
         }
+
+        public void Disable()
+        {
+            if(midiDevice != null)
+                midiDevice.NoteEvent -= MidiDevice_NoteEvent;
+        }
     }
 }
