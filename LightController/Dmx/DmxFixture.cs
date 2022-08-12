@@ -130,10 +130,6 @@ namespace LightController.Dmx
                 {
                     frame.Set(channel.Index, intensity * 255);
                 }
-                else if (channel.Constant.HasValue)
-                {
-                    frame.Set(channel.Index, channel.Constant.Value);
-                }
                 else if(channel.IsColor)
                 {
                     // This value could be more than 255 if lumen compensation is on,
@@ -156,6 +152,13 @@ namespace LightController.Dmx
             }
 
             frame.Mix();
+
+            foreach(DmxChannel channel in addressMap)
+            {
+                if(channel.Constant.HasValue)
+                    frame.Set(channel.Index, channel.Constant.Value);
+            }
+
             return frame;
         }
 
