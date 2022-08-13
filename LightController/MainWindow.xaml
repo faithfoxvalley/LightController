@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Light Controller" Height="450" Width="800" Closed="Window_Closed"
+        Title="Light Controller" Height="450" Width="800" Closing="Window_Closing" Closed="Window_Closed"
         MinHeight="200px" MinWidth="500px">
 
     <DockPanel>

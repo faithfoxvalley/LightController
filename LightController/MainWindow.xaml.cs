@@ -173,11 +173,20 @@ namespace LightController
             if (dmx == null)
                 return;
 
+            LogFile.Info("Closed application.");
+
             inputsTimer.Change(Timeout.Infinite, Timeout.Infinite);
             sceneManager.Disable();
 
             dmx.TurnOff();
             dmx.Write();
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            MessageBoxResult messageBoxResult = MessageBox.Show("Are you sure you want to exit?", "Exit Confirmation", MessageBoxButton.YesNo);
+            if (messageBoxResult != MessageBoxResult.Yes)
+                e.Cancel = true;
         }
     }
 }
