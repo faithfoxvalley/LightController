@@ -6,6 +6,8 @@ namespace LightController.Color
     {
         public ColorHSV(double hue, double saturation, double value)
         {
+			if (hue < 0)
+				hue += 360;
             Hue = hue;
             Saturation = saturation;
             Value = value;
