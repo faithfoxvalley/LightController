@@ -85,7 +85,6 @@ namespace LightController.Dmx
 
         public DmxFrame GetFrame()
         {
-            frame.Reset();
 
             ColorHSV hsv;
             double intensity;
@@ -93,13 +92,18 @@ namespace LightController.Dmx
             lock (inputLock)
             {
                 if (disabled)
+                {
+                    frame.Reset();
                     return frame;
+                }
 
                 if (newInput)
                 {
                     frame.StartMix(mixLength);
                     newInput = false;
                 }
+
+                frame.Reset();
 
                 if (input == null)
                 {
