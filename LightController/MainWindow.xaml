@@ -13,6 +13,7 @@
                 <MenuItem Header="_Restart" Click="btnRestart_Click"/>
                 <MenuItem Header="_Close" Click="btnTurnOff_Click"/>
                 <MenuItem Header="Show _Logs" Click="ShowLogs_Click"/>
+                <MenuItem Header="Debug DMX" Click="DebugDmx_Click"/>
             </MenuItem>
             <MenuItem Header="_Config">
                 <MenuItem Header="_Open" Click="btnOpenConfig_Click"/>

@@ -163,6 +163,11 @@ namespace LightController
                 Process.Start("explorer.exe", "\"" + logs + "\"");
         }
 
+        private void DebugDmx_Click(object sender, RoutedEventArgs e)
+        {
+            dmx.WriteDebug();
+        }
+
         private void Window_Closed(object sender, EventArgs e)
         {
             if (dmx == null)

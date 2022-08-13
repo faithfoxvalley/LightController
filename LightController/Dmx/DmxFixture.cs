@@ -18,6 +18,8 @@ namespace LightController.Dmx
         private double mixLength;
         private string detailString;
 
+        public int FixtureId => fixtureId;
+
         public DmxFixture(Config.Dmx.DmxDeviceProfile profile, int dmxStartAddress, int fixtureId, double mixLength)
         {
             detailString = $"{fixtureId} - {profile.Name} - {dmxStartAddress}-{dmxStartAddress + profile.DmxLength - 1}";
