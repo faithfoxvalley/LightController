@@ -4,45 +4,35 @@ namespace LightController.Dmx
 {
     public class DmxFrame
     {
-
-        private double[] rawData = new double[0];
-        private byte[] data = new byte[0];
-        private byte[] mixData = new byte[0];
+        private byte[] baseData; // Data before color/intensity values are added
+        private byte[] mixData; // Old data to mix with new data
+        private byte[] data; // Data to be sent
         private DateTime mixStart;
         private TimeSpan mixTime;
 
         public byte[] Data => data;
         public int StartAddress { get; }
 
-        public DmxFrame(int totalChannels, int addressStart) 
+        public DmxFrame(byte[] baseData, int addressStart) 
         {
-            data = new byte[totalChannels];
-            mixData = new byte[totalChannels];
-            rawData = new double[totalChannels];
+            this.baseData = baseData;
+            data = new byte[baseData.Length];
+            mixData = new byte[baseData.Length];
             StartAddress = addressStart;
         }
 
         public void Reset()
         {
-            for (int i = 0; i < data.Length; i++)
-                data[i] = 0;
-            for (int i = 0; i < rawData.Length; i++)
-                rawData[i] = 0;
+            for (int i = 0; i < baseData.Length; i++)
+                data[i] = baseData[i];
         }
 
         public void Set(int index, double packet)
         {
-            rawData[index] = packet;
-
             if(packet > 255)
                 data[index] = 255;
             else
                 data[index] = (byte)packet;
-        }
-
-        public double Get(int index)
-        {
-            return rawData[index];
         }
 
         public void StartMix(double mixLength)
@@ -51,6 +41,7 @@ namespace LightController.Dmx
             mixTime = TimeSpan.FromSeconds(mixLength);
             mixData = data;
             data = new byte[mixData.Length];
+            Reset();
         }
 
         public void Mix()

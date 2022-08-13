@@ -8,9 +8,8 @@ namespace LightController.Dmx
     public class DmxFixture
     {
         private DmxFrame frame;
-        private List<DmxChannel> addressMap;
-        private List<int> colorChannels;
-        private bool hasIntensity;
+        private DmxChannel intensityChannel;
+        private List<DmxChannel> colorChannels = new List<DmxChannel>();
         private Config.Input.InputBase input;
         private bool disabled;
         private bool newInput;
@@ -23,53 +22,26 @@ namespace LightController.Dmx
         {
             detailString = $"{fixtureId} - {profile.Name} - {dmxStartAddress}-{dmxStartAddress + profile.DmxLength - 1}";
 
-            frame = new DmxFrame(profile.DmxLength, dmxStartAddress);
-            addressMap = profile.AddressMap.Where(x => x != null).OrderByDescending(x => x.MaskSize).ToList();
-            colorChannels = addressMap.Where(x => x.IsColor).Select(x => x.Index).ToList();
-            hasIntensity = addressMap.Find(x => x.IsIntensity) != null;
+            // Construct the default frame
+            byte[] data = new byte[profile.DmxLength];
+            
+            foreach(DmxChannel channel in profile.AddressMap)
+            {
+                if (channel != null)
+                {
+                    if (channel.Constant.HasValue)
+                        data[channel.Index] = channel.Constant.Value;
+                    else if (channel.IsIntensity)
+                        intensityChannel = channel;
+                    else if(channel.IsColor)
+                        colorChannels.Add(channel);
+                }
+            }
+            frame = new DmxFrame(data, dmxStartAddress);
+            colorChannels = colorChannels.OrderByDescending(x => x.MaskSize).ToList();
+
             this.fixtureId = fixtureId;
             this.mixLength = mixLength;
-
-            CompensateForLumens();
-        }
-
-        /// <summary>
-        /// Compensate for some bulbs having different physical intensities.
-        /// </summary>
-        private void CompensateForLumens()
-        {
-            bool? hasLumens = null;
-            double maxLumens = double.NegativeInfinity;
-            foreach(DmxChannel channel in addressMap)
-            {
-                if(channel.IsColor)
-                {
-                    double lumens = channel.Lumens;
-                    bool lumensExists = !double.IsNaN(lumens);
-                    if (hasLumens.HasValue)
-                    {
-                        if(lumensExists != hasLumens.Value)
-                            throw new Exception("Invalid mixing of dmx channel definitions with and without lumens.");
-                    }
-                    else
-                    {
-                        hasLumens = lumensExists;
-                    }
-
-                    if(lumensExists && lumens > maxLumens)
-                        maxLumens = lumens;
-                }
-            }
-
-            if(hasLumens.HasValue && hasLumens.Value)
-            {
-                foreach (DmxChannel channel in addressMap)
-                {
-                    if (channel.IsColor)
-                        channel.ApplyIntensityMultiplier(maxLumens / channel.Lumens);
-                }
-
-            }
         }
 
         public void TurnOff()
@@ -120,6 +92,9 @@ namespace LightController.Dmx
 
             lock (inputLock)
             {
+                if (disabled)
+                    return frame;
+
                 if (newInput)
                 {
                     frame.StartMix(mixLength);
@@ -128,11 +103,6 @@ namespace LightController.Dmx
 
                 if (input == null)
                 {
-                    foreach (DmxChannel channel in addressMap)
-                    {
-                        if (channel.Constant.HasValue)
-                            frame.Set(channel.Index, channel.Constant.Value);
-                    }
                     frame.Mix();
                     return frame;
                 }
@@ -144,42 +114,18 @@ namespace LightController.Dmx
             // Make a copy with maximum intensity
             ColorRGB rgb = (ColorRGB)new ColorHSV(hsv.Hue, hsv.Saturation, 1);
 
+            if(intensityChannel != null)
+                frame.Set(intensityChannel.Index, intensity * 255);
 
-            double maxValue = double.NegativeInfinity;
-            foreach (DmxChannel channel in addressMap)
+            foreach (DmxChannel channel in colorChannels)
             {
-                if(channel.IsIntensity)
-                {
-                    frame.Set(channel.Index, intensity * 255);
-                }
-                else if(channel.IsColor)
-                {
-                    // This value could be more than 255 if lumen compensation is on,
-                    //   and in that case it must be normalized later.
-                    double value = channel.GetColorValue(ref rgb) * 255;
-                    if (!hasIntensity)
-                        value *= intensity;
-                    if(value > maxValue)
-                        maxValue = value;
-                    frame.Set(channel.Index, value);
-                }
-            }
-
-            // If the values are too high, normalize the value back down to 255
-            if (maxValue > 255)
-            {
-                maxValue = 255 / maxValue;
-                foreach (int colorIndex in colorChannels)
-                    frame.Set(colorIndex, frame.Get(colorIndex) * maxValue);
+                double value = channel.GetColorValue(ref rgb) * 255;
+                if (intensityChannel == null)
+                    value *= intensity;
+                frame.Set(channel.Index, value);
             }
 
             frame.Mix();
-
-            foreach(DmxChannel channel in addressMap)
-            {
-                if(channel.Constant.HasValue)
-                    frame.Set(channel.Index, channel.Constant.Value);
-            }
 
             return frame;
         }
