@@ -16,6 +16,7 @@ namespace LightController.Config.Input
             set => FixtureIds = new ValueSet(value);
         }
 
+        [YamlMember(Alias = "Intensity")]
         public string IntensityMode
         {
             get
