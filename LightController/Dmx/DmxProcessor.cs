@@ -122,7 +122,7 @@ namespace LightController.Dmx
             controller.WriteData();
         }
 
-        internal void WriteDebug()
+        public void WriteDebug()
         {
             debug = true;
         }
