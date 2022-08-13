@@ -19,6 +19,7 @@ namespace LightController.Dmx
             data = new byte[baseData.Length];
             mixData = new byte[baseData.Length];
             StartAddress = addressStart;
+            Reset();
         }
 
         public void Reset()
@@ -60,7 +61,7 @@ namespace LightController.Dmx
                 double newData = data[i] * percentNewData;
                 double oldData = mixData[i] * (1 - percentNewData);
                 double newValue = newData + oldData;
-                if (newValue > 255)
+                if (newValue > 254.5)
                     data[i] = 255;
                 else
                     data[i] = (byte)newValue;
