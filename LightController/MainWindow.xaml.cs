@@ -140,11 +140,6 @@ namespace LightController
             config.Open();
         }
 
-        private void btnTurnOff_Click(object sender, RoutedEventArgs e)
-        {
-            Application.Current.Shutdown();
-        }
-
         private void btnSaveConfig_Click(object sender, RoutedEventArgs e)
         {
             config.Save();
