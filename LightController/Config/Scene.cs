@@ -30,7 +30,7 @@ namespace LightController.Config
         /// </summary>
         public void Init()
         {
-            if(Inputs == null)
+            if (Inputs == null)
                 Inputs = new List<InputBase>();
             foreach(InputBase input in Inputs)
                 input.Init();
@@ -81,6 +81,13 @@ namespace LightController.Config
                 tasks[i] = Inputs[i].UpdateAsync();
 
             return Task.WhenAll(tasks);
+        }
+
+        public override string ToString()
+        {
+            if (MidiNote == null)
+                return Name;
+            return $"{MidiNote.Channel},{MidiNote.Note} - {Name}";
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using LightController.Config;
 using LightController.Dmx;
 using LightController.Midi;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows;
@@ -21,7 +22,7 @@ namespace LightController
             this.dmx = dmx;
             this.sceneList = sceneList;
             foreach (var scene in scenes)
-                sceneList.Items.Add(scene.Name);
+                sceneList.Items.Add(scene.ToString());
 
             MidiDeviceList midiDevices = new MidiDeviceList();
 
@@ -54,12 +55,11 @@ namespace LightController
 
             if (!string.IsNullOrWhiteSpace(defaultScene))
             {
-                Scene scene = scenes.Find(x => x.Name == defaultScene.Trim());
-                if (scene != null)
+                if (TryFindScene(x => x.Name == defaultScene.Trim(), out Scene scene, out int sceneIndex))
                 {
                     LogFile.Info("Activating scene " + scene.Name);
                     activeScene = scene;
-                    UpdateSceneUI(activeScene.Name);
+                    UpdateSceneUI(sceneIndex);
                     dmx.SetInputs(scene.Inputs);
                 }
             }
@@ -82,8 +82,7 @@ namespace LightController
 
         private async void MidiDevice_NoteEvent(MidiNote note)
         {
-            Scene newScene = scenes.Find(s => s.MidiNote == note);
-            if (newScene != null)
+            if (TryFindScene(s => s.MidiNote == note, out Scene newScene, out int newSceneIndex))
             {
                 LogFile.Info("Activating scene " + newScene.Name);
 
@@ -92,22 +91,40 @@ namespace LightController
 
                 await newScene.ActivateAsync(note);
                 activeScene = newScene;
-                UpdateSceneUI(activeScene.Name);
+                UpdateSceneUI(newSceneIndex);
                 dmx.SetInputs(newScene.Inputs);
             }
         }
 
-        private void UpdateSceneUI(string name)
+        private bool TryFindScene(Func<Scene, bool> func, out Scene scene, out int index)
+        {
+            for (int i = 0; i < scenes.Count; i++)
+            {
+                Scene s = scenes[i];
+                if (func(s))
+                {
+                    scene = s;
+                    index = i;
+                    return true;
+                }
+            }
+            scene = null;
+            index = -1;
+            return false;
+        }
+
+        private void UpdateSceneUI(int sceneIndex)
         {
             Application.Current.Dispatcher.BeginInvoke(() =>
             {
-                for (int i = 0; i < sceneList.Items.Count; i++)
-                {
-                    if (sceneList.Items[i] as string == name)
-                    {   
-                        sceneList.SelectedIndex = i;
-                    }
-                }
+                int count = sceneList.Items.Count;
+                if (count == 0)
+                    return;
+
+                if (count >= sceneIndex)
+                    sceneList.SelectedIndex = count - 1;
+                else
+                    sceneList.SelectedIndex = sceneIndex;
             });
         }
 
