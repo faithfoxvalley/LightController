@@ -179,9 +179,11 @@ namespace LightController
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+#if !DEBUG
             MessageBoxResult messageBoxResult = MessageBox.Show("Are you sure you want to exit?", "Exit Confirmation", MessageBoxButton.YesNo);
             if (messageBoxResult != MessageBoxResult.Yes)
                 e.Cancel = true;
+#endif
         }
     }
 }
