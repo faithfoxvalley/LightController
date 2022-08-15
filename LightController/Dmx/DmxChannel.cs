@@ -96,7 +96,7 @@ namespace LightController.Dmx
                     mask = new ColorRGB(255, 255, 255);
                     break;
                 case "amber":
-                    mask = new ColorRGB(255, 191, 0);
+                    mask = new ColorRGB(255, 126, 0);
                     break;
                 case "intensity":
                     return new DmxChannel(null, originalString, index, lumens)
