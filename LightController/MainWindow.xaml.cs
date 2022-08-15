@@ -131,6 +131,7 @@ namespace LightController
 
         private void btnRestart_Click(object sender, RoutedEventArgs e)
         {
+            LogFile.Info("Restarting application");
             Process.Start(Process.GetCurrentProcess().MainModule.FileName);
             Process.GetCurrentProcess().Kill();
         }
