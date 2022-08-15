@@ -121,7 +121,7 @@ namespace LightController
                 if (count == 0)
                     return;
 
-                if (count >= sceneIndex)
+                if (sceneIndex >= count)
                     sceneList.SelectedIndex = count - 1;
                 else
                     sceneList.SelectedIndex = sceneIndex;
