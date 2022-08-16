@@ -3,25 +3,29 @@ using System.Windows;
 
 namespace LightController.Config.Input
 {
-    //[YamlTag("!debug_input")]
+    [YamlTag("!debug_input")]
     public class DebugInput : InputBase
     {
         private const string pickerName = "colorPicker";
 
-        private ColorPicker.StandardColorPicker picker;
-        private ColorHSV hsv = new ColorHSV(0, 1, 1);
+        private ColorPicker.DualPickerControlBase picker;
+        private ColorHSV hsv = new ColorHSV(0, 0, 1);
         private double pickerIntensity = 1;
 
         public override void Init()
         {
-            foreach (Window window in App.Current.Windows)
+            picker = MainWindow.Instance.colorPicker;
+            if (picker != null)
             {
-                picker = window.FindName(pickerName) as ColorPicker.StandardColorPicker;
-                if (picker != null)
+                picker.ColorChanged += Picker_ColorChanged;
+                picker.Visibility = Visibility.Visible;
+                picker.SelectedColor = new System.Windows.Media.Color
                 {
-                    picker.ColorChanged += Picker_ColorChanged;
-                    break;
-                }
+                    R = 255,
+                    G = 255,
+                    B = 255,
+                    A = 255
+                };
             }
         }
 
