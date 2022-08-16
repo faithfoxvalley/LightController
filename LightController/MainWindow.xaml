@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         Title="Light Controller" Height="450" Width="800" Closing="Window_Closing" Closed="Window_Closed"
-        MinHeight="200px" MinWidth="500px">
+        MinHeight="200px" MinWidth="600px">
 
     <DockPanel>
         <Menu DockPanel.Dock="Top">
@@ -27,7 +27,7 @@
             <Label Content="Fixtures" Grid.Row="0"/>
             <ListBox x:Name="fixtureList" Grid.Row="1" PreviewMouseDown="ListBox_DisableMouseDown"/>
         </Grid>
-        <Grid DockPanel.Dock="Left" MaxWidth="100px" Margin="10,10,0,10">
+        <Grid DockPanel.Dock="Left" MaxWidth="200px" Margin="10,10,0,10">
             <Grid.RowDefinitions>
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="*"/>
