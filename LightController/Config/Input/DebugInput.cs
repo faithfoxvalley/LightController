@@ -8,8 +8,6 @@ namespace LightController.Config.Input
     [YamlTag("!debug_input")]
     public class DebugInput : InputBase
     {
-        private const string pickerName = "colorPicker";
-
         private ColorPicker.DualPickerControlBase picker;
         private ColorHSV hsv = new ColorHSV(0, 0, 1);
         private double pickerIntensity = 1;
