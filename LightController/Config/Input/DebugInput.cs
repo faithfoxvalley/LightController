@@ -1,4 +1,6 @@
 ﻿using LightController.Color;
+using LightController.Midi;
+using System.Threading.Tasks;
 using System.Windows;
 
 namespace LightController.Config.Input
@@ -18,7 +20,7 @@ namespace LightController.Config.Input
             if (picker != null)
             {
                 picker.ColorChanged += Picker_ColorChanged;
-                picker.Visibility = Visibility.Visible;
+                picker.Visibility = Visibility.Collapsed;
                 picker.SelectedColor = new System.Windows.Media.Color
                 {
                     R = 255,
@@ -27,6 +29,22 @@ namespace LightController.Config.Input
                     A = 255
                 };
             }
+        }
+
+        public override async Task StartAsync(MidiNote note)
+        {
+            await Application.Current.Dispatcher.BeginInvoke(() =>
+            {
+                picker.Visibility = Visibility.Visible;
+            });
+        }
+
+        public override async Task StopAsync()
+        {
+            await Application.Current.Dispatcher.BeginInvoke(() =>
+            {
+                picker.Visibility = Visibility.Collapsed;
+            });
         }
 
         private void Picker_ColorChanged(object sender, RoutedEventArgs e)
