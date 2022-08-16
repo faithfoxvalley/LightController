@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace LightController.Dmx
 {
@@ -6,6 +8,8 @@ namespace LightController.Dmx
     {
         private byte[] baseData; // Data before color/intensity values are added
         private byte[] mixData; // Old data to mix with new data
+        private double[] rawData; // Data before being clamped to byte range
+        private double maxData; // Maximum value in data
         private byte[] data; // Data to be sent
         private DateTime mixStart;
         private TimeSpan mixTime;
@@ -25,12 +29,19 @@ namespace LightController.Dmx
         public void Reset()
         {
             for (int i = 0; i < baseData.Length; i++)
+            {
                 data[i] = baseData[i];
+                rawData[i] = baseData[i];
+            }
+            maxData = 0;
         }
 
         public void Set(int index, double packet)
         {
-            if(packet > 255)
+            rawData[index] = packet;
+            if (packet > maxData)
+                maxData = packet;
+            if(packet > 254.5)
                 data[index] = 255;
             else
                 data[index] = (byte)packet;
@@ -65,6 +76,22 @@ namespace LightController.Dmx
                     data[i] = 255;
                 else
                     data[i] = (byte)newValue;
+            }
+        }
+
+        public void Clamp(IEnumerable<int> indicies)
+        {
+            if (maxData <= 255)
+                return;
+
+            double factor = 255 / maxData;
+            foreach(int i in indicies)
+            {
+                double packet = rawData[i] * factor;
+                if (packet > 254.5)
+                    data[i] = 255;
+                else
+                    data[i] = (byte)packet;
             }
         }
     }

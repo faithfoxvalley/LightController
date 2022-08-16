@@ -9,6 +9,7 @@ namespace LightController.Dmx
     {
         private DmxFrame frame;
         private DmxChannel intensityChannel;
+        private double? maxLumens;
         private List<DmxChannel> colorChannels = new List<DmxChannel>();
         private Config.Input.InputBase input;
         private bool disabled;
@@ -39,6 +40,10 @@ namespace LightController.Dmx
                         colorChannels.Add(channel);
                 }
             }
+
+            if (colorChannels.All(x => x.Lumens.HasValue))
+                maxLumens = colorChannels.Max(x => x.Lumens.Value);
+
             frame = new DmxFrame(data, dmxStartAddress);
             colorChannels = colorChannels.OrderByDescending(x => x.MaskSize).ToList();
 
@@ -128,9 +133,12 @@ namespace LightController.Dmx
                 double value = channel.GetColorValue(ref rgb) * 255;
                 if (intensityChannel == null)
                     value *= intensity;
+                if (maxLumens.HasValue)
+                    value *= maxLumens.Value / channel.Lumens.Value;
                 frame.Set(channel.Index, value);
             }
 
+            frame.Clamp(colorChannels.Select(x => x.Index));
             frame.Mix();
 
             return frame;
