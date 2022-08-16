@@ -10,22 +10,21 @@ namespace LightController.Dmx
         private ColorRGB mask;
         private byte? constantValue;
         private string stringValue;
-        private double lumens;
         private double intensity = 1;
 
-        public double Lumens => mask == null ? double.NaN : lumens;
+        public double? Lumens { get; private set; }
         public int Index { get; private set; }
         public byte? Constant => constantValue;
         public bool IsIntensity { get; private set; } = false;
         public bool IsColor => mask != null;
         public double MaskSize => mask == null ? double.PositiveInfinity : mask.Red + mask.Green + mask.Blue;
 
-        public DmxChannel(ColorRGB mask, string stringValue, int index, double lumens)
+        public DmxChannel(ColorRGB mask, string stringValue, int index, double? lumens)
         {
             this.mask = mask;
             this.stringValue = stringValue;
             Index = index;
-            this.lumens = lumens;
+            Lumens = lumens;
         }
 
         public static DmxChannel Parse(string value, int index)
@@ -39,14 +38,14 @@ namespace LightController.Dmx
 
             string originalString = value;
 
-            double lumens = double.NaN;
+            double? lumens;
             int intensityIndex = value.IndexOf('@');
             if(intensityIndex > 0 && intensityIndex < value.Length - 1)
             {
                 string intensity = value.Substring(intensityIndex + 1);
                 value = value.Substring(0, intensityIndex);
-                if (!double.TryParse(intensity, out lumens))
-                    lumens = double.NaN;
+                if (double.TryParse(intensity, out double lumenValue))
+                    lumens = lumenValue;
             }
 
             if (value[value.Length - 1] == 'k')
