@@ -44,7 +44,15 @@ namespace LightController
             InitAppData();
             InitFfmpeg();
 
-            config = ConfigFile.Load();
+            try
+            {
+                config = ConfigFile.Load();
+            }
+            catch (Exception e)
+            {
+                LogFile.Error(e, "An error occurred while reading the config file!");
+                ErrorBox.Show("An error occurred while reading the config file, please check your config.");
+            }
 
             pro = new ProPresenter(config.ProPresenter, mediaList);
             dmx = new DmxProcessor(config.Dmx, config.SceneTransitionTime);
