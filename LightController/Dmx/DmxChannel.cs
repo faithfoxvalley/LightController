@@ -38,7 +38,7 @@ namespace LightController.Dmx
 
             string originalString = value;
 
-            double? lumens;
+            double? lumens = null;
             int intensityIndex = value.IndexOf('@');
             if(intensityIndex > 0 && intensityIndex < value.Length - 1)
             {

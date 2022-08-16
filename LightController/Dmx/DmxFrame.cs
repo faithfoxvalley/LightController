@@ -22,6 +22,7 @@ namespace LightController.Dmx
             this.baseData = baseData;
             data = new byte[baseData.Length];
             mixData = new byte[baseData.Length];
+            rawData = new double[baseData.Length];
             StartAddress = addressStart;
             Reset();
         }
