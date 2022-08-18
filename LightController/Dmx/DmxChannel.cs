@@ -61,6 +61,7 @@ namespace LightController.Dmx
                     RGBColor colourfulColor = colourfulConverter.Convert(chromacity).NormalizeIntensity();
                     return new DmxChannel(ColorRGB.FromColor(colourfulColor), originalString, index, lumens);
                 }
+                LogFile.Warn("'" + originalString + "' is not a supported color temperature.");
                 return null;
             }
 
@@ -75,6 +76,7 @@ namespace LightController.Dmx
                 }
                 catch
                 {
+                    LogFile.Warn("'" + originalString + "' is not a supported hex color value.");
                     return null;
                 }
             }
@@ -110,6 +112,7 @@ namespace LightController.Dmx
                             constantValue = b
                         };
                     }
+                    LogFile.Warn("'" + originalString + "' is not a supported color value.");
                     return null;
             }
             return new DmxChannel(mask, originalString, index, lumens);

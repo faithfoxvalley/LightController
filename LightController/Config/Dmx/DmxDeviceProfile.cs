@@ -30,12 +30,7 @@ namespace LightController.Config.Dmx
                     return;
 
                 foreach (string color in value)
-                {
-                    DmxChannel channel  = DmxChannel.Parse(color, AddressMap.Count);
-                    if(channel == null)
-                        LogFile.Warn("'" + color + "' is not a supported color value.");
-                    AddressMap.Add(channel);
-                }
+                    AddressMap.Add(DmxChannel.Parse(color, AddressMap.Count));
             }
         }
 
