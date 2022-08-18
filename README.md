@@ -2,9 +2,13 @@
 
 A DMX lighting controller for use with ProPresenter.
 
+---
+
+## Config File
+
 The following is a description of the settings found in the config.yml file, feel free to copy any snippets into the config and remove the lines starting with a "#" if desired.
 
-## General Settings
+### General Settings
 
 ```yml
 # Name of the MIDI device, or blank to pick the first one
@@ -15,7 +19,7 @@ default_scene: Scene
 default_transition_time: 1
 ```
 
-## Scene Settings
+### Scene Settings
 
 Scenes are used to store lighting configurations. 
 ```yml
@@ -33,7 +37,7 @@ scenes:
   inputs:
 ```
 
-### Scene Inputs
+#### Scene Inputs
 
 Each scene has a list of inputs that tell the light fixtures what color to be. Each input type has at least the following structure:
 ```yml
@@ -89,7 +93,7 @@ Use an [online color picker](https://www.google.com/search?q=color+picker) to ge
     intensity: 100%
 ```
 
-## DMX Settings
+### DMX Settings
 
 ```yml
 # DMX settings
@@ -102,7 +106,7 @@ dmx:
   addresses:
 ```
 
-### Fixture Profiles
+#### Fixture Profiles
 
 The fixture profile list is where you define how the lights are hooked up to the DMX system. Each profile has the following structure:
 ```yml
@@ -146,7 +150,7 @@ Some examples of complete light fixture profiles:
     - 255
 ```
 
-### Fixture Addresses
+#### Fixture Addresses
 
 The fixture addresses is where you define how the lights are actually hooked up to the DMX system. Each address has the following structure:
 ```yml
@@ -158,7 +162,7 @@ The fixture addresses is where you define how the lights are actually hooked up 
     count: 1
 ```
 
-## ProPresenter Settings
+### ProPresenter Settings
 
 The following settings must be configured in order to use ProPresenter inputs:
 ```yml
@@ -178,3 +182,7 @@ To use ProPresenter to change the scenes, you can use the "Communication" MIDI a
 All media that is ready to be used by the ProPresenter input can be seen in the center of the window. If any media is currently being generated, the progress bar will activate to show the progress. In order to avoid having to wait before the light actually change color, make sure all the media is in the list before use in a real production. 
 
 To further reduce the delay before the light change, you may use the "Intensity" field of the MIDI action to give each media background an id. Ensure that the Intensity is at least one and that each background has a different Intensity value.
+
+---
+
+## 
