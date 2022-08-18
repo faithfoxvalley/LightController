@@ -12,11 +12,11 @@ namespace LightController.Config
     {
         public string Name { get; set; }
 
+        public double? TransitionTime { get; set; }
+
         public MidiNote MidiNote { get; set; }
 
         public List<InputBase> Inputs { get; set; } = new List<InputBase>();
-
-        public double? TransitionTime { get; set; }
 
         private bool active = false;
 

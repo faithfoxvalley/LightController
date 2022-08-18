@@ -21,7 +21,7 @@ namespace LightController.Dmx
 
         public int FixtureId => fixtureId;
 
-        public DmxFixture(Config.Dmx.DmxDeviceProfile profile, int dmxStartAddress, int fixtureId, double mixLength)
+        public DmxFixture(Config.Dmx.DmxDeviceProfile profile, int dmxStartAddress, int fixtureId)
         {
             detailString = $"{fixtureId} - {profile.Name} - {dmxStartAddress}-{dmxStartAddress + profile.DmxLength - 1}";
 
@@ -48,7 +48,6 @@ namespace LightController.Dmx
             colorChannels = colorChannels.OrderByDescending(x => x.MaskSize).ToList();
 
             this.fixtureId = fixtureId;
-            this.mixLength = mixLength;
         }
 
         public void TurnOff()
@@ -61,9 +60,12 @@ namespace LightController.Dmx
             }
         }
 
-        public void SetInput(IEnumerable<Config.Input.InputBase> inputs)
+        public void SetInput(IEnumerable<Config.Input.InputBase> inputs, double mixLength)
         {
-            foreach(var input in inputs)
+            if (double.IsNaN(mixLength) || double.IsInfinity(mixLength) || mixLength < 0)
+                mixLength = 0;
+
+            foreach (var input in inputs)
             {
                 if (input.FixtureIds.Contains(fixtureId))
                 {
@@ -71,6 +73,7 @@ namespace LightController.Dmx
                     {
                         if(!disabled)
                         {
+                            this.mixLength = mixLength;
                             this.input = input;
                             newInput = true;
                         }
@@ -83,6 +86,7 @@ namespace LightController.Dmx
             {
                 if (!disabled)
                 {
+                    this.mixLength = mixLength;
                     this.input = null;
                     newInput = true;
                 }

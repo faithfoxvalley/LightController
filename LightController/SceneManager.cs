@@ -14,13 +14,19 @@ namespace LightController
         private Scene activeScene;
         private MidiInput midiDevice;
         private DmxProcessor dmx;
+        private double transitionTime;
         private System.Windows.Controls.ListBox sceneList;
 
-        public SceneManager(List<Scene> scenes, string midiDevice, string defaultScene, DmxProcessor dmx, System.Windows.Controls.ListBox sceneList)
+        public SceneManager(List<Scene> scenes, string midiDevice, string defaultScene, DmxProcessor dmx, 
+            double transitionTime, System.Windows.Controls.ListBox sceneList)
         {
             this.scenes = scenes;
             this.dmx = dmx;
             this.sceneList = sceneList;
+            if (double.IsNaN(transitionTime) || double.IsInfinity(transitionTime) || transitionTime < 0)
+                transitionTime = 0;
+            this.transitionTime = transitionTime;
+
             foreach (var scene in scenes)
                 sceneList.Items.Add(scene.ToString());
 
@@ -60,7 +66,7 @@ namespace LightController
                     LogFile.Info("Activating scene " + scene.Name);
                     activeScene = scene;
                     UpdateSceneUI(sceneIndex);
-                    dmx.SetInputs(scene.Inputs);
+                    UpdateDmx(scene);
                 }
             }
 
@@ -92,8 +98,13 @@ namespace LightController
                 await newScene.ActivateAsync(note);
                 activeScene = newScene;
                 UpdateSceneUI(newSceneIndex);
-                dmx.SetInputs(newScene.Inputs);
+                UpdateDmx(newScene);
             }
+        }
+
+        private void UpdateDmx(Scene scene)
+        {
+            dmx.SetInputs(scene.Inputs, scene.TransitionTime ?? transitionTime);
         }
 
         private bool TryFindScene(Func<Scene, bool> func, out Scene scene, out int index)

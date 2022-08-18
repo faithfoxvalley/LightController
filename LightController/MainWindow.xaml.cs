@@ -55,8 +55,8 @@ namespace LightController
             }
 
             pro = new ProPresenter(config.ProPresenter, mediaList);
-            dmx = new DmxProcessor(config.Dmx, config.SceneTransitionTime);
-            sceneManager = new SceneManager(config.Scenes, config.MidiDevice, config.DefaultScene, dmx, sceneList);
+            dmx = new DmxProcessor(config.Dmx);
+            sceneManager = new SceneManager(config.Scenes, config.MidiDevice, config.DefaultScene, dmx, config.DefaultTransitionTime, sceneList);
 
             // Update fixture list
             dmx.AppendToListbox(fixtureList);

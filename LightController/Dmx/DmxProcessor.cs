@@ -14,7 +14,7 @@ namespace LightController.Dmx
         private List<DmxFixture> fixtures = new List<DmxFixture>();
         private DmxController controller = new DmxController();
 
-        public DmxProcessor(DmxConfig config, double mixLength)
+        public DmxProcessor(DmxConfig config)
         {
             if(config == null)
             {
@@ -30,9 +30,6 @@ namespace LightController.Dmx
                 ErrorBox.ExitOnCancel("DMX Device not found. Press OK to try again or Cancel to exit."); 
 #endif
             }
-
-            if (double.IsNaN(mixLength) || double.IsInfinity(mixLength))
-                mixLength = 0;
 
             if (config.Addresses == null || config.Addresses.Count == 0)
             {
@@ -76,7 +73,7 @@ namespace LightController.Dmx
                         int address = fixtureAddress.StartAddress;
                         for (int i = 0; i < fixtureAddress.Count; i++)
                         {
-                            fixtures.Add(new DmxFixture(profile, address, fixtures.Count + 1, mixLength));
+                            fixtures.Add(new DmxFixture(profile, address, fixtures.Count + 1));
                             address += profile.DmxLength;
                         }
                     }
@@ -119,10 +116,10 @@ namespace LightController.Dmx
                 fixture.TurnOff();
         }
 
-        public void SetInputs(IEnumerable<Config.Input.InputBase> inputs)
+        public void SetInputs(IEnumerable<Config.Input.InputBase> inputs, double mixLength)
         {
             foreach (DmxFixture fixture in fixtures)
-                fixture.SetInput(inputs);
+                fixture.SetInput(inputs, mixLength);
         }
         
         public void Write()
