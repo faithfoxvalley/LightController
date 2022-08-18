@@ -181,8 +181,12 @@ To use ProPresenter to change the scenes, you can use the "Communication" MIDI a
 
 All media that is ready to be used by the ProPresenter input can be seen in the center of the window. If any media is currently being generated, the progress bar will activate to show the progress. In order to avoid having to wait before the light actually change color, make sure all the media is in the list before use in a real production. 
 
-To further reduce the delay before the light change, you may use the "Intensity" field of the MIDI action to give each media background an id. Ensure that the Intensity is at least one and that each background has a different Intensity value.
+To further reduce the delay before the lights change, you may use the "Intensity" field of the MIDI action to give each media background an id. Ensure that the Intensity is at least one and that each background has a different Intensity value.
 
 ---
 
-## 
+## Troubleshooting
+
+If the program crashes, information on what could be wrong will be in the log files. You can access the log files via the program under the "Application" menu, or in the `%localappdata%\LightController\Logs` folder. An error may also be visible in the Windows Event Viewer.
+
+If you are having other issues with the program behaving unexpectedly, you may try saving over the config via the "Config" menu or checking the logs for warnings. 
