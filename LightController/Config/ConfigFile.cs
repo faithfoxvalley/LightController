@@ -57,7 +57,8 @@ namespace LightController.Config
 
                     existingFile = deserializer.Build().Deserialize<ConfigFile>(reader);
                 }
-                return existingFile;
+                if(existingFile != null)
+                    return existingFile;
             }
             ConfigFile newFile = new ConfigFile();
             newFile.Save();

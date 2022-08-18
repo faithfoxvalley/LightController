@@ -12,8 +12,17 @@ namespace LightController.Config.Input
         [YamlMember(Alias = "FixtureIds")]
         public string FixtureRange
         {
-            get => FixtureIds.ToString();
-            set => FixtureIds = new ValueSet(value);
+            get
+            {
+                return FixtureIds.ToString();
+            }
+            set
+            {
+                if (value == null)
+                    FixtureIds = new ValueSet();
+                else
+                    FixtureIds = new ValueSet(value);
+            }
         }
 
         [YamlMember(Alias = "Intensity")]
@@ -25,7 +34,10 @@ namespace LightController.Config.Input
             }
             set
             {
-                intensity = InputIntensity.Parse(value);
+                if (value == null)
+                    intensity = new InputIntensity();
+                else
+                    intensity = InputIntensity.Parse(value);
             }
         }
 

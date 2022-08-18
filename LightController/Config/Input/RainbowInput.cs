@@ -24,7 +24,7 @@ namespace LightController.Config.Input
         /// </summary>
         public double CycleLength { get; set; }
 
-        private Percent saturation;
+        private Percent saturation = new Percent(1);
         private DateTime startTime;
 
         public override void Init()

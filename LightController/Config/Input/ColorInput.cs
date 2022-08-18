@@ -9,10 +9,14 @@ namespace LightController.Config.Input
         [YamlMember(Alias = "rgb", ApplyNamingConventions = false)]
         public ColorRGB RGB { get; set; }
 
+        private ColorHSV black = new ColorHSV(0, 0, 0);
+
         public ColorInput() { }
 
         public override ColorHSV GetColor(int fixtureId)
         {
+            if (RGB == null)
+                return black;
             return (ColorHSV)RGB;
         }
     }

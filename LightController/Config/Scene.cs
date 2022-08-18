@@ -16,6 +16,8 @@ namespace LightController.Config
 
         public List<InputBase> Inputs { get; set; } = new List<InputBase>();
 
+        public double? TransitionTime { get; set; }
+
         private bool active = false;
 
         //public event Action<Scene> SceneActivated;

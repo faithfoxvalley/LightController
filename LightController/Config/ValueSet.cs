@@ -13,13 +13,19 @@ namespace LightController.Config
 
         public bool Empty => ranges.Count == 0;
 
-        private ValueSet() 
+        public ValueSet() 
         {
             ranges = new List<Range>();
         }
 
         public ValueSet(string values)
         {
+            if(values == null)
+            {
+                ranges = new List<Range>();
+                return;
+            }
+
             string[] strings = values.Split(',');
             ranges = new List<Range>(strings.Length);
             foreach (string s in strings)

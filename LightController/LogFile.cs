@@ -38,6 +38,11 @@ namespace LightController
             Write(Serilog.Events.LogEventLevel.Error, msg);
         }
 
+        public static void Warn(string msg)
+        {
+            Write(Serilog.Events.LogEventLevel.Warning, msg);
+        }
+
         public static void Error(Exception ex)
         {
             log.Error(ex,

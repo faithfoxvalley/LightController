@@ -40,7 +40,7 @@ namespace LightController.Config.Input
                 return new InputIntensity(intensity / 255d, stringValue);
             }
 
-            // TODO: Warn
+            LogFile.Warn("'" + value + "' is not a valid intensity.");
             return new InputIntensity();
         }
 
