@@ -67,7 +67,10 @@ namespace LightController.Pro
             List<MediaFrame> frames = new List<MediaFrame>(); 
             for (double time = 0; time < fileLength || time == 0; time += FrameInterval)
             {
-                progress.Report(fileLength > 0 ? time / fileLength : 0);
+                if (fileLength > 0)
+                    progress.Report(time / fileLength);
+                else
+                    progress.Report(double.NaN);
 
                 options.SeekSpan = TimeSpan.FromSeconds(time);
 
