@@ -122,11 +122,18 @@ namespace LightController.Config.Input
                 if (double.IsNaN(percent))
                 {
                     MainWindow.Instance.mediaProgress.IsIndeterminate = true;
+                    MainWindow.Instance.TaskbarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.Indeterminate;
                 }
                 else
                 {
                     MainWindow.Instance.mediaProgress.IsIndeterminate = false;
                     MainWindow.Instance.mediaProgress.Value = percent;
+                    System.Windows.Shell.TaskbarItemInfo taskbarItemInfo = MainWindow.Instance.TaskbarItemInfo;
+                    taskbarItemInfo.ProgressValue = percent;
+                    if (percent > 0)
+                        taskbarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.Normal;
+                    else
+                        taskbarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.None;
                 }
             });
         }
