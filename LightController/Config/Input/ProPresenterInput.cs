@@ -14,6 +14,12 @@ namespace LightController.Config.Input
     [YamlTag("!propresenter_input")]
     public class ProPresenterInput : InputBase
     {
+        private const int UpdateRate = 10;
+
+        private int runtime = 0;
+        private double transportLayerTime;
+        private DateTime lastUpdateTime;
+
         private ProPresenter pro = null;
         private ProMediaItem media;
         private ColorRGB[] colors;
@@ -25,6 +31,7 @@ namespace LightController.Config.Input
         private InputIntensity minIntensity = new InputIntensity();
         private static CancellationTokenSource cts = new CancellationTokenSource();
         private Dictionary<int, int> idToIndex = new Dictionary<int, int>();
+
 
         public bool HasMotion { get; set; } = true;
 
@@ -65,6 +72,8 @@ namespace LightController.Config.Input
 
         public override async Task StartAsync(Midi.MidiNote note)
         {
+            runtime = 0;
+
             if(cts != null)
                 cts.Cancel();
 
@@ -144,14 +153,28 @@ namespace LightController.Config.Input
             if (media == null || !HasMotion)
                 return;
 
-            double time = await pro.AsyncGetTransportLayerTime(Layer.Presentation);
+            double time;
+            if(runtime % UpdateRate == 0)
+            {
+                transportLayerTime = await pro.AsyncGetTransportLayerTime(Layer.Presentation);
+                time = transportLayerTime;
+                lastUpdateTime = DateTime.Now;
+            }
+            else
+            {
+                time = transportLayerTime + (DateTime.Now - lastUpdateTime).TotalSeconds;
+                if (time > media.Length)
+                    time %= media.Length;
+            }
 
-            lock(colorLock)
+            lock (colorLock)
             {
                 colors = media.GetData(pixelWidth, time);
                 maxColorValue = colors.Select(x => x.Max()).Max();
                 minColorValue = colors.Select(x => x.Max()).Min();
             }
+
+            runtime++;
         }
 
         public override ColorHSV GetColor(int fixtureId)

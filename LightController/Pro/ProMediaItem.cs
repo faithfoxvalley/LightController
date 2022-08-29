@@ -18,6 +18,8 @@ namespace LightController.Pro
         private MediaFrame[] data;
         private Dictionary<int, MediaFrame[]> resizedData = new Dictionary<int, MediaFrame[]>();
 
+        public double Length => data.Length * FrameInterval;
+
         public ProMediaItem()
         {
         }
@@ -31,6 +33,8 @@ namespace LightController.Pro
             int index = (int)(time / FrameInterval);
             if (index >= data.Length)
                 index = data.Length - 1;
+            if(index < 0)
+                index = 0;
 
             return frames[index].Data;
         }

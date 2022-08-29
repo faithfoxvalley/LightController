@@ -17,7 +17,7 @@ namespace LightController
     public partial class MainWindow : Window
     {
         private const int DmxUpdateRate = 40;
-        private const int InputsUpdateRate = 200;
+        private const int InputsUpdateRate = 100;
         private const int ErrorTimeout = 5000;
 
         private ProPresenter pro;
