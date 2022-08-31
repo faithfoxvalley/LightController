@@ -10,6 +10,11 @@
     <Window.TaskbarItemInfo>
         <TaskbarItemInfo/>
     </Window.TaskbarItemInfo>
+    <Window.Resources>
+        <Style x:Key="ListBoxNoSelection" TargetType="ListBoxItem">
+            <EventSetter Event="PreviewMouseDown" Handler="ListBox_DisableMouseDown"/>
+        </Style>
+    </Window.Resources>
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_Application">
@@ -28,7 +33,7 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             <Label Content="Fixtures" Grid.Row="0"/>
-            <ListBox x:Name="fixtureList" Grid.Row="1" PreviewMouseDown="ListBox_DisableMouseDown"/>
+            <ListBox x:Name="fixtureList" Grid.Row="1" ItemContainerStyle="{StaticResource ListBoxNoSelection}"/>
         </Grid>
         <Grid DockPanel.Dock="Left" MaxWidth="200px" Margin="10,10,0,10">
             <Grid.RowDefinitions>
@@ -37,7 +42,7 @@
                 <RowDefinition Height="auto"/>
             </Grid.RowDefinitions>
             <Label Content="Scenes" Grid.Row="0"/>
-            <ListBox x:Name="sceneList" Grid.Row="1" PreviewMouseDown="ListBox_DisableMouseDown"/>
+            <ListBox x:Name="sceneList" Grid.Row="1" ItemContainerStyle="{StaticResource ListBoxNoSelection}"/>
             <colorpicker:PortableColorPicker HorizontalAlignment="Left" x:Name="colorPicker" Width="40" Height="40" Grid.Row="2" Visibility="Collapsed"/>
         </Grid>
         <Grid Margin="10,10,10,10">
@@ -48,7 +53,7 @@
             </Grid.RowDefinitions>
             <Label Content="ProPresenter Media" HorizontalAlignment="Left" Grid.Row="0"/>
             <ProgressBar x:Name="mediaProgress" Height="15" Grid.Row="1" Minimum="0" Maximum="1"/>
-            <ListBox x:Name="mediaList" Grid.Row="2" PreviewMouseDown="ListBox_DisableMouseDown"/>
+            <ListBox x:Name="mediaList" Grid.Row="2" Visibility="Visible" ItemContainerStyle="{StaticResource ListBoxNoSelection}"/>
         </Grid>
     </DockPanel>
 </Window>
