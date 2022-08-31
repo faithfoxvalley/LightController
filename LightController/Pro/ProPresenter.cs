@@ -17,11 +17,10 @@ namespace LightController.Pro
         private const string ThumbnailCache = "Thumbnails";
 
         private string url;
-        private string mediaPath;
         private HttpClient client = new HttpClient();
-        private Dictionary<int, string> mediaNames = new Dictionary<int, string>();
-        private Dictionary<string, ProMediaItem> media = new Dictionary<string, ProMediaItem>();
-        private Dictionary<string, ProMediaItem> thumbnails = new Dictionary<string, ProMediaItem>();
+        private List<ProMediaItem> allMedia = new List<ProMediaItem>();
+        private MediaLibrary motionLibrary;
+        private MediaLibrary thumbnailLibrary;
         private System.Windows.Controls.ListBox mediaList;
 
         public ProPresenter(Config.ProPresenterConfig config, System.Windows.Controls.ListBox mediaList)
@@ -40,9 +39,11 @@ namespace LightController.Pro
                 ErrorBox.Show("No ProPresenter media assets path found, please check your config.");
                 return;
             }
-            mediaPath = config.MediaAssetsPath;
+            string mediaPath = config.MediaAssetsPath;
             if (!mediaPath.EndsWith('/'))
                 mediaPath += '/';
+            motionLibrary = new MediaLibrary(true, Path.Combine(MainWindow.Instance.ApplicationData, MotionCache), mediaPath);
+            thumbnailLibrary = new MediaLibrary(false, Path.Combine(MainWindow.Instance.ApplicationData, ThumbnailCache), mediaPath);
 
             this.mediaList = mediaList;
         }
@@ -50,16 +51,20 @@ namespace LightController.Pro
         public async Task<ProMediaItem> GetCurrentMediaAsync (bool motion, IProgress<double> progress, CancellationToken cancelToken, int? id = null)
         {
             string mediaName;
-            if(id.HasValue && mediaNames.TryGetValue(id.Value, out mediaName))
+            if (id.HasValue)
             {
                 ProMediaItem existingItem;
                 if (motion)
                 {
-                    if(media.TryGetValue(mediaName, out existingItem))
+                    if (motionLibrary.TryGetExistingItem(id.Value, out existingItem))
+                    {
+                        await UpdateMediaList(existingItem);
                         return existingItem;
+                    }
                 }
-                else if (thumbnails.TryGetValue(mediaName, out existingItem))
+                else if (thumbnailLibrary.TryGetExistingItem(id.Value, out existingItem))
                 {
+                    await UpdateMediaList(existingItem);
                     return existingItem;
                 }
             }
@@ -68,43 +73,22 @@ namespace LightController.Pro
             if (status.audio_only || string.IsNullOrWhiteSpace(status.name))
                 throw new HttpRequestException("No ProPresenter media available!");
             mediaName = status.name;
-            if (id.HasValue)
-                mediaNames[id.Value] = mediaName;
+
+            MediaLibrary library;
+            if (motion)
+                library = motionLibrary;
+            else
+                library = thumbnailLibrary;
 
             ProMediaItem mediaItem;
-            if (motion && status.duration > 0)
+            if (!library.TryGetExistingItem(id, status.name, out mediaItem))
             {
-                if (media.TryGetValue(mediaName, out ProMediaItem existingItem))
-                    return existingItem;
-
-                LogFile.Info("Starting media generation for " + mediaName);
-                mediaItem = await ProMediaItem.GetItemAsync(
-                    mediaPath,
-                    Path.Combine(MainWindow.Instance.ApplicationData, MotionCache),
-                    mediaName,
-                    status.duration,
-                    progress, cancelToken);
-                media[mediaName] = mediaItem;
-                AddToMediaList(mediaName + " (motion)");
-                LogFile.Info("Finished media generation for " + mediaName);
-            }
-            else
-            {
-                if (thumbnails.TryGetValue(mediaName, out ProMediaItem existingItem))
-                    return existingItem;
-
-                LogFile.Info("Starting thumbnail generation for " + mediaName);
-                mediaItem = await ProMediaItem.GetItemAsync(
-                    mediaPath,
-                    Path.Combine(MainWindow.Instance.ApplicationData, ThumbnailCache),
-                    mediaName,
-                    0,
-                    progress, cancelToken);
-                thumbnails[mediaName] = mediaItem;
-                AddToMediaList(mediaName + " (thumbnail)");
-                LogFile.Info("Finished thumbnail generation for " + mediaName);
+                mediaItem = await library.LoadMediaAsync(id, mediaName, status.duration, progress, cancelToken);
+                allMedia.Add(mediaItem);
             }
 
+            allMedia.Sort(new MediaItemComparer());
+            await UpdateMediaList(mediaItem);
             return mediaItem;
         }
 
@@ -143,11 +127,25 @@ namespace LightController.Pro
             return double.NaN;
         }
 
-        private void AddToMediaList(string mediaName)
+        private async Task UpdateMediaList(ProMediaItem currentItem)
         {
-            Application.Current.Dispatcher.BeginInvoke(() =>
+            await Application.Current.Dispatcher.InvokeAsync(() =>
             {
-                mediaList.Items.Add(mediaName);
+                var list = mediaList.Items;
+                list.Clear();
+                
+                int currentIndex = -1;
+                int i = 0;
+                foreach(var media in allMedia)
+                {
+                    if (ReferenceEquals(currentItem, media))
+                        currentIndex = i;
+                    list.Add(media.ToString());
+                    i++;
+                }
+
+                if(currentIndex >= 0)
+                    mediaList.SelectedIndex = currentIndex;
             });
         }
     }

@@ -4,6 +4,7 @@ using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,11 +18,30 @@ namespace LightController.Pro
         [ProtoMember(1)]
         private MediaFrame[] data;
         private Dictionary<int, MediaFrame[]> resizedData = new Dictionary<int, MediaFrame[]>();
+        private string details = "";
 
         public double Length => data.Length * FrameInterval;
+        public string Name { get; private set; }
+        public int? Id { get; private set; }
+        public bool HasMotion { get; private set; }
 
         public ProMediaItem()
         {
+        }
+
+        public void SetDetails(string name, int? id, bool hasMotion)
+        {
+            Name = name;
+            Id = id;
+            HasMotion = hasMotion;
+
+            StringBuilder sb = new StringBuilder();
+            if (Id.HasValue)
+                sb.Append(Id.Value).Append(" - ");
+            sb.Append(Name);
+            if (!HasMotion)
+                sb.Append(" (thumbnail)");
+            details = sb.ToString();
         }
 
         public ColorRGB[] GetData(int size, double time)
@@ -118,6 +138,11 @@ namespace LightController.Pro
                 cancelToken.ThrowIfCancellationRequested();
                 return await Task.Run(() => Serializer.Deserialize<ProMediaItem>(stream));
             }
+        }
+
+        public override string ToString()
+        {
+            return details;
         }
     }
 }
