@@ -96,14 +96,16 @@ namespace LightController.Config.Input
                     Stopwatch sw = Stopwatch.StartNew();
                     ProMediaItem newMedia = await pro.GetCurrentMediaAsync(HasMotion, progress, cts.Token, id);
                     media = newMedia;
-                    if (!HasMotion)
+                    transportLayerTime = 0;
+                    lastUpdateTime = DateTime.Now;
+
+                    await TryUpdateTransportLayerTime();
+
+                    lock (colorLock)
                     {
-                        lock (colorLock)
-                        {
-                            colors = media.GetData(pixelWidth, 0);
-                            maxColorValue = colors.Select(x => x.Max()).Max();
-                            minColorValue = colors.Select(x => x.Max()).Min();
-                        }
+                        colors = media.GetData(pixelWidth, transportLayerTime);
+                        maxColorValue = colors.Select(x => x.Max()).Max();
+                        minColorValue = colors.Select(x => x.Max()).Min();
                     }
                     LogFile.Info($"{(HasMotion ? "Media" : "Thumbnail")} generation took {sw.ElapsedMilliseconds}ms");
                 }
@@ -154,11 +156,9 @@ namespace LightController.Config.Input
                 return;
 
             double time;
-            if(runtime % UpdateRate == 0)
+            if(runtime % UpdateRate == 0 && await TryUpdateTransportLayerTime())
             {
-                transportLayerTime = await pro.AsyncGetTransportLayerTime(Layer.Presentation);
                 time = transportLayerTime;
-                lastUpdateTime = DateTime.Now;
             }
             else
             {
@@ -175,6 +175,16 @@ namespace LightController.Config.Input
             }
 
             runtime++;
+        }
+
+        public async Task<bool> TryUpdateTransportLayerTime()
+        {
+            double temp = await pro.AsyncGetTransportLayerTime(Layer.Presentation);
+            if (double.IsNaN(temp))
+                return false;
+            transportLayerTime = temp;
+            lastUpdateTime = DateTime.Now;
+            return true;
         }
 
         public override ColorHSV GetColor(int fixtureId)
