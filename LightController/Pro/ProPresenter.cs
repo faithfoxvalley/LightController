@@ -15,9 +15,13 @@ namespace LightController.Pro
     {
         private const string MotionCache = "Media";
         private const string ThumbnailCache = "Thumbnails";
+        private const double NetworkTimeout = 30;
 
         private string url;
-        private HttpClient client = new HttpClient();
+        private HttpClient client = new HttpClient()
+        {
+            Timeout = TimeSpan.FromSeconds(NetworkTimeout)
+        };
         private List<ProMediaItem> allMedia = new List<ProMediaItem>();
         private MediaLibrary motionLibrary;
         private MediaLibrary thumbnailLibrary;
