@@ -16,7 +16,7 @@ namespace LightController.Config.Input
     {
         private const int UpdateRate = 10;
 
-        private int runtime = 0;
+        private int runtime = int.MinValue;
         private double transportLayerTime;
         private DateTime lastUpdateTime;
 
@@ -72,7 +72,7 @@ namespace LightController.Config.Input
 
         public override async Task StartAsync(Midi.MidiNote note)
         {
-            runtime = 0;
+            runtime = int.MinValue;
 
             if(cts != null)
                 cts.Cancel();
@@ -98,8 +98,6 @@ namespace LightController.Config.Input
                     media = newMedia;
                     transportLayerTime = 0;
                     lastUpdateTime = DateTime.Now;
-
-                    await TryUpdateTransportLayerTime();
 
                     lock (colorLock)
                     {
@@ -155,8 +153,16 @@ namespace LightController.Config.Input
             if (media == null || !HasMotion)
                 return;
 
-            double time;
-            if(runtime % UpdateRate == 0 && await TryUpdateTransportLayerTime())
+            double time = 0;
+            if (runtime <= 0)
+            {
+                if (await TryUpdateTransportLayerTime())
+                {
+                    runtime = 0;
+                    time = transportLayerTime;
+                }
+            }
+            else if ((runtime % UpdateRate == 0) && await TryUpdateTransportLayerTime())
             {
                 time = transportLayerTime;
             }
