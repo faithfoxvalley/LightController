@@ -54,7 +54,7 @@ namespace LightController.Pro
                 mediaFolder,
                 cacheFolder,
                 fileName,
-                duration,
+                motion ? duration : 0,
                 progress, cancelToken);
             mediaItem.SetDetails(fileName, id, motion);
             if (mediaItem.Id.HasValue)
