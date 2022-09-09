@@ -70,7 +70,7 @@ namespace LightController.Pro
         public static Task<ProMediaItem> GetItemAsync(string mediaFolder, string cacheFolder, string file, double length, IProgress<double> progress, CancellationToken cancelToken)
         {
             Directory.CreateDirectory(cacheFolder);
-            string cacheFile = Path.Combine(cacheFolder, Path.ChangeExtension(file, "bin"));
+            string cacheFile = Path.Combine(cacheFolder, file + ".bin");
             if(File.Exists(cacheFile))
             {
                 progress.Report(double.NaN);
