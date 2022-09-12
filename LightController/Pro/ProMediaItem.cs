@@ -116,9 +116,34 @@ namespace LightController.Pro
 
             cancelToken.ThrowIfCancellationRequested();
 
+            // Check if thumbnail creation failed
             if (frames.Count == 0)
             {
-                throw new Exception("Error while reading media file: Unable to get any frames from the media.");
+                // Try again with slightly modified ffmpeg arguments if the media is an image
+                if(fileLength == 0)
+                {
+                    GetThumbnailResult thumbnailResult = await MainWindow.Instance.Ffmpeg.ExecuteAsync(new FfTaskGetThumbnail2(
+                      mediaPath,
+                      options
+                    ));
+
+                    cancelToken.ThrowIfCancellationRequested();
+
+                    if (thumbnailResult.ThumbnailData.Length > 0)
+                    {
+                        MediaFrame frame = await Task.Run(() => MediaFrame.CreateFrame(thumbnailResult.ThumbnailData, 0, cancelToken));
+                        frames.Add(frame);
+                    }
+                    else
+                    {
+                        throw new Exception("Error while reading media file: Unable to get any frames from the media.");
+                    }
+                }
+                else
+                {
+                    throw new Exception("Error while reading media file: Unable to get any frames from the media.");
+                }
+
             }
 
             ProMediaItem result = new ProMediaItem();

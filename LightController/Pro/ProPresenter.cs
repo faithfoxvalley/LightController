@@ -44,8 +44,8 @@ namespace LightController.Pro
                 return;
             }
             string mediaPath = config.MediaAssetsPath;
-            if (!mediaPath.EndsWith('/'))
-                mediaPath += '/';
+            if (!mediaPath.EndsWith(Path.DirectorySeparatorChar) && !mediaPath.EndsWith(Path.AltDirectorySeparatorChar))
+                mediaPath += Path.DirectorySeparatorChar;
             motionLibrary = new MediaLibrary(true, Path.Combine(MainWindow.Instance.ApplicationData, MotionCache), mediaPath);
             thumbnailLibrary = new MediaLibrary(false, Path.Combine(MainWindow.Instance.ApplicationData, ThumbnailCache), mediaPath);
 
