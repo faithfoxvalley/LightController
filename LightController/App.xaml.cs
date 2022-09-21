@@ -7,5 +7,9 @@ namespace LightController
     /// </summary>
     public partial class App : Application
     {
+        void App_SessionEnding(object sender, SessionEndingCancelEventArgs e)
+        {
+            LightController.MainWindow.Instance?.Shutdown();
+        }
     }
 }

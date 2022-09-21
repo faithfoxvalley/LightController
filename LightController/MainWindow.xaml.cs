@@ -182,8 +182,7 @@ namespace LightController
             inputsTimer.Change(Timeout.Infinite, Timeout.Infinite);
             sceneManager.Disable();
 
-            dmx.TurnOff();
-            dmx.Write();
+            Shutdown();
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -193,6 +192,12 @@ namespace LightController
             if (messageBoxResult != MessageBoxResult.Yes)
                 e.Cancel = true;
 #endif
+        }
+
+        public void Shutdown()
+        {
+            dmx.TurnOff();
+            dmx.Write();
         }
     }
 }
