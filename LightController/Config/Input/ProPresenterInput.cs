@@ -220,6 +220,8 @@ namespace LightController.Config.Input
             // intensity provided by user
             double targetMaxIntensity = intensity.Value ?? 1;
             double targetMinIntensity = minIntensity.Value ?? 0;
+            if (targetMinIntensity >= targetMaxIntensity)
+                return targetMaxIntensity;
 
             // intensity of the media 
             double maxChannelValue;
@@ -232,7 +234,7 @@ namespace LightController.Config.Input
 
             double thisIntensity = color.Value;
 
-            if(minChannelValue == maxChannelValue || targetMinIntensity == targetMaxIntensity)
+            if(minChannelValue == maxChannelValue)
                 return targetMaxIntensity;
 
             // https://math.stackexchange.com/a/914843
