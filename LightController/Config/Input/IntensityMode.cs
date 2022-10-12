@@ -30,7 +30,7 @@ namespace LightController.Config.Input
             if(value.EndsWith('%'))
             {
                 if(double.TryParse(value.Substring(0, value.Length - 1), out double percent) 
-                    && !double.IsNaN(percent) && !double.IsInfinity(percent) && percent > 0 && percent <= 100)
+                    && !double.IsNaN(percent) && !double.IsInfinity(percent) && percent >= 0 && percent <= 100)
                 {
                     return new InputIntensity(percent / 100d, stringValue);
                 }
