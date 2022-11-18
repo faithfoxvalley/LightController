@@ -113,7 +113,7 @@ The fixture profile list is where you define how the lights are hooked up to the
     # The name of the fixture
   - name: 
     # The total number of DMX channels this fixture uses
-    dmx_length: 1,2,4-5
+    dmx_length: 3
     # A list of color values that correspond to each fixture
     address_map:
 ```
