@@ -124,6 +124,11 @@ namespace LightController.Config.Input
 
         }
 
+        public override Task StopAsync()
+        {
+            return pro.DeselectMediaItem();
+        }
+
         private void ReportMediaProgress(object sender, double percent)
         {
             Application.Current.Dispatcher.BeginInvoke(() =>

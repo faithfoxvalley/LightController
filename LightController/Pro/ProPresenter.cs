@@ -97,6 +97,13 @@ namespace LightController.Pro
         }
 
 
+        public async Task DeselectMediaItem()
+        {
+            await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                mediaList.SelectedIndex = -1;
+            });
+        }
 
         public async Task<TransportLayerStatus> GetTransportStatusAsync(Layer layer)
         {
@@ -110,7 +117,6 @@ namespace LightController.Pro
             }
             return await Task.FromResult(new TransportLayerStatus());
         }
-
 
         public async Task<double> AsyncGetTransportLayerTime(Layer layer)
         {
