@@ -66,7 +66,7 @@ namespace LightController.Config
         public double GetDelay(int fixtureId)
         {
             if (animationOrder.Count == 0)
-                return Length;
+                return 0;
             for (int i = 0; i < animationOrder.Count; i++)
             {
                 ValueSet set = animationOrder[i];

@@ -64,7 +64,7 @@ namespace LightController.Dmx
 
             double percentNewData = 0;
             TimeSpan length = DateTime.Now - mixStart;
-            if (length.Ticks < 0) // Negative value indicates mixing hasnt started yet
+            if (length.Ticks > 0) // Negative value indicates mixing hasnt started yet
             {
                 if (length > mixTime)
                     return;
