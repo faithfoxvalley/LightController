@@ -1,4 +1,5 @@
-﻿using LightController.Config.Dmx;
+﻿using LightController.Config;
+using LightController.Config.Dmx;
 using OpenDMX.NET;
 using System;
 using System.Collections.Generic;
@@ -116,10 +117,10 @@ namespace LightController.Dmx
                 fixture.TurnOff();
         }
 
-        public void SetInputs(IEnumerable<Config.Input.InputBase> inputs, double mixLength)
+        public void SetInputs(IEnumerable<Config.Input.InputBase> inputs, Animation animation)
         {
             foreach (DmxFixture fixture in fixtures)
-                fixture.SetInput(inputs, mixLength);
+                fixture.SetInput(inputs, animation.GetLength(fixture.FixtureId), animation.GetDelay(fixture.FixtureId));
         }
         
         public void Write()

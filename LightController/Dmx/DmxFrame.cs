@@ -48,9 +48,9 @@ namespace LightController.Dmx
                 data[index] = (byte)packet;
         }
 
-        public void StartMix(double mixLength)
+        public void StartMix(double mixLength, double mixDelay)
         {
-            mixStart = DateTime.Now;
+            mixStart = DateTime.Now + TimeSpan.FromSeconds(mixDelay);
             mixTime = TimeSpan.FromSeconds(mixLength);
             mixData = data;
             data = new byte[mixData.Length];
@@ -62,11 +62,15 @@ namespace LightController.Dmx
             if (mixStart.Ticks <= 0 || mixTime.Ticks == 0)
                 return;
 
+            double percentNewData = 0;
             TimeSpan length = DateTime.Now - mixStart;
-            if (length > mixTime)
-                return;
+            if (length.Ticks < 0) // Negative value indicates mixing hasnt started yet
+            {
+                if (length > mixTime)
+                    return;
 
-            double percentNewData = length.Ticks / (double)mixTime.Ticks;
+                percentNewData = length.Ticks / (double)mixTime.Ticks;
+            }
 
             for(int i = 0; i < mixData.Length && i < data.Length; i++)
             {

@@ -16,7 +16,7 @@ namespace LightController.Dmx
         private bool newInput;
         private object inputLock = new object();
         private int fixtureId;
-        private double mixLength;
+        private double mixLength, mixDelay;
         private string detailString;
 
         public int FixtureId => fixtureId;
@@ -60,7 +60,7 @@ namespace LightController.Dmx
             }
         }
 
-        public void SetInput(IEnumerable<Config.Input.InputBase> inputs, double mixLength)
+        public void SetInput(IEnumerable<Config.Input.InputBase> inputs, double mixLength, double mixDelay)
         {
             if (double.IsNaN(mixLength) || double.IsInfinity(mixLength) || mixLength < 0)
                 mixLength = 0;
@@ -74,6 +74,7 @@ namespace LightController.Dmx
                         if(!disabled)
                         {
                             this.mixLength = mixLength;
+                            this.mixDelay = mixDelay;
                             this.input = input;
                             newInput = true;
                         }
@@ -87,6 +88,7 @@ namespace LightController.Dmx
                 if (!disabled)
                 {
                     this.mixLength = mixLength;
+                    this.mixDelay = mixDelay;
                     this.input = null;
                     newInput = true;
                 }
@@ -110,7 +112,7 @@ namespace LightController.Dmx
 
                 if (newInput)
                 {
-                    frame.StartMix(mixLength);
+                    frame.StartMix(mixLength, mixDelay);
                     newInput = false;
                 }
 

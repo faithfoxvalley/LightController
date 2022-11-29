@@ -2,6 +2,7 @@
 using LightController.Midi;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using YamlDotNet.Serialization;
 
 namespace LightController.Config
 {
@@ -13,6 +14,20 @@ namespace LightController.Config
         public string Name { get; set; }
 
         public double? TransitionTime { get; set; }
+
+        [YamlMember(Alias = "Animation")]
+        public string AnimationValue
+        {
+            get
+            {
+                return TransitionAnimation?.ToString();
+            }
+            set
+            {
+                TransitionAnimation = new Animation(value);
+            }
+        }
+        public Animation TransitionAnimation { get; set; } = new Animation();
 
         public MidiNote MidiNote { get; set; }
 
@@ -30,12 +45,15 @@ namespace LightController.Config
         /// <summary>
         /// Called after the scene has been created, regardless of wether it is currently active
         /// </summary>
-        public void Init()
+        public void Init(double defaultTransitionTime)
         {
             if (Inputs == null)
                 Inputs = new List<InputBase>();
             foreach(InputBase input in Inputs)
                 input.Init();
+            if(!TransitionTime.HasValue)
+                TransitionTime = defaultTransitionTime;
+            TransitionAnimation.Length = TransitionTime.Value;
         }
 
         /// <summary>
