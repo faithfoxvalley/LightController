@@ -29,6 +29,9 @@ scenes:
   # The amount of time in seconds to use as a transition into this scene
   # If left blank, the lighting controller will use the default value instead
   transition_time: 
+  # The order that lights should turn on during the transition, or blank for no animation
+  # Use multiple sets of fixture_ids seperated by semicolons
+  animation:
   # The midi note and channel that will activate the scene
   midi_note:
     channel: 1
