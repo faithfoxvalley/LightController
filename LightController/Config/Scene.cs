@@ -27,6 +27,7 @@ namespace LightController.Config
                 TransitionAnimation = new Animation(value);
             }
         }
+        [YamlIgnore]
         public Animation TransitionAnimation { get; set; } = new Animation();
 
         public MidiNote MidiNote { get; set; }
