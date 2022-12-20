@@ -9,6 +9,12 @@ namespace LightController.Midi
         
         public MidiDeviceList()
         {
+            UpdateMidiDeviceList();
+        }
+
+        public void UpdateMidiDeviceList()
+        {
+            midiDevices.Clear();
             for (int device = 0; device < MidiIn.NumberOfDevices; device++)
                 midiDevices[MidiIn.DeviceInfo(device).ProductName.Trim()] = device;
         }

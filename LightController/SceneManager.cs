@@ -32,9 +32,10 @@ namespace LightController
 
             if (string.IsNullOrWhiteSpace(midiDevice))
             {
-                while(!midiDevices.TryGetFirstDevice(out this.midiDevice))
+                while (!midiDevices.TryGetFirstDevice(out this.midiDevice))
                 {
                     ErrorBox.ExitOnCancel("Midi device not found. Press OK to try again or Cancel to exit.");
+                    midiDevices.UpdateMidiDeviceList();
                 }
 
                 this.midiDevice.NoteEvent += MidiDevice_NoteEvent;
@@ -42,16 +43,14 @@ namespace LightController
             }
             else
             {
-                if (midiDevices.TryGetDevice(midiDevice, out this.midiDevice))
+                while (!midiDevices.TryGetDevice(midiDevice, out this.midiDevice))
                 {
-                    this.midiDevice.NoteEvent += MidiDevice_NoteEvent;
-                    this.midiDevice.Input.Start();
+                    ErrorBox.ExitOnCancel("No Midi device found with name '" + midiDevice + "', please check your config. Press OK to try again or Cancel to exit.");
+                    midiDevices.UpdateMidiDeviceList();
                 }
-                else
-                {
-                    ErrorBox.Show("No Midi device found with name '" + midiDevice + "', please check your config.");
-                    return;
-                }
+
+                this.midiDevice.NoteEvent += MidiDevice_NoteEvent;
+                this.midiDevice.Input.Start();
             }
 
             foreach (Scene s in scenes)
