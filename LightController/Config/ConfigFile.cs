@@ -40,7 +40,7 @@ namespace LightController.Config
             return Path.Combine(MainWindow.Instance.ApplicationData, FileName);
         }
 
-        public static ConfigFile Load()
+        public static ConfigFile Load(bool createNew = true)
         {
             string file = GetUserFileLocation();
             if (File.Exists(file))
