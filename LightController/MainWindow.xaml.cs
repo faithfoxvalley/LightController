@@ -80,7 +80,8 @@ namespace LightController
 
         private void InitAppData()
         {
-            string appname = typeof(MainWindow).Assembly.GetName().Name;
+            AssemblyName mainAssemblyName = typeof(MainWindow).Assembly.GetName();
+            string appname = mainAssemblyName.Name;
             string path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             if (!Directory.Exists(path))
                 throw new DirectoryNotFoundException("No /AppData/Local/ folder exists!");
@@ -90,7 +91,10 @@ namespace LightController
             ApplicationData = path;
 
             LogFile.Init(Path.Combine(ApplicationData, "Logs", appname + ".log"));
-            LogFile.Info("Started application");
+            if(mainAssemblyName.Version != null)
+                LogFile.Info("Started application - v" + mainAssemblyName.Version);
+            else
+                LogFile.Info("Started application");
         }
 
         // This runs on a different thread
