@@ -208,7 +208,7 @@ namespace LightController.Config.Input
             {
                 if (colors == null)
                 {
-                    result = new ColorHSV(0, 1, 1);
+                    result = new ColorHSV(0, 0, 1); // White
                 }
                 else 
                 {
