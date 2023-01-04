@@ -126,6 +126,8 @@ namespace LightController.Config.Input
 
         public override Task StopAsync()
         {
+            if (cts != null)
+                cts.Cancel();
             return pro.DeselectMediaItem();
         }
 
