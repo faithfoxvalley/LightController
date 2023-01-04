@@ -148,23 +148,6 @@ namespace LightController
             Process.GetCurrentProcess().Kill();
         }
 
-        private void btnReload_Click(object sender, RoutedEventArgs e)
-        {
-            ConfigFile newConfig;
-            try
-            {
-                newConfig = ConfigFile.Load();
-            }
-            catch (Exception ex)
-            {
-                LogFile.Error(ex, "An error occurred while reading the config file!");
-                MessageBox.Show("An error occurred while reading the config file, please check your config.", "Light Controller", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.None, MessageBoxOptions.DefaultDesktopOnly);
-                return;
-            }
-            config.Scenes = newConfig.Scenes;
-            sceneManager.ReloadScenes(config.Scenes, config.DefaultTransitionTime);
-        }
-
         private void btnOpenConfig_Click(object sender, RoutedEventArgs e)
         {
             config.Open();

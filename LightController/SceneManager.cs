@@ -16,7 +16,7 @@ namespace LightController
         private DmxProcessor dmx;
         private System.Windows.Controls.ListBox sceneList;
 
-        public SceneManager(List<Scene> scenes, string midiDevice, string defaultScene, DmxProcessor dmx,
+        public SceneManager(List<Scene> scenes, string midiDevice, string defaultScene, DmxProcessor dmx, 
             double transitionTime, System.Windows.Controls.ListBox sceneList)
         {
             this.scenes = scenes;
@@ -67,35 +67,6 @@ namespace LightController
                 }
             }
 
-        }
-
-        public async Task ReloadScenes(List<Scene> scenes, double transitionTime)
-        {
-            foreach (Scene s in this.scenes)
-                await s.DeactivateAsync();
-
-            sceneList.Items.Clear();
-
-            this.scenes = scenes;
-            int currentScene = -1;
-            for (int i = 0; i < scenes.Count; i++)
-            {
-                Scene scene = scenes[i];
-                sceneList.Items.Add(scene.ToString());
-                scene.Init(transitionTime);
-
-                if (scene.Name == activeScene.Name)
-                    currentScene = i;
-            }
-
-            if(currentScene >= 0)
-            {
-                activeScene = scenes[currentScene];
-                LogFile.Info("Activating scene " + activeScene.Name);
-                await activeScene.ActivateAsync();
-                sceneList.SelectedIndex = currentScene;
-                UpdateDmx(activeScene);
-            }
         }
 
         public Task ActivateSceneAsync()
