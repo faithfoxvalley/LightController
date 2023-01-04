@@ -44,6 +44,9 @@ namespace LightController
             InitAppData();
             InitFfmpeg();
 
+            CommandLineOptions args = new CommandLineOptions(Environment.GetCommandLineArgs());
+            LogFile.Info("Command: " + args.ToString());
+
             try
             {
                 config = ConfigFile.Load();
@@ -56,7 +59,11 @@ namespace LightController
 
             pro = new ProPresenter(config.ProPresenter, mediaList);
             dmx = new DmxProcessor(config.Dmx);
-            sceneManager = new SceneManager(config.Scenes, config.MidiDevice, config.DefaultScene, dmx, config.DefaultTransitionTime, sceneList);
+
+            string defaultScene;
+            if(!args.TryGetFlagArg("scene", 0, out defaultScene))
+                defaultScene = config.DefaultScene;
+            sceneManager = new SceneManager(config.Scenes, config.MidiDevice, defaultScene, dmx, config.DefaultTransitionTime, sceneList);
 
             // Update fixture list
             dmx.AppendToListbox(fixtureList);
@@ -144,7 +151,11 @@ namespace LightController
         private void btnRestart_Click(object sender, RoutedEventArgs e)
         {
             LogFile.Info("Restarting application");
-            Process.Start(Process.GetCurrentProcess().MainModule.FileName);
+            string currentScene = sceneManager?.ActiveSceneName;
+            if(currentScene != null)
+                Process.Start(Process.GetCurrentProcess().MainModule.FileName, "-scene " + currentScene);
+            else
+                Process.Start(Process.GetCurrentProcess().MainModule.FileName);
             Process.GetCurrentProcess().Kill();
         }
 
