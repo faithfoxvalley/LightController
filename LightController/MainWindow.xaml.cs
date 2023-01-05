@@ -152,10 +152,20 @@ namespace LightController
         {
             LogFile.Info("Restarting application");
             string currentScene = sceneManager?.ActiveSceneName;
-            if(currentScene != null)
-                Process.Start(Process.GetCurrentProcess().MainModule.FileName, "-scene " + currentScene);
+            string fileName = Process.GetCurrentProcess().MainModule.FileName;
+            if (currentScene != null && !currentScene.Contains('"'))
+            {
+                string argument = "-scene ";
+                if (currentScene.Contains(' '))
+                    argument += "\"" + currentScene + "\"";
+                else
+                    argument += currentScene;
+                Process.Start(fileName, argument);
+            }
             else
-                Process.Start(Process.GetCurrentProcess().MainModule.FileName);
+            {
+                Process.Start(fileName);
+            }
             Process.GetCurrentProcess().Kill();
         }
 

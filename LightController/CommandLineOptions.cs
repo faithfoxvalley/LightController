@@ -15,7 +15,11 @@ namespace LightController
             List<string> optionArgs = new List<string>();
             foreach(string arg in args)
             {
-                sb.Append(arg).Append(' ');
+                if (arg.Contains(' '))
+                    sb.Append('"').Append(arg).Append("\" ");
+                else
+                    sb.Append(arg).Append(' ');
+
                 if(arg.StartsWith('-'))
                 {
                     if(optionName != null)
