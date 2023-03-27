@@ -88,8 +88,8 @@ namespace LightController.Config.Input
                 cts = myCts;
 
                 Progress<double> progress = new Progress<double>();
-                progress.ProgressChanged += MainWindow.ReportMediaProgress;
-                MainWindow.ReportMediaProgress(null, double.NaN);
+                progress.ProgressChanged += ReportMediaProgress;
+                ReportMediaProgress(null, double.NaN);
 
                 try
                 {
@@ -116,7 +116,7 @@ namespace LightController.Config.Input
                     LogFile.Info($"Canceled {(HasMotion ? "media" : "thumbnail")} generation");
                 }
 
-                MainWindow.ReportMediaProgress(null, 0);
+                ReportMediaProgress(null, 0);
                 if (cts == myCts)
                     cts = null;
 
@@ -129,6 +129,29 @@ namespace LightController.Config.Input
             if (cts != null)
                 cts.Cancel();
             return pro.DeselectMediaItem();
+        }
+
+        private void ReportMediaProgress(object sender, double percent)
+        {
+            Application.Current.Dispatcher.BeginInvoke(() =>
+            {
+                if (double.IsNaN(percent))
+                {
+                    MainWindow.Instance.mediaProgress.IsIndeterminate = true;
+                    MainWindow.Instance.TaskbarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.Indeterminate;
+                }
+                else
+                {
+                    MainWindow.Instance.mediaProgress.IsIndeterminate = false;
+                    MainWindow.Instance.mediaProgress.Value = percent;
+                    System.Windows.Shell.TaskbarItemInfo taskbarItemInfo = MainWindow.Instance.TaskbarItemInfo;
+                    taskbarItemInfo.ProgressValue = percent;
+                    if (percent > 0)
+                        taskbarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.Normal;
+                    else
+                        taskbarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.None;
+                }
+            });
         }
 
         public override async Task UpdateAsync()

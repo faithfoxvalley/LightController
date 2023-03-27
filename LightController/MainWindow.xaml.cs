@@ -7,7 +7,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 
 namespace LightController
@@ -218,30 +217,6 @@ namespace LightController
             if (messageBoxResult != MessageBoxResult.Yes)
                 e.Cancel = true;
 #endif
-        }
-
-        public static void ReportMediaProgress(object sender, double percent)
-        {
-            Application.Current.Dispatcher.BeginInvoke(() =>
-            {
-                MainWindow main = Instance;
-                if (double.IsNaN(percent))
-                {
-                    main.mediaProgress.IsIndeterminate = true;
-                    main.TaskbarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.Indeterminate;
-                }
-                else
-                {
-                    main.mediaProgress.IsIndeterminate = false;
-                    main.mediaProgress.Value = percent;
-                    System.Windows.Shell.TaskbarItemInfo taskbarItemInfo = main.TaskbarItemInfo;
-                    taskbarItemInfo.ProgressValue = percent;
-                    if (percent > 0)
-                        taskbarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.Normal;
-                    else
-                        taskbarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.None;
-                }
-            });
         }
 
         public void Shutdown()
