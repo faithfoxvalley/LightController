@@ -8,6 +8,8 @@ using System.IO;
 using System.Reflection;
 using System.Threading;
 using System.Windows;
+using System.Text;
+using Microsoft.Win32;
 
 namespace LightController
 {
@@ -28,6 +30,7 @@ namespace LightController
         private Timer dmxTimer; // Runs on different thread
         private Timer inputsTimer; // Runs on different thread
         private bool inputActivated = false;
+        private string customConfig;
 
         public static MainWindow Instance { get; private set; }
 
@@ -49,7 +52,13 @@ namespace LightController
 
             try
             {
-                config = ConfigFile.Load();
+                string configFile;
+                if (args.TryGetFlagArg("config", 0, out configFile) && File.Exists(configFile))
+                    customConfig = configFile;
+                else
+                    configFile = Path.Combine(ApplicationData, "config.yml");
+
+                config = ConfigFile.Load(configFile);
             }
             catch (Exception e)
             {
@@ -153,25 +162,52 @@ namespace LightController
             LogFile.Info("Restarting application");
             string currentScene = sceneManager?.ActiveSceneName;
             string fileName = Process.GetCurrentProcess().MainModule.FileName;
+            StringBuilder sb = new StringBuilder();
+
             if (currentScene != null && !currentScene.Contains('"'))
             {
-                string argument = "-scene ";
+                sb.Append("-scene ");
                 if (currentScene.Contains(' '))
-                    argument += "\"" + currentScene + "\"";
+                    sb.Append('"').Append(currentScene).Append('"');
                 else
-                    argument += currentScene;
-                Process.Start(fileName, argument);
+                    sb.Append(currentScene);
             }
-            else
+
+            if(customConfig != null)
             {
-                Process.Start(fileName);
+                if (sb.Length > 0)
+                    sb.Append(' ');
+                sb.Append("-config ");
+                if (customConfig.Contains(' '))
+                    sb.Append('"').Append(customConfig).Append('"');
+                else
+                    sb.Append(customConfig);
             }
+
+            if(sb.Length > 0)
+                Process.Start(fileName, sb.ToString());
+            else
+                Process.Start(fileName);
             Process.GetCurrentProcess().Kill();
         }
 
         private void btnOpenConfig_Click(object sender, RoutedEventArgs e)
         {
             config.Open();
+        }
+
+        private void btnLoadConfig_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog()
+            {
+                Filter = "YAML files (.yml)|*.yml;*.yaml",
+                Multiselect = false,
+            };
+            if (openFileDialog.ShowDialog() == true && File.Exists(openFileDialog.FileName))
+            {
+                customConfig = openFileDialog.FileName;
+                btnRestart_Click(null, null);
+            }
         }
 
         private void btnSaveConfig_Click(object sender, RoutedEventArgs e)

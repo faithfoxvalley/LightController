@@ -12,8 +12,6 @@ namespace LightController.Config
 {
     public class ConfigFile
     {
-        private const string FileName = "config.yml";
-
         [YamlMember(Description = "Name of the MIDI device, or blank to pick the first one")]
         public string MidiDevice { get; set; }
 
@@ -32,21 +30,16 @@ namespace LightController.Config
         [YamlMember(Description = "Transition time in seconds for switching scenes")]
         public double DefaultTransitionTime { get; set; } = 1;
 
+        private string fileLocation;
+
         public ConfigFile() { }
 
-
-        public static string GetUserFileLocation()
+        public static ConfigFile Load(string fileLocation)
         {
-            return Path.Combine(MainWindow.Instance.ApplicationData, FileName);
-        }
-
-        public static ConfigFile Load()
-        {
-            string file = GetUserFileLocation();
-            if (File.Exists(file))
+            if (File.Exists(fileLocation))
             {
                 ConfigFile existingFile;
-                using (StreamReader reader = File.OpenText(file))
+                using (StreamReader reader = File.OpenText(fileLocation))
                 {
                     DeserializerBuilder deserializer = new DeserializerBuilder()
                         .IgnoreFields()
@@ -58,16 +51,20 @@ namespace LightController.Config
                     existingFile = deserializer.Build().Deserialize<ConfigFile>(reader);
                 }
                 if(existingFile != null)
+                {
+                    existingFile.fileLocation = fileLocation;
                     return existingFile;
+                }
             }
             ConfigFile newFile = new ConfigFile();
+            newFile.fileLocation = fileLocation;
             newFile.Save();
             return newFile;
         }
 
         public void Save()
         {
-            using(StreamWriter writer = File.CreateText(GetUserFileLocation()))
+            using(StreamWriter writer = File.CreateText(fileLocation))
             {
                 SerializerBuilder serializer = new SerializerBuilder()
                     .IgnoreFields()
@@ -96,7 +93,7 @@ namespace LightController.Config
             using Process fileopener = new Process();
 
             fileopener.StartInfo.FileName = "explorer";
-            fileopener.StartInfo.Arguments = "\"" + GetUserFileLocation() + "\"";
+            fileopener.StartInfo.Arguments = "\"" + fileLocation + "\"";
             fileopener.Start();
         }
     }

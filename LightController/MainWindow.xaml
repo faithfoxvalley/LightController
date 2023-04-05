@@ -23,7 +23,8 @@
                 <MenuItem Header="Debug DMX" Click="DebugDmx_Click"/>
             </MenuItem>
             <MenuItem Header="_Config">
-                <MenuItem Header="_Open" Click="btnOpenConfig_Click"/>
+                <MenuItem Header="_Show" Click="btnOpenConfig_Click"/>
+                <MenuItem Header="_Load" Click="btnLoadConfig_Click"/>
                 <MenuItem Header="_Save" Click="btnSaveConfig_Click"/>
             </MenuItem>
         </Menu>
