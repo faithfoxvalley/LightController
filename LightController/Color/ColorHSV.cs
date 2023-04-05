@@ -16,7 +16,7 @@ namespace LightController.Color
         public double Hue { get; set; }
         public double Saturation { get; set; }
         public double Value { get; set; }
-
+		public static ColorHSV Black { get; } = new ColorHSV(0, 0, 0);
 
         public static explicit operator ColorRGB(ColorHSV x)
         {
