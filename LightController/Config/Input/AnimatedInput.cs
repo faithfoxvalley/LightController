@@ -26,7 +26,7 @@ namespace LightController.Config.Input
         {
             if (Colors == null)
                 Colors = new List<AnimatedInputFrame>();
-            loops.Add(new AnimatedInputLoop(Loop, Colors)); // TODO: Add based on an animation property
+            loops.Add(new AnimatedInputLoop(Loop, Colors, 0)); // TODO: Add based on an animation property
         }
 
         public override Task StartAsync(MidiNote note)

@@ -9,74 +9,114 @@ namespace LightController.Config.Input
     {
         private bool loop;
         private readonly List<AnimatedInputFrame> frames;
-        private DateTime frameEnds = DateTime.MaxValue;
+        private DateTime frameStart;
+        private DateTime mixStart;
+        private DateTime frameEnd;
+        private TimeSpan startDelay;
         private int frameIndex;
         private AnimatedInputFrame frame;
-        private object frameLock = new object();
+        private ColorHSV previousColor;
+        private ColorHSV color;
+        private object colorLock = new object();
 
-        public AnimatedInputLoop(bool loop, List<AnimatedInputFrame> frames)
+        public AnimatedInputLoop(bool loop, List<AnimatedInputFrame> frames, double delay)
         {
             this.loop = loop;
             this.frames = frames;
+            startDelay = TimeSpan.FromSeconds(delay);
+            Reset();
         }
 
         public void Reset()
         {
-            lock (frameLock)
+            frameIndex = 0;
+            previousColor = null;
+            mixStart = DateTime.UtcNow;
+            if (frames.Count == 0)
             {
-                frameIndex = 0;
-                if (frames.Count == 0)
-                {
-                    frame = null;
-                    frameEnds = DateTime.MaxValue;
-                }
-                else
-                {
-                    frame = frames.First();
-                    frameEnds = DateTime.UtcNow + frame.LengthTime;
-                }
+                frame = null;
+                frameStart = DateTime.MaxValue;
+                frameEnd = DateTime.MaxValue;
+            }
+            else
+            {
+                frame = frames.First();
+                frameStart = mixStart + startDelay;
+                frameEnd = frameStart + frame.LengthTime;
+            }
+
+            lock(colorLock)
+            {
+                color = null;
             }
         }
 
         public void Update()
         {
+            if (frame == null)
+                return;
+
             DateTime now = DateTime.UtcNow;
-            lock (frameLock)
+            if (now < frameStart)
             {
-                if (frame != null && frameIndex >= 0 && frameIndex < frames.Count)
+                TimeSpan mixLength = frameStart - mixStart;
+                TimeSpan mixTime = now - mixStart;
+                double percent = mixTime / mixLength;
+                MixColors(percent);
+            }
+            else if (now > frameEnd)
+            {
+                AdvanceFrame();
+            }
+        }
+
+        private void MixColors(double percent)
+        {
+            if (previousColor == null)
+            {
+                lock (colorLock)
                 {
-                    if (now > frameEnds)
-                    {
-                        frameIndex++;
-                        if (frameIndex < frames.Count)
-                        {
-                            frame = frames[frameIndex];
-                            frameEnds += frame.LengthTime;
-                        }
-                        else if (loop)
-                        {
-                            frameIndex = 0;
-                            frame = frames.First();
-                            frameEnds += frame.LengthTime;
-                        }
-                        else
-                        {
-                            frameEnds = DateTime.MaxValue;
-                        }
-                    }
+                    color = null;
                 }
+            }
+            else
+            {
+                ColorHSV newColor = frame.Color;
+                // TODO: Color interpolation
+                // Hint: Unity Mathf.LerpAngle
+            }
+
+        }
+
+        private void AdvanceFrame()
+        {
+            mixStart = frameEnd;
+            frameStart = frameEnd + frame.MixLengthTime;
+            previousColor = frame.Color;
+            frameIndex++;
+            if (frameIndex < frames.Count)
+            {
+                frame = frames[frameIndex];
+                frameEnd = frameStart + frame.LengthTime;
+            }
+            else if (loop)
+            {
+                frameIndex = 0;
+                frame = frames.First();
+                frameEnd = frameStart + frame.LengthTime;
+            }
+            else
+            {
+                frame = null;
             }
         }
 
         public ColorHSV GetColor()
         {
             ColorHSV currentColor;
-            lock (frameLock)
+            lock (colorLock)
             {
-                if (frame == null)
-                    currentColor = ColorHSV.Black;
-                else
-                    currentColor = frame.Color;
+                currentColor = color ?? ColorHSV.Black;
             }
             return currentColor;
         }
@@ -84,12 +124,9 @@ namespace LightController.Config.Input
         public double GetIntensity()
         {
             double currentIntensity;
-            lock (frameLock)
+            lock (colorLock)
             {
-                if (frame == null)
-                    currentIntensity = 0;
-                else
-                    currentIntensity = frame.Color.Value;
+                currentIntensity = color?.Value ?? 0;
             }
             return currentIntensity;
         }
