@@ -21,7 +21,26 @@ namespace LightController.Config.Input
         }
         private double length;
         [YamlIgnore]
-        public TimeSpan LengthTime { get; private set; }
+        public TimeSpan LengthTime { get; private set; } = TimeSpan.Zero;
+
+        [YamlMember(Alias = "MixLength")]
+        public double MixLength
+        {
+            get
+            {
+                return mixLength;
+            }
+            set
+            {
+                mixLength = value;
+                MixLengthTime = TimeSpan.FromSeconds(value);
+            }
+        }
+        private double mixLength;
+        [YamlIgnore]
+        public TimeSpan MixLengthTime { get; private set; } = TimeSpan.Zero;
+        
+
 
 
         [YamlMember(Alias = "rgb", ApplyNamingConventions = false)]
