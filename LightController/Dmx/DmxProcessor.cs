@@ -95,16 +95,15 @@ namespace LightController.Dmx
 
         private bool OpenDevice(uint deviceIndex)
         {
-            var devices = controller.GetDevices();
-            if (deviceIndex < devices.Length)
+            try
             {
-                try
+                var devices = controller.GetDevices();
+                if (deviceIndex < devices.Length)
                 {
                     controller.Open(deviceIndex);
                     return true;
                 }
-                catch { }
-            }
+            } catch { }
             return false;
         }
 
