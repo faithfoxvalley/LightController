@@ -36,12 +36,19 @@ namespace LightController
             {
                 while (!midiDevices.TryGetFirstDevice(out this.midiDevice))
                 {
+#if DEBUG
+                    break;
+#else
                     ErrorBox.ExitOnCancel("Midi device not found. Press OK to try again or Cancel to exit.");
                     midiDevices.UpdateMidiDeviceList();
+#endif
                 }
 
-                this.midiDevice.NoteEvent += MidiDevice_NoteEvent;
-                this.midiDevice.Input.Start();
+                if(this.midiDevice != null)
+                {
+                    this.midiDevice.NoteEvent += MidiDevice_NoteEvent;
+                    this.midiDevice.Input.Start();
+                }
             }
             else
             {
