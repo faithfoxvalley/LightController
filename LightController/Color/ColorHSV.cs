@@ -13,6 +13,10 @@ namespace LightController.Color
             Value = value;
         }
 
+        public ColorHSV(ColorHSV other) : this(other.Hue, other.Saturation, other.Value)
+        {
+        }
+
         public double Hue { get; set; }
         public double Saturation { get; set; }
         public double Value { get; set; }
