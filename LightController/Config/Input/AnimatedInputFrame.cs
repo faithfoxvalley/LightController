@@ -39,32 +39,64 @@ namespace LightController.Config.Input
         private double mixLength;
         [YamlIgnore]
         public TimeSpan MixLengthTime { get; private set; } = TimeSpan.Zero;
-        
 
+        [YamlMember(Alias = "Hue")]
+        public double Hue
+        {
+            get => Color.Hue;
+            set => Color.Hue = Hue;
+        }
 
+        [YamlMember(Alias = "Saturation")]
+        public string Saturation
+        {
+            get => DoubleToPercent(Color.Saturation);
+            set => Color.Saturation = ParsePercent(value, 1);
+        }
 
-        [YamlMember(Alias = "rgb", ApplyNamingConventions = false)]
-        public ColorRGB RGB { get; set; }
+        [YamlIgnore]
+        public ColorHSV Color { get; private set; } = new ColorHSV(ColorHSV.Black);
 
         [YamlMember(Alias = "Intensity")]
         public string IntensityMode
         {
-            get
-            {
-                return intensity.ToString();
-            }
-            set
-            {
-                if (value == null)
-                    intensity = new InputIntensity();
-                else
-                    intensity = InputIntensity.Parse(value);
-            }
+
+            get => DoubleToPercent(Color.Value);
+            set => Color.Value = ParsePercent(value, 1);
         }
-        private InputIntensity intensity = new InputIntensity();
-        public double? Intensity => intensity.Value;
 
         public AnimatedInputFrame() { }
 
+
+        static double ParsePercent(string value, double defaultValue)
+        {
+            if(value.EndsWith('%'))
+            {
+                if (value.Length > 1 && double.TryParse(value, out double percent))
+                {
+                    if (percent < 0)
+                        return 0;
+                    if (percent > 100)
+                        return 1;
+                    return percent / 100;
+                }
+                return defaultValue;
+            }
+
+            if(double.TryParse(value, out double rawValue))
+            {
+                if (rawValue < 0)
+                    return 0;
+                if (rawValue > 1)
+                    return 1;
+                return rawValue;
+            }
+            return defaultValue;
+        }
+
+        static string DoubleToPercent(double value)
+        {
+            return (value * 100).ToString() + "%";
+        }
     }
 }

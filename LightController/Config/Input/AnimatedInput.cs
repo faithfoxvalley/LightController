@@ -18,10 +18,7 @@ namespace LightController.Config.Input
         [YamlMember(Alias = "Loop")]
         public bool Loop { get; set; }
 
-        private DateTime currentFrameEnds = DateTime.MaxValue;
-        private int currentFrameIndex;
-        private AnimatedInputFrame currentFrame;
-        private object currentFrameLock = new object();
+        private readonly List<AnimatedInputLoop> loops = new List<AnimatedInputLoop>();
 
         public AnimatedInput() { }
 
@@ -29,84 +26,41 @@ namespace LightController.Config.Input
         {
             if (Colors == null)
                 Colors = new List<AnimatedInputFrame>();
+            loops.Add(new AnimatedInputLoop(Loop, Colors)); // TODO: Add based on an animation property
         }
 
         public override Task StartAsync(MidiNote note)
         {
-            lock(currentFrameLock)
-            {
-                currentFrameIndex = 0;
-                if (Colors.Count == 0)
-                {
-                    currentFrame = null;
-                    currentFrameEnds = DateTime.MaxValue;
-                }
-                else
-                {
-                    currentFrame = Colors.First();
-                    currentFrameEnds = DateTime.UtcNow + currentFrame.LengthTime;
-                }
-            }
+            // TODO: Test performance vs parallel.foreach
+            foreach(AnimatedInputLoop loop in loops)
+                loop.Reset();
+            //Parallel.ForEach(loops, x => x.Reset());
             return Task.CompletedTask;
         }
 
         public override Task UpdateAsync()
         {
-            DateTime now = DateTime.UtcNow;
-            lock (currentFrameLock)
-            {
-                if (currentFrame != null && currentFrameIndex >= 0 && currentFrameIndex < Colors.Count)
-                {
-                    if (now > currentFrameEnds)
-                    {
-                        currentFrameIndex++;
-                        if (currentFrameIndex < Colors.Count)
-                        {
-                            currentFrame = Colors[currentFrameIndex];
-                            currentFrameEnds += currentFrame.LengthTime;
-                        }
-                        else if(Loop)
-                        {
-                            currentFrameIndex = 0;
-                            currentFrame = Colors.First();
-                            currentFrameEnds += currentFrame.LengthTime;
-                        }
-                        else
-                        {
-                            currentFrameEnds = DateTime.MaxValue;
-                        }
-                    }
-                }
-            }
+            // TODO: Test performance vs parallel.foreach
+            foreach (AnimatedInputLoop loop in loops)
+                loop.Update();
+            //Parallel.ForEach(loops, x => x.Update());
             return Task.CompletedTask;
+        }
+
+        private AnimatedInputLoop GetLoopForFixture(int fixtureId)
+        {
+            return loops[0]; // TODO
         }
 
         public override ColorHSV GetColor(int fixtureId)
         {
-            ColorHSV currentColor;
-            lock (currentFrameLock)
-            {
-                if (currentFrame == null)
-                    currentColor = ColorHSV.Black;
-                else
-                    currentColor = (ColorHSV)currentFrame.RGB;
-            }
-            return currentColor;
+            return GetLoopForFixture(fixtureId).GetColor();
         }
 
         public override double GetIntensity(int fixtureid, ColorHSV target)
         {
-            double? currentIntensity = null;
-            lock (currentFrameLock)
-            {
-                if (currentFrame == null)
-                    currentIntensity = 0;
-                else if (currentFrame.Intensity.HasValue)
-                    currentIntensity = currentFrame.Intensity.Value;
-            }
-            if (currentIntensity.HasValue)
-                return currentIntensity.Value;
-            return intensity.GetIntensity(target);
+            return (intensity.Value ?? 1) * GetLoopForFixture(fixtureid).GetIntensity();
+
         }
     }
 }
