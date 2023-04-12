@@ -10,18 +10,38 @@ namespace LightController.Config
     {
         private List<ValueSet> animationOrder = new List<ValueSet>();
 
+        public IEnumerable<ValueSet> AnimationOrder => animationOrder;
+
         public double Length
         {
             get => length;
             set
             {
                 length = value;
-                if(animationOrder.Count > 0)
-                    stepLength = value / animationOrder.Count;
+                UpdateStepLength();
             }
         }
         private double length;
         private double stepLength;
+
+        /// <summary>
+        /// True = Length defines start to end
+        /// False = Length defines start to start of last set
+        /// </summary>
+        public bool LengthIncludesLastSet 
+        { 
+            get
+            {
+                return lengthIncludesLastSet;
+            }
+            set
+            {
+                lengthIncludesLastSet = value;
+                UpdateStepLength();
+            }
+        }
+        private bool lengthIncludesLastSet = true;
+
 
         public Animation()
         {
@@ -42,6 +62,18 @@ namespace LightController.Config
                     }
                 }
             }
+        }
+
+        private void UpdateStepLength()
+        {
+            if (animationOrder.Count == 0)
+                stepLength = 0;
+            else if (lengthIncludesLastSet)
+                stepLength = length / animationOrder.Count;
+            else if (animationOrder.Count == 1)
+                stepLength = 0;
+            else
+                stepLength = length / (animationOrder.Count - 1);
         }
 
         public override string ToString()
@@ -74,6 +106,13 @@ namespace LightController.Config
                     return stepLength * i;
             }
             return 0;
+        }
+
+        public double GetDelayForSetIndex(int index)
+        {
+            if (index < 0 || index >= animationOrder.Count)
+                return 0;
+            return stepLength * index;
         }
     }
 }

@@ -126,6 +126,11 @@ namespace LightController.Config.Input
             {
                 frame = null;
             }
+
+            lock (colorLock)
+            {
+                isTargetColor = false;
+            }
         }
 
         public ColorHSV GetColor()

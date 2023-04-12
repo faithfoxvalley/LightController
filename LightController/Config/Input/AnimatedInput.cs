@@ -18,7 +18,34 @@ namespace LightController.Config.Input
         [YamlMember(Alias = "Loop")]
         public bool Loop { get; set; }
 
+        [YamlMember(Alias = "Animation")]
+        public string AnimationValue
+        {
+            get
+            {
+                return animation?.ToString();
+            }
+            set
+            {
+                animation = new Animation(value);
+            }
+        }
+        [YamlMember(Alias = "AnimationLength")]
+        public double AnimationLength
+        {
+            get
+            {
+                return animation.Length;
+            }
+            set
+            {
+                animation.Length = value;
+            }
+        }
+
+        private Animation animation = new Animation();
         private readonly List<AnimatedInputLoop> loops = new List<AnimatedInputLoop>();
+        private readonly Dictionary<int, int> loopsByFixture = new Dictionary<int, int>();
 
         public AnimatedInput() { }
 
@@ -26,7 +53,21 @@ namespace LightController.Config.Input
         {
             if (Colors == null)
                 Colors = new List<AnimatedInputFrame>();
-            loops.Add(new AnimatedInputLoop(Loop, Colors, 0)); // TODO: Add based on an animation property
+
+            animation.LengthIncludesLastSet = false;
+            int i = 0;
+            foreach(ValueSet set in animation.AnimationOrder)
+            {
+                if (set.GetOverlap(FixtureIds, out ValueSet overlap))
+                {
+                    double delay = animation.GetDelayForSetIndex(i);
+                    AnimatedInputLoop loop = new AnimatedInputLoop(Loop, Colors, delay);
+                    foreach (int id in overlap.EnumerateValues())
+                        loopsByFixture[id] = loops.Count;
+                    loops.Add(loop);
+                }
+                i++;
+            }
         }
 
         public override Task StartAsync(MidiNote note)
@@ -49,7 +90,7 @@ namespace LightController.Config.Input
 
         private AnimatedInputLoop GetLoopForFixture(int fixtureId)
         {
-            return loops[0]; // TODO
+            return loops[loopsByFixture[fixtureId]];
         }
 
         public override ColorHSV GetColor(int fixtureId)
