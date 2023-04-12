@@ -17,6 +17,7 @@ namespace LightController.Config.Input
         private AnimatedInputFrame frame;
         private ColorHSV previousColor;
         private ColorHSV color;
+        private bool isTargetColor;
         private object colorLock = new object();
 
         public AnimatedInputLoop(bool loop, List<AnimatedInputFrame> frames, double delay)
@@ -48,6 +49,7 @@ namespace LightController.Config.Input
             lock(colorLock)
             {
                 color = null;
+                isTargetColor = false;
             }
         }
 
@@ -60,13 +62,24 @@ namespace LightController.Config.Input
             if (now < frameStart)
             {
                 TimeSpan mixLength = frameStart - mixStart;
-                TimeSpan mixTime = now - mixStart;
-                double percent = mixTime / mixLength;
+                TimeSpan elapsedTime = now - mixStart;
+                double percent = elapsedTime / mixLength;
                 MixColors(percent);
             }
             else if (now > frameEnd)
             {
                 AdvanceFrame();
+            }
+            else
+            {
+                lock(colorLock)
+                {
+                    if(color == null || !isTargetColor)
+                    {
+                        color = new ColorHSV(frame.Color);
+                        isTargetColor = true;
+                    }
+                }
             }
         }
 
@@ -77,13 +90,17 @@ namespace LightController.Config.Input
                 lock (colorLock)
                 {
                     color = null;
+                    isTargetColor = false;
                 }
             }
             else
             {
-                ColorHSV newColor = frame.Color;
-                // TODO: Color interpolation
-                // Hint: Unity Mathf.LerpAngle
+                ColorHSV lerpColor = ColorHSV.Lerp(previousColor, frame.Color, percent);
+                lock (colorLock)
+                {
+                    color = lerpColor;
+                    isTargetColor = false;
+                }
             }
 
         }
