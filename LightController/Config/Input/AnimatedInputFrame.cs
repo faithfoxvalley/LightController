@@ -44,7 +44,7 @@ namespace LightController.Config.Input
         public double Hue
         {
             get => Color.Hue;
-            set => Color.Hue = Hue;
+            set => Color.Hue = value;
         }
 
         [YamlMember(Alias = "Saturation")]
@@ -72,7 +72,7 @@ namespace LightController.Config.Input
         {
             if(value.EndsWith('%'))
             {
-                if (value.Length > 1 && double.TryParse(value, out double percent))
+                if (value.Length > 1 && double.TryParse(value.Substring(0, value.Length - 1), out double percent))
                 {
                     if (percent < 0)
                         return 0;
