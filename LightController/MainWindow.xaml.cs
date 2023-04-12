@@ -10,6 +10,8 @@ using System.Threading;
 using System.Windows;
 using System.Text;
 using Microsoft.Win32;
+using System.Threading.Tasks;
+using LightController.Color;
 
 namespace LightController
 {
@@ -31,6 +33,7 @@ namespace LightController
         private Timer inputsTimer; // Runs on different thread
         private bool inputActivated = false;
         private string customConfig;
+        private DebugData debug = new DebugData();
 
         public static MainWindow Instance { get; private set; }
 
@@ -43,9 +46,14 @@ namespace LightController
             Instance = this;
 
             InitializeComponent();
+            DataContext = debug;
 
             InitAppData();
             InitFfmpeg();
+
+#if DEBUG
+            debugPanel.Visibility = Visibility.Visible;
+#endif
 
             CommandLineOptions args = new CommandLineOptions(Environment.GetCommandLineArgs());
             LogFile.Info("Command: " + args.ToString());
@@ -129,6 +137,10 @@ namespace LightController
                 await sceneManager.UpdateAsync();
 
                 sw.Stop();
+#if DEBUG
+                double percent = sw.ElapsedMilliseconds / (double)InputsUpdateRate;
+                debug.InputUpdateUsage = percent.ToString("P");
+#endif
                 inputsTimer.Change(Math.Max(0, InputsUpdateRate - sw.ElapsedMilliseconds), Timeout.Infinite);
             }
             catch (Exception ex)
@@ -148,6 +160,10 @@ namespace LightController
                 dmx.Write();
 
                 sw.Stop();
+#if DEBUG
+                double percent = sw.ElapsedMilliseconds / (double)DmxUpdateRate;
+                debug.DmxUpdateUsage = percent.ToString("P");
+#endif
                 dmxTimer.Change(Math.Max(0, DmxUpdateRate - sw.ElapsedMilliseconds), Timeout.Infinite);
             }
             catch(Exception ex)
@@ -259,6 +275,13 @@ namespace LightController
         {
             dmx.TurnOff();
             dmx.Write();
+        }
+
+
+        public class DebugData
+        {
+            public string InputUpdateUsage { get; set; }
+            public string DmxUpdateUsage { get; set; }
         }
     }
 }

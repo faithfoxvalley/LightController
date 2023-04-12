@@ -45,6 +45,11 @@
             <Label Content="Scenes" Grid.Row="0"/>
             <ListBox x:Name="sceneList" Grid.Row="1" ItemContainerStyle="{StaticResource ListBoxNoSelection}"/>
             <colorpicker:PortableColorPicker HorizontalAlignment="Left" x:Name="colorPicker" Width="40" Height="40" Grid.Row="2" Visibility="Collapsed"/>
+            <StackPanel Grid.Row="2" x:Name="debugPanel" Visibility="Collapsed">
+                <Label Background="White" Panel.ZIndex="1" VerticalAlignment="Top" HorizontalAlignment="Left" Content="{Binding InputUpdateUsage}"></Label>
+                <Label Background="White" Panel.ZIndex="1" VerticalAlignment="Top" HorizontalAlignment="Left" Content="{Binding DmxUpdateUsage}"></Label>
+            </StackPanel>
+            
         </Grid>
         <Grid Margin="10,10,10,10">
             <Grid.RowDefinitions>
