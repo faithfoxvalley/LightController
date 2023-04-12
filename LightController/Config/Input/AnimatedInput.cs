@@ -72,19 +72,15 @@ namespace LightController.Config.Input
 
         public override Task StartAsync(MidiNote note)
         {
-            // TODO: Test performance vs parallel.foreach
             foreach(AnimatedInputLoop loop in loops)
                 loop.Reset();
-            //Parallel.ForEach(loops, x => x.Reset());
             return Task.CompletedTask;
         }
 
         public override Task UpdateAsync()
         {
-            // TODO: Test performance vs parallel.foreach
             foreach (AnimatedInputLoop loop in loops)
                 loop.Update();
-            //Parallel.ForEach(loops, x => x.Update());
             return Task.CompletedTask;
         }
 
