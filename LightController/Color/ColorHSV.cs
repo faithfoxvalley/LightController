@@ -8,6 +8,8 @@ namespace LightController.Color
         {
 			if (hue < 0)
 				hue += 360;
+			if (hue >= 360)
+				hue -= 360;
             Hue = hue;
             Saturation = saturation;
             Value = value;
@@ -102,6 +104,35 @@ namespace LightController.Color
 		public override string ToString()
 		{
 			return $"{Hue:0.#}, {Saturation:P}, {Value:P}";
+		}
+
+		public static ColorHSV Lerp(ColorHSV previousColor, ColorHSV newColor, double percent)
+        {
+			double hue = LerpAngle(previousColor.Hue, newColor.Hue, percent);
+			double sat = Lerp(previousColor.Saturation, newColor.Saturation, percent);
+			double val = Lerp(previousColor.Value, newColor.Value, percent);
+			return new ColorHSV(hue, sat, val);
+		}
+
+		// Interpolates between a and b by percent.
+		static double Lerp(double a, double b, double percent)
+		{
+			return a + (b - a) * percent;
+		}
+
+		// Loops the value, so that it is never larger than length and never smaller than 0.
+		static double Repeat(double value, double length)
+		{
+			return Math.Clamp(value - Math.Floor(value / length) * length, 0, length);
+		}
+
+		// Same as Lerp but makes sure the values interpolate correctly when they wrap around 360 degrees.
+		static double LerpAngle(double a, double b, double percent)
+		{
+			double delta = Repeat((b - a), 360);
+			if (delta > 180)
+				delta -= 360;
+			return a + delta * percent;
 		}
 	}
 }
