@@ -68,6 +68,19 @@ namespace LightController.Config.Input
                 }
                 i++;
             }
+
+            AnimatedInputLoop defaultLoop = new AnimatedInputLoop(Loop, Colors, 0);
+            bool defaultLoopRequired = false;
+            foreach(int id in FixtureIds.EnumerateValues())
+            {
+                if(!loopsByFixture.ContainsKey(id))
+                {
+                    loopsByFixture[id] = loops.Count;
+                    defaultLoopRequired = true;
+                }
+            }
+            if (defaultLoopRequired)
+                loops.Add(defaultLoop);
         }
 
         public override Task StartAsync(MidiNote note)
