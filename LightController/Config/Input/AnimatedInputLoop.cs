@@ -87,7 +87,10 @@ namespace LightController.Config.Input
                     return;
                 }
             }
-            throw new Exception("Unknown frame state");
+
+            frame = frames.First();
+            frameStart = DateTime.UtcNow;
+            frameEnd = frameStart + frame.LengthTime;
         }
 
         private TimeSpan GetLength()
