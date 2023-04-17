@@ -25,6 +25,9 @@ namespace LightController.Config.Input
             this.loop = loop;
             this.frames = frames;
             startDelay = TimeSpan.FromSeconds(delay);
+            TimeSpan totalLength = GetLength();
+            if (startDelay > totalLength)
+                startDelay = new TimeSpan(startDelay.Ticks % totalLength.Ticks);
             Reset();
         }
 
@@ -39,11 +42,15 @@ namespace LightController.Config.Input
                 frameStart = DateTime.MaxValue;
                 frameEnd = DateTime.MaxValue;
             }
-            else
+            else if(!loop || startDelay.Ticks <= 0)
             {
                 frame = frames.First();
                 frameStart = mixStart + startDelay;
                 frameEnd = frameStart + frame.LengthTime;
+            }
+            else
+            {
+                ResetFrameToTime(GetLength() - startDelay);
             }
 
             lock(colorLock)
@@ -51,6 +58,44 @@ namespace LightController.Config.Input
                 color = null;
                 isTargetColor = false;
             }
+        }
+
+        private void ResetFrameToTime(TimeSpan elapsedTime)
+        {
+            int i = 0;
+            while(elapsedTime.Ticks > 0)
+            {
+                AnimatedInputFrame frame = frames[i];
+                elapsedTime -= frame.LengthTime;
+                if(elapsedTime.Ticks <= 0)
+                {
+                    // The current state is in the middle of a frame
+                    this.frame = frame;
+                    frameStart = DateTime.UtcNow + elapsedTime;
+                    frameEnd = frameStart + frame.LengthTime;
+                    return;
+                }
+                elapsedTime -= frame.MixLengthTime;
+                if (elapsedTime.Ticks <= 0)
+                {
+                    // The current state is mixing between two frames
+                    previousColor = frame.Color;
+                    this.frame = frames[(i + 1) % frames.Count];
+                    mixStart = DateTime.UtcNow + elapsedTime;
+                    frameStart = mixStart + this.frame.MixLengthTime;
+                    frameEnd = frameStart + this.frame.LengthTime;
+                    return;
+                }
+            }
+            throw new Exception("Unknown frame state");
+        }
+
+        private TimeSpan GetLength()
+        {
+            TimeSpan span = new TimeSpan(0);
+            foreach (AnimatedInputFrame frame in frames)
+                span += frame.LengthTime + frame.MixLengthTime;
+            return span;
         }
 
         public void Update()
