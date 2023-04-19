@@ -75,7 +75,11 @@ namespace LightController.ColorAnimation
             {
                 if(loop)
                 {
-                    if(this.color != null)
+                    elapsedTime = new TimeSpan(elapsedTime.Ticks % totalLength.Ticks);
+                }
+                else
+                {
+                    if (this.color != null)
                     {
                         lock (colorLock)
                         {
@@ -83,10 +87,6 @@ namespace LightController.ColorAnimation
                         }
                     }
                     return;
-                }
-                else
-                {
-                    elapsedTime = new TimeSpan(elapsedTime.Ticks % totalLength.Ticks);
                 }
             }
 
