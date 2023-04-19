@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace LightController.Color
 {
@@ -101,7 +102,17 @@ namespace LightController.Color
 			return new ColorRGB((byte)Math.Round(r * 255), (byte)Math.Round(g * 255), (byte)Math.Round(b * 255));
 		}
 
-		public override string ToString()
+        public static bool operator ==(ColorHSV left, ColorHSV right)
+        {
+            return EqualityComparer<ColorHSV>.Default.Equals(left, right);
+        }
+
+        public static bool operator !=(ColorHSV left, ColorHSV right)
+        {
+            return !(left == right);
+        }
+
+        public override string ToString()
 		{
 			return $"{Hue:0.#}, {Saturation:P}, {Value:P}";
 		}
@@ -134,5 +145,13 @@ namespace LightController.Color
 				delta -= 360;
 			return a + delta * percent;
 		}
-	}
+
+        public override bool Equals(object obj)
+        {
+            return obj is ColorHSV hSV &&
+                   Hue == hSV.Hue &&
+                   Saturation == hSV.Saturation &&
+                   Value == hSV.Value;
+        }
+    }
 }
