@@ -14,7 +14,7 @@ namespace LightController.Config.Input
     [YamlTag("!propresenter_input")]
     public class ProPresenterInput : InputBase
     {
-        private const int UpdateRate = 10;
+        private const int UpdateRate = 20;
 
         private int runtime = int.MinValue;
         private double transportLayerTime;
