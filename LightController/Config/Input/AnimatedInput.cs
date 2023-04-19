@@ -19,8 +19,8 @@ namespace LightController.Config.Input
         [YamlMember(Alias = "Loop")]
         public bool Loop { get; set; }
 
-        [YamlMember(Alias = "Animation")]
-        public string AnimationValue
+        [YamlMember(Alias = "DelayAnimation")]
+        public string DelayAnimation
         {
             get
             {
@@ -31,8 +31,8 @@ namespace LightController.Config.Input
                 animation = new Animation(value);
             }
         }
-        [YamlMember(Alias = "AnimationLength")]
-        public double AnimationLength
+        [YamlMember(Alias = "DelayLength")]
+        public double DelayLength
         {
             get
             {
