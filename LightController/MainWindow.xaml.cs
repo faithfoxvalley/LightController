@@ -12,6 +12,7 @@ using System.Text;
 using Microsoft.Win32;
 using System.Threading.Tasks;
 using LightController.Color;
+using System.Collections.Generic;
 
 namespace LightController
 {
@@ -33,7 +34,13 @@ namespace LightController
         private Timer inputsTimer; // Runs on different thread
         private bool inputActivated = false;
         private string customConfig;
-        private DebugData debug = new DebugData();
+
+        // Debug stuff
+        private System.Windows.Threading.DispatcherTimer debugTimer;
+        ulong dmxTicks;
+        ulong inputTicks;
+        long dmxUsage;
+        long inputUsage;
 
         public static MainWindow Instance { get; private set; }
 
@@ -46,14 +53,9 @@ namespace LightController
             Instance = this;
 
             InitializeComponent();
-            DataContext = debug;
 
             InitAppData();
             InitFfmpeg();
-
-#if DEBUG
-            debugPanel.Visibility = Visibility.Visible;
-#endif
 
             CommandLineOptions args = new CommandLineOptions(Environment.GetCommandLineArgs());
             LogFile.Info("Command: " + args.ToString());
@@ -88,6 +90,29 @@ namespace LightController
             // https://stackoverflow.com/a/12797382
             dmxTimer = new Timer(UpdateDmx, null, DmxUpdateRate, Timeout.Infinite);
             inputsTimer = new Timer(UpdateInputs, null, InputsUpdateRate, Timeout.Infinite);
+
+#if DEBUG
+            debugPanel.Visibility = Visibility.Visible;
+            debugTimer = new System.Windows.Threading.DispatcherTimer();
+            debugTimer.Interval = new TimeSpan(0, 0, 1);
+            debugTimer.Tick += DebugTimer_Tick;
+            debugTimer.Start();
+#endif
+        }
+
+        private void DebugTimer_Tick(object sender, EventArgs e)
+        {
+            ulong dmxTicks = Interlocked.Exchange(ref this.dmxTicks, 0);
+            long dmxUsage = Interlocked.Exchange(ref this.dmxUsage, 0);
+            ulong maxDmx = dmxTicks * DmxUpdateRate;
+            double dmxPercent = dmxUsage / (double)maxDmx;
+            lblDebug1.Content = $"{dmxPercent:P} {dmxTicks}";
+
+            ulong inputTicks = Interlocked.Exchange(ref this.inputTicks, 0);
+            long inputUsage = Interlocked.Exchange(ref this.inputUsage, 0);
+            ulong maxInput = inputTicks * InputsUpdateRate;
+            double inputPercent = inputUsage / (double)maxInput;
+            lblDebug2.Content = $"{inputPercent:P} {inputTicks}";
 
         }
 
@@ -136,11 +161,11 @@ namespace LightController
 
                 await sceneManager.UpdateAsync();
 
-                sw.Stop();
 #if DEBUG
-                double percent = sw.ElapsedMilliseconds / (double)InputsUpdateRate;
-                debug.InputUpdateUsage = percent.ToString("P");
+                Interlocked.Increment(ref inputTicks);
+                Interlocked.Add(ref inputUsage, sw.ElapsedMilliseconds);
 #endif
+                sw.Stop();
                 inputsTimer.Change(Math.Max(0, InputsUpdateRate - sw.ElapsedMilliseconds), Timeout.Infinite);
             }
             catch (Exception ex)
@@ -159,11 +184,11 @@ namespace LightController
 
                 dmx.Write();
 
-                sw.Stop();
 #if DEBUG
-                double percent = sw.ElapsedMilliseconds / (double)DmxUpdateRate;
-                debug.DmxUpdateUsage = percent.ToString("P");
+                Interlocked.Increment(ref dmxTicks);
+                Interlocked.Add(ref dmxUsage, sw.ElapsedMilliseconds);
 #endif
+                sw.Stop();
                 dmxTimer.Change(Math.Max(0, DmxUpdateRate - sw.ElapsedMilliseconds), Timeout.Infinite);
             }
             catch(Exception ex)
@@ -275,13 +300,6 @@ namespace LightController
         {
             dmx.TurnOff();
             dmx.Write();
-        }
-
-
-        public class DebugData
-        {
-            public string InputUpdateUsage { get; set; }
-            public string DmxUpdateUsage { get; set; }
         }
     }
 }
