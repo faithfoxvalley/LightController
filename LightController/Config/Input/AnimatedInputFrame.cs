@@ -23,23 +23,6 @@ namespace LightController.Config.Input
         [YamlIgnore]
         public TimeSpan LengthTime { get; private set; } = TimeSpan.Zero;
 
-        [YamlMember(Alias = "MixLength")]
-        public double MixLength
-        {
-            get
-            {
-                return mixLength;
-            }
-            set
-            {
-                mixLength = value;
-                MixLengthTime = TimeSpan.FromSeconds(value);
-            }
-        }
-        private double mixLength;
-        [YamlIgnore]
-        public TimeSpan MixLengthTime { get; private set; } = TimeSpan.Zero;
-
         [YamlMember(Alias = "Hue")]
         public double Hue
         {
@@ -64,6 +47,9 @@ namespace LightController.Config.Input
             get => DoubleToPercent(Color.Value);
             set => Color.Value = ParsePercent(value, 1);
         }
+
+        [YamlMember(Alias = "Mix")]
+        public bool Mix { get; set; } = true;
 
         public AnimatedInputFrame() { }
 

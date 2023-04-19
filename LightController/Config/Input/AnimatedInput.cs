@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using YamlDotNet.Serialization;
+using LightController.ColorAnimation;
 
 namespace LightController.Config.Input
 {
@@ -44,7 +45,7 @@ namespace LightController.Config.Input
         }
 
         private Animation animation = new Animation();
-        private readonly List<AnimatedInputLoop> loops = new List<AnimatedInputLoop>();
+        private readonly List<AnimationLoop> loops = new List<AnimationLoop>();
         private readonly Dictionary<int, int> loopsByFixture = new Dictionary<int, int>();
 
         public AnimatedInput() { }
@@ -60,8 +61,8 @@ namespace LightController.Config.Input
             {
                 if (set.GetOverlap(FixtureIds, out ValueSet overlap))
                 {
-                    double delay = animation.GetDelayForSetIndex(i);
-                    AnimatedInputLoop loop = new AnimatedInputLoop(Loop, Colors, delay);
+                    TimeSpan delay = TimeSpan.FromSeconds(animation.GetDelayForSetIndex(i));
+                    AnimationLoop loop = new AnimationLoop(Loop, Colors, delay);
                     foreach (int id in overlap.EnumerateValues())
                         loopsByFixture[id] = loops.Count;
                     loops.Add(loop);
@@ -69,7 +70,7 @@ namespace LightController.Config.Input
                 i++;
             }
 
-            AnimatedInputLoop defaultLoop = new AnimatedInputLoop(Loop, Colors, 0);
+            AnimationLoop defaultLoop = new AnimationLoop(Loop, Colors, TimeSpan.Zero);
             bool defaultLoopRequired = false;
             foreach(int id in FixtureIds.EnumerateValues())
             {
@@ -85,19 +86,21 @@ namespace LightController.Config.Input
 
         public override Task StartAsync(MidiNote note)
         {
-            foreach(AnimatedInputLoop loop in loops)
-                loop.Reset();
+            DateTime utcNow = DateTime.UtcNow;
+            foreach(AnimationLoop loop in loops)
+                loop.Reset(utcNow);
             return Task.CompletedTask;
         }
 
         public override Task UpdateAsync()
         {
-            foreach (AnimatedInputLoop loop in loops)
-                loop.Update();
+            DateTime utcNow = DateTime.UtcNow;
+            foreach (AnimationLoop loop in loops)
+                loop.Update(utcNow);
             return Task.CompletedTask;
         }
 
-        private AnimatedInputLoop GetLoopForFixture(int fixtureId)
+        private AnimationLoop GetLoopForFixture(int fixtureId)
         {
             return loops[loopsByFixture[fixtureId]];
         }
