@@ -114,9 +114,9 @@ namespace LightController.ColorAnimation
                     else
                         currentFrame = null;
                 }
-                else // elapsedTime is greater than the start time at frames[index]
+                else // elapsedTime is less than the start time at frames[index]
                 {
-                    currentFrame = frames[index];
+                    currentFrame = frames[index - 1];
                 }
             }
             ColorHSV color = currentFrame?.GetColor(elapsedTime);
