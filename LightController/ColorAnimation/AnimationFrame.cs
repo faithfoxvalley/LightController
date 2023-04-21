@@ -32,12 +32,8 @@ namespace LightController.ColorAnimation
             if (equal)
                 return startColor;
 
-            if (elapsedTime < startTime)
-                return ColorHSV.Black;
             elapsedTime -= startTime;
-            if (elapsedTime > length)
-                return ColorHSV.Black;
-            double percent = elapsedTime / length;
+            double percent = Math.Clamp(elapsedTime / length, 0, 1);
             return ColorHSV.Lerp(startColor, endColor, percent);
         }
     }

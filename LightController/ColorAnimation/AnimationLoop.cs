@@ -71,23 +71,9 @@ namespace LightController.ColorAnimation
                 return;
 
             TimeSpan elapsedTime = utcNow - startTime;
-            if (elapsedTime > totalLength)
+            if (elapsedTime > totalLength && loop)
             {
-                if(loop)
-                {
-                    elapsedTime = new TimeSpan(elapsedTime.Ticks % totalLength.Ticks);
-                }
-                else
-                {
-                    if (this.color != null)
-                    {
-                        lock (colorLock)
-                        {
-                            this.color = null;
-                        }
-                    }
-                    return;
-                }
+                elapsedTime = new TimeSpan(elapsedTime.Ticks % totalLength.Ticks);
             }
 
             dummyFrame.StartTime = elapsedTime;
@@ -100,21 +86,21 @@ namespace LightController.ColorAnimation
             else
             {
                 index = ~index;
-                if(index >= frames.Count) // elapsedTime is greater than all other frame start times
+                if(index >= frames.Count) // elapsedTime is after all other frame start times
                 {
                     if (loop)
                         currentFrame = frames[0];
                     else
-                        currentFrame = null;
+                        currentFrame = frames[frames.Count - 1];
                 }
-                else if(index == 0) // elapsedTime is less than all other frame start times (impossible?)
+                else if(index == 0) // elapsedTime is before all other frame start times (impossible?)
                 {
                     if (loop)
                         currentFrame = frames[frames.Count - 1];
                     else
                         currentFrame = null;
                 }
-                else // elapsedTime is less than the start time at frames[index]
+                else // elapsedTime is before the start time at frames[index]
                 {
                     currentFrame = frames[index - 1];
                 }
