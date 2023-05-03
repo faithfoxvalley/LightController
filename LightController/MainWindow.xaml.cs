@@ -21,8 +21,8 @@ namespace LightController
     /// </summary>
     public partial class MainWindow : Window
     {
-        private const int DmxUpdateRate = 33;
-        private const int InputsUpdateRate = 50;
+        private const int DmxUpdateFps = 30;
+        private const int InputsUpdateFps = 20;
         private const int ErrorTimeout = 5000;
 
         private ProPresenter pro;
@@ -30,17 +30,12 @@ namespace LightController
         private ConfigFile config;
         private SceneManager sceneManager;
         private DmxProcessor dmx;
-        private Timer dmxTimer; // Runs on different thread
-        private Timer inputsTimer; // Runs on different thread
+        private TickLoop dmxTimer; // Runs on different thread
+        private TickLoop inputsTimer; // Runs on different thread
         private bool inputActivated = false;
         private string customConfig;
 
-        // Debug stuff
-        private System.Windows.Threading.DispatcherTimer debugTimer;
-        ulong dmxTicks;
-        ulong inputTicks;
-        long dmxUsage;
-        long inputUsage;
+        private System.Windows.Threading.DispatcherTimer uiTimer;
 
         public static MainWindow Instance { get; private set; }
 
@@ -87,33 +82,24 @@ namespace LightController
             // Update fixture list
             dmx.AppendToListbox(fixtureList);
 
-            // https://stackoverflow.com/a/12797382
-            dmxTimer = new Timer(UpdateDmx, null, DmxUpdateRate, Timeout.Infinite);
-            inputsTimer = new Timer(UpdateInputs, null, InputsUpdateRate, Timeout.Infinite);
+            dmxTimer = new TickLoop(DmxUpdateFps, UpdateDmx);
+            inputsTimer = new TickLoop(InputsUpdateFps, UpdateInputs);
 
-#if DEBUG
-            debugPanel.Visibility = Visibility.Visible;
-            debugTimer = new System.Windows.Threading.DispatcherTimer();
-            debugTimer.Interval = new TimeSpan(0, 0, 1);
-            debugTimer.Tick += DebugTimer_Tick;
-            debugTimer.Start();
-#endif
+            uiTimer = new System.Windows.Threading.DispatcherTimer();
+            uiTimer.Interval = new TimeSpan(0, 0, 1);
+            uiTimer.Tick += UiTimer_Tick;
+            uiTimer.Start();
         }
 
-        private void DebugTimer_Tick(object sender, EventArgs e)
+        private void UiTimer_Tick(object sender, EventArgs e)
         {
-            ulong dmxTicks = Interlocked.Exchange(ref this.dmxTicks, 0);
-            long dmxUsage = Interlocked.Exchange(ref this.dmxUsage, 0);
-            ulong maxDmx = dmxTicks * DmxUpdateRate;
-            double dmxPercent = dmxUsage / (double)maxDmx;
-            lblDebug1.Content = $"{dmxPercent:P} {dmxTicks}";
-
-            ulong inputTicks = Interlocked.Exchange(ref this.inputTicks, 0);
-            long inputUsage = Interlocked.Exchange(ref this.inputUsage, 0);
-            ulong maxInput = inputTicks * InputsUpdateRate;
-            double inputPercent = inputUsage / (double)maxInput;
-            lblDebug2.Content = $"{inputPercent:P} {inputTicks}";
-
+            StringBuilder sb = new StringBuilder();
+            sb.Append("Dmx").AppendLine();
+            dmxTimer.AppendPerformanceInfo(sb);
+            sb.AppendLine();
+            sb.Append("Input").AppendLine();
+            inputsTimer.AppendPerformanceInfo(sb);
+            performanceInfo.Text = sb.ToString();
         }
 
         private void InitFfmpeg()
@@ -147,55 +133,22 @@ namespace LightController
         }
 
         // This runs on a different thread
-        private async void UpdateInputs(object state)
+        private async Task UpdateInputs()
         {
-            try
+            if (!inputActivated)
             {
-                Stopwatch sw = Stopwatch.StartNew();
-
-                if (!inputActivated)
-                {
-                    await sceneManager.ActivateSceneAsync();
-                    inputActivated = true;
-                }
-
-                await sceneManager.UpdateAsync();
-
-#if DEBUG
-                Interlocked.Increment(ref inputTicks);
-                Interlocked.Add(ref inputUsage, sw.ElapsedMilliseconds);
-#endif
-                sw.Stop();
-                inputsTimer.Change(Math.Max(0, InputsUpdateRate - sw.ElapsedMilliseconds), Timeout.Infinite);
+                await sceneManager.ActivateSceneAsync();
+                inputActivated = true;
             }
-            catch (Exception ex)
-            {
-                LogFile.Error(ex, "An error occurred while updating inputs!");
-                inputsTimer.Change(ErrorTimeout, Timeout.Infinite);
-            }
+
+            await sceneManager.UpdateAsync();
         }
 
         // This runs on a different thread
-        private void UpdateDmx(object state)
+        private Task UpdateDmx()
         {
-            try
-            {
-                Stopwatch sw = Stopwatch.StartNew();
-
-                dmx.Write();
-
-#if DEBUG
-                Interlocked.Increment(ref dmxTicks);
-                Interlocked.Add(ref dmxUsage, sw.ElapsedMilliseconds);
-#endif
-                sw.Stop();
-                dmxTimer.Change(Math.Max(0, DmxUpdateRate - sw.ElapsedMilliseconds), Timeout.Infinite);
-            }
-            catch(Exception ex)
-            {
-                LogFile.Error(ex, "An error occurred while updating dmx!");
-                dmxTimer.Change(ErrorTimeout, Timeout.Infinite);
-            }
+            dmx.Write();
+            return Task.CompletedTask;
         }
 
         private void btnRestart_Click(object sender, RoutedEventArgs e)
@@ -281,7 +234,7 @@ namespace LightController
 
             LogFile.Info("Closed application.");
 
-            inputsTimer.Change(Timeout.Infinite, Timeout.Infinite);
+            inputsTimer.Disable();
             sceneManager.Disable();
 
             Shutdown();
