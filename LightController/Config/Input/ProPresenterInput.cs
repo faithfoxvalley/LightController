@@ -102,8 +102,7 @@ namespace LightController.Config.Input
                     lock (colorLock)
                     {
                         colors = media.GetData(pixelWidth, transportLayerTime);
-                        maxColorValue = colors.Select(x => x.Max()).Max();
-                        minColorValue = colors.Select(x => x.Max()).Min();
+                        media.GetColorValueBounds(pixelWidth, out maxColorValue, out minColorValue);
                     }
                     LogFile.Info($"{(HasMotion ? "Media" : "Thumbnail")} generation took {sw.ElapsedMilliseconds}ms");
                 }
@@ -183,8 +182,6 @@ namespace LightController.Config.Input
             lock (colorLock)
             {
                 colors = media.GetData(pixelWidth, time);
-                maxColorValue = colors.Select(x => x.Max()).Max();
-                minColorValue = colors.Select(x => x.Max()).Min();
             }
 
             runtime++;

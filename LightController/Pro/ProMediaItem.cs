@@ -44,6 +44,31 @@ namespace LightController.Pro
             details = sb.ToString();
         }
 
+        /// <summary>
+        /// Get maximum and minimum HSV value of all the colors in the media
+        /// </summary>
+        public void GetColorValueBounds(int size, out byte max, out byte min)
+        {
+            MediaFrame[] frames;
+            if (!resizedData.TryGetValue(size, out frames))
+                frames = resizedData[size] = ResizeData(data, size);
+
+            min = byte.MaxValue;
+            max = byte.MinValue;
+            foreach(MediaFrame frame in frames)
+            {
+                foreach(ColorRGB color in frame.Data)
+                {
+                    byte value = color.Max();
+                    if (value < min)
+                        min = value;
+                    if (value > max)
+                        max = value;
+                }
+            }
+
+        }
+
         public ColorRGB[] GetData(int size, double time)
         {
             MediaFrame[] frames;
