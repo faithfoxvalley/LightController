@@ -10,7 +10,7 @@ namespace LightController.Config.Input
         public ColorRGB RGB { get; set; }
         
         [YamlMember(Alias = "hsv", ApplyNamingConventions = false)]
-        public ColorHSV HSV { get; set; }
+        public SerializableColorHSV HSV { get; set; }
 
         public ColorInput() { }
 
@@ -19,7 +19,7 @@ namespace LightController.Config.Input
             if (RGB != null)
                 return (ColorHSV)RGB;
             if (HSV != null)
-                return HSV;
+                return HSV.Color;
             return ColorHSV.Black;
         }
     }
