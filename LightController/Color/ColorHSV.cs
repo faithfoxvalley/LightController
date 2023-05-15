@@ -153,5 +153,10 @@ namespace LightController.Color
                    Saturation == hSV.Saturation &&
                    Value == hSV.Value;
         }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Hue, Saturation, Value);
+        }
     }
 }
