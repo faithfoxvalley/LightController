@@ -1,6 +1,6 @@
 # ProPresenter Lighting Controller
 
-A DMX lighting controller for use with ProPresenter.
+A simple programmable DMX lighting controller with support for ProPresenter media. Designed for use with MIDI to switch between lighting scenes.
 
 ---
 
@@ -52,7 +52,7 @@ Each scene has a list of inputs that tell the light fixtures what color to be. E
     intensity: 100%
 ```
 
-`!color_input` allows you to specify a color in RGB format.
+`!color_input` allows you to specify a color in RGB or HSV format.
 Use an [online color picker](https://www.google.com/search?q=color+picker) to get the values.
 ```yml
   - !color_input
@@ -61,6 +61,14 @@ Use an [online color picker](https://www.google.com/search?q=color+picker) to ge
       red: 255
       green: 255
       blue: 255
+    fixture_ids: 1,2,4
+    intensity: 40%
+  # OR
+  - !color_input
+    # HSV color with hue and saturation as percentages (value = intensity)
+    hsv: 
+      hue: 10%
+      saturation: 20%
     fixture_ids: 1,2,4
     intensity: 40%
 ```
@@ -78,16 +86,43 @@ Use an [online color picker](https://www.google.com/search?q=color+picker) to ge
     intensity: 90%
 ```
 
-`!rainbow_input` cycles through all colors at the specified rate.
+`!animated_input` is used to create simple animations in the lighting
 ```yml
-  - !rainbow_input
-    # Saturation where 100% is full color and 0% is white
-    saturation: 70%
-    # The length of the color cycle in seconds
-    cycle_length: 3
-    fixture_ids: 6-19
+  - !animated_input
+    # The list of color data points in the animation
+    colors:
+      # The length of time to mix between this color and the next color
+    - length: 0.2
+      # The HSV hue of the color
+      hue: 0
+      # The HSV saturation of the color 
+      saturation: 100%
+      # The intensity of the light
+      intensity: 100%
+    - length: 0.4
+      hue: 0
+      saturation: 100%
+      intensity: 100%
+    - length: 0.6
+      hue: 0
+      saturation: 100%
+      intensity: 0%
+    - length: 0.4
+      hue: 0
+      saturation: 100%
+      intensity: 0%
+    # When true, the animation will loop back to the beginning instead of fading to black
+    loop: true
+    # The order that lights should animate using delay, or blank for no delay
+    # Use multiple sets of fixture_ids seperated by semicolons
+    delay_animation: 13,14;12,15;11,16;10,17;9,18;8,19;7,20
+    # The length of the delay between the first fixture and the last fixture
+    delay_length: 0.6
+    fixture_ids: 7-20
     intensity: 90%
 ```
+
+**Do not use animated_input and propresenter_input at the same time in the same scene**
 
 `!debug_input` creates a color picker below the scene list.
 ```yml
