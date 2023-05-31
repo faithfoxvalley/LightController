@@ -9,10 +9,10 @@ namespace LightController.Color
 {
     public class SerializableColorHSV
     {
-        public string Hue
+        public double Hue
         {
-            get => hue.ToString();
-            set => hue = Percent.Parse(value, 0);
+            get => hue;
+            set => hue = Math.Clamp(value, 0, 360);
         }
 
         public string Saturation
@@ -27,9 +27,9 @@ namespace LightController.Color
             set => val = Percent.Parse(value, 1);
         }
 
-        public ColorHSV Color => new ColorHSV(hue.Value, sat.Value, val.Value);
+        public ColorHSV Color => new ColorHSV(hue, sat.Value, val.Value);
 
-        private Percent hue = new Percent(0);
+        private double hue;
         private Percent sat = new Percent(1);
         private Percent val = new Percent(1);
     }

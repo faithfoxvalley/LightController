@@ -65,9 +65,9 @@ Use an [online color picker](https://www.google.com/search?q=color+picker) to ge
     intensity: 40%
   # OR
   - !color_input
-    # HSV color with hue and saturation as percentages (value = intensity)
+    # HSV color with hue and saturation as a percentage (value = intensity)
     hsv: 
-      hue: 10%
+      hue: 60
       saturation: 20%
     fixture_ids: 1,2,4
     intensity: 40%
