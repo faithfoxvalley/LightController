@@ -49,7 +49,7 @@ namespace LightController.ColorAnimation
 
             totalLength = start;
             this.delay = delay;
-            Reset(DateTime.UtcNow);
+            Reset(ClockTime.UtcNow);
         }
 
         public void Reset(DateTime utcNow)

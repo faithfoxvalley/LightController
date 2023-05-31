@@ -86,7 +86,7 @@ namespace LightController.Config.Input
 
         public override Task StartAsync(MidiNote note)
         {
-            DateTime utcNow = DateTime.UtcNow;
+            DateTime utcNow = ClockTime.UtcNow;
             foreach(AnimationLoop loop in loops)
                 loop.Reset(utcNow);
             return Task.CompletedTask;
@@ -94,7 +94,7 @@ namespace LightController.Config.Input
 
         public override Task UpdateAsync()
         {
-            DateTime utcNow = DateTime.UtcNow;
+            DateTime utcNow = ClockTime.UtcNow;
             foreach (AnimationLoop loop in loops)
                 loop.Update(utcNow);
             return Task.CompletedTask;

@@ -52,6 +52,8 @@ namespace LightController
             InitAppData();
             InitFfmpeg();
 
+            ClockTime.Init();
+
             CommandLineOptions args = new CommandLineOptions(Environment.GetCommandLineArgs());
             LogFile.Info("Command: " + args.ToString());
 
