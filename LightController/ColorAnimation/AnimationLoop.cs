@@ -88,10 +88,7 @@ namespace LightController.ColorAnimation
                 index = ~index;
                 if(index >= frames.Count) // elapsedTime is after all other frame start times
                 {
-                    if (loop)
-                        currentFrame = frames[0];
-                    else
-                        currentFrame = frames[frames.Count - 1];
+                    currentFrame = frames[frames.Count - 1];
                 }
                 else if(index == 0) // elapsedTime is before all other frame start times (impossible?)
                 {
