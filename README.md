@@ -52,6 +52,7 @@ Each scene has a list of inputs that tell the light fixtures what color to be. E
     intensity: 100%
 ```
 
+##### Color Input
 `!color_input` allows you to specify a color in RGB or HSV format.
 Use an [online color picker](https://www.google.com/search?q=color+picker) to get the values.
 ```yml
@@ -73,6 +74,7 @@ Use an [online color picker](https://www.google.com/search?q=color+picker) to ge
     intensity: 40%
 ```
 
+##### ProPresenter Input
 `!propresenter_input` uses the media that is showing on screen to generate the colors. The lighting controller will only look up the media once when the scene is activated, so if you change the background without reactivating the scene it will not update the light color.
 ```yml
   - !propresenter_input
@@ -86,6 +88,7 @@ Use an [online color picker](https://www.google.com/search?q=color+picker) to ge
     intensity: 90%
 ```
 
+##### Animated Input
 `!animated_input` is used to create simple animations in the lighting
 ```yml
   - !animated_input
@@ -124,6 +127,7 @@ Use an [online color picker](https://www.google.com/search?q=color+picker) to ge
 
 **Do not use animated_input and propresenter_input at the same time in the same scene**
 
+##### Debug Input
 `!debug_input` creates a color picker below the scene list.
 ```yml
   - !debug_input
