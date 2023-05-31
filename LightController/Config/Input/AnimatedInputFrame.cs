@@ -38,7 +38,7 @@ namespace LightController.Config.Input
         }
 
         [YamlIgnore]
-        public ColorHSV Color { get; private set; } = new ColorHSV(ColorHSV.Black);
+        public ColorHSV Color { get; private set; } = new ColorHSV(0, 1, 1);
 
         [YamlMember(Alias = "Intensity")]
         public string IntensityMode
