@@ -80,6 +80,9 @@ namespace LightController.Pro
             if (!resizedData.TryGetValue(size, out frames))
                 frames = resizedData[size] = ResizeData(data, size);
 
+            if (frames.Length == 1)
+                return frames[0].Data;
+
             int index = (int)(time / FrameInterval) % data.Length;
 
             double indexRemainder = (time % FrameInterval) / FrameInterval;
