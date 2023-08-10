@@ -5,6 +5,7 @@ using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 
@@ -17,6 +18,9 @@ namespace LightController.Pro
         private ColorRGB[] data;
         [ProtoMember(2)]
         private double time;
+
+        private ColorHSV[] hsvData;
+        private ColorRGB[] lerpData;
 
         public double Time => time;
 
@@ -177,6 +181,29 @@ namespace LightController.Pro
                 resultPixels[i] = new ColorRGB(red, green, blue);
             }
             return resultPixels;
+        }
+
+        public ColorRGB[] Interpolate(MediaFrame nextFrame, double percent)
+        {
+            if (data.Length != nextFrame.data.Length)
+                throw new Exception("Cannot interploate between frames of different sizes");
+
+            PrepForInterpolation();
+            nextFrame.PrepForInterpolation();
+
+            for (int i = 0; i < data.Length; i++)
+                lerpData[i] = (ColorRGB)ColorHSV.Lerp(hsvData[i], nextFrame.hsvData[i], percent);
+
+            return lerpData;
+        }
+
+        private void PrepForInterpolation()
+        {
+            if(hsvData == null)
+            {
+                hsvData = data.Select(x => (ColorHSV)x).ToArray();
+                lerpData = new ColorRGB[data.Length];
+            }
         }
     }
 }

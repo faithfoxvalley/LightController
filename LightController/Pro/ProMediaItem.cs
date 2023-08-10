@@ -73,17 +73,21 @@ namespace LightController.Pro
 
         public ColorRGB[] GetData(int size, double time)
         {
+            if (time < 0)
+                time = 0;
+
             MediaFrame[] frames;
             if (!resizedData.TryGetValue(size, out frames))
                 frames = resizedData[size] = ResizeData(data, size);
 
-            int index = (int)(time / FrameInterval);
-            if (index >= data.Length)
-                index = data.Length - 1;
-            if(index < 0)
-                index = 0;
+            int index = (int)(time / FrameInterval) % data.Length;
 
-            return frames[index].Data;
+            double indexRemainder = (time % FrameInterval) / FrameInterval;
+            if(indexRemainder < 0.000001)
+                return frames[index].Data;
+
+            int nextIndex = (index + 1) % data.Length;
+            return frames[index].Interpolate(frames[nextIndex], indexRemainder);
         }
 
         private MediaFrame[] ResizeData(MediaFrame[] data, int size)
