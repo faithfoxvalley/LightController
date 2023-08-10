@@ -20,7 +20,7 @@ namespace LightController.Config.Input
         private double transportLayerTime;
         private DateTime lastUpdateTime;
 
-        private ProPresenter pro = null;
+        private Pro.ProPresenter pro = null;
         private ProMediaItem media;
         private ColorRGB[] colors;
         private byte maxColorValue;

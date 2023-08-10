@@ -54,7 +54,6 @@ namespace LightController.Pro
 
         public async Task<ProMediaItem> GetCurrentMediaAsync (bool motion, IProgress<double> progress, CancellationToken cancelToken, int? id = null)
         {
-            string mediaName;
             if (id.HasValue)
             {
                 ProMediaItem existingItem;
@@ -76,8 +75,12 @@ namespace LightController.Pro
             TransportLayerStatus status = await GetTransportStatusAsync(Layer.Presentation);
             if (status.audio_only || string.IsNullOrWhiteSpace(status.name))
                 throw new HttpRequestException("No ProPresenter media available!");
-            mediaName = status.name;
 
+            return await GetMediaItemAsync(status.name, status.duration, motion, progress, cancelToken, id);
+        }
+
+        public async Task<ProMediaItem> GetMediaItemAsync(string mediaName, double duration, bool motion, IProgress<double> progress, CancellationToken cancelToken, int? id = null)
+        {
             MediaLibrary library;
             if (motion)
                 library = motionLibrary;
@@ -85,9 +88,9 @@ namespace LightController.Pro
                 library = thumbnailLibrary;
 
             ProMediaItem mediaItem;
-            if (!library.TryGetExistingItem(id, status.name, out mediaItem))
+            if (!library.TryGetExistingItem(id, mediaName, out mediaItem))
             {
-                mediaItem = await library.LoadMediaAsync(id, mediaName, status.duration, progress, cancelToken);
+                mediaItem = await library.LoadMediaAsync(id, mediaName, duration, progress, cancelToken);
                 allMedia.Add(mediaItem);
             }
 
@@ -135,6 +138,34 @@ namespace LightController.Pro
                 sw.Stop();
             }
             return double.NaN;
+        }
+
+        public async Task<PlaylistId> GetFocusedPlaylistAsync()
+        {
+
+            try
+            {
+                string responseBody = await client.GetStringAsync(url + "playlist/focused");
+                return await Task.FromResult(JsonConvert.DeserializeObject<PlaylistId>(responseBody));
+            }
+            catch (Exception e)
+            {
+            }
+            return await Task.FromResult(new PlaylistId());
+        }
+
+        public async Task<ActivePlaylists> GetActivePlaylistAsync()
+        {
+
+            try
+            {
+                string responseBody = await client.GetStringAsync(url + "playlist/active");
+                return await Task.FromResult(JsonConvert.DeserializeObject<ActivePlaylists>(responseBody));
+            }
+            catch (Exception e)
+            {
+            }
+            return await Task.FromResult(new ActivePlaylists());
         }
 
         private async Task UpdateMediaList(ProMediaItem currentItem)

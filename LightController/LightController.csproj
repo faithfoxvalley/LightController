@@ -40,7 +40,26 @@
     <PackageReference Include="Serilog.Sinks.Debug" Version="2.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
     <PackageReference Include="System.Drawing.Common" Version="7.0.0" />
+    <PackageReference Include="System.Management" Version="7.0.2" />
     <PackageReference Include="YamlDotNet" Version="13.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Google.Protobuf">
+      <HintPath>..\..\..\..\..\..\Program Files\Renewed Vision\ProPresenter\Google.Protobuf.dll</HintPath>
+    </Reference>
+    <Reference Include="Pro.Common">
+      <HintPath>..\..\..\..\..\..\Program Files\Renewed Vision\ProPresenter\Pro.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Pro.Serialization">
+      <HintPath>..\..\..\..\..\..\Program Files\Renewed Vision\ProPresenter\Pro.Serialization.dll</HintPath>
+    </Reference>
+    <Reference Include="Pro.SerializationInterop">
+      <HintPath>..\..\..\..\..\..\Program Files\Renewed Vision\ProPresenter\Pro.SerializationInterop.dll</HintPath>
+    </Reference>
+    <Reference Include="ProPresenter.DO">
+      <HintPath>..\..\..\..\..\..\Program Files\Renewed Vision\ProPresenter\ProPresenter.DO.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>

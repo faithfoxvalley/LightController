@@ -25,7 +25,7 @@ namespace LightController
         private const int InputsUpdateFps = 20;
         private const int ErrorTimeout = 5000;
 
-        private ProPresenter pro;
+        private Pro.ProPresenter pro;
         private IMediaToolkitService ffmpeg;
         private ConfigFile config;
         private SceneManager sceneManager;
@@ -40,7 +40,7 @@ namespace LightController
         public static MainWindow Instance { get; private set; }
 
         public string ApplicationData { get; private set; }
-        public ProPresenter Pro => pro;
+        public Pro.ProPresenter Pro => pro;
         public IMediaToolkitService Ffmpeg => ffmpeg;
 
         public MainWindow()
@@ -73,7 +73,7 @@ namespace LightController
                 ErrorBox.Show("An error occurred while reading the config file, please check your config.");
             }
 
-            pro = new ProPresenter(config.ProPresenter, mediaList);
+            pro = new Pro.ProPresenter(config.ProPresenter, mediaList);
             dmx = new DmxProcessor(config.Dmx);
 
             string defaultScene;
@@ -141,6 +141,9 @@ namespace LightController
             {
                 await sceneManager.ActivateSceneAsync();
                 inputActivated = true;
+
+                ProPlaylist test = new ProPlaylist(pro);
+                await test.Load();
             }
 
             await sceneManager.UpdateAsync();
