@@ -9,5 +9,8 @@ namespace LightController.Config
         
         [YamlMember(Description = "Path to the media assets folder")]
         public string MediaAssetsPath { get; set; }
+
+        [YamlMember(Description = "Number of media processors to use at the same time")]
+        public int MaxMediaProcessors { get; set; } = 2;
     }
 }

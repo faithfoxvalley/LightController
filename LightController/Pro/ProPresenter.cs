@@ -46,8 +46,11 @@ namespace LightController.Pro
             string mediaPath = config.MediaAssetsPath;
             if (!mediaPath.EndsWith(Path.DirectorySeparatorChar) && !mediaPath.EndsWith(Path.AltDirectorySeparatorChar))
                 mediaPath += Path.DirectorySeparatorChar;
-            motionLibrary = new MediaLibrary(true, Path.Combine(MainWindow.Instance.ApplicationData, MotionCache), mediaPath);
-            thumbnailLibrary = new MediaLibrary(false, Path.Combine(MainWindow.Instance.ApplicationData, ThumbnailCache), mediaPath);
+            int mediaProcessors = config.MaxMediaProcessors;
+            if (mediaProcessors < 1)
+                mediaProcessors = 1;
+            motionLibrary = new MediaLibrary(true, Path.Combine(MainWindow.Instance.ApplicationData, MotionCache), mediaPath, mediaProcessors);
+            thumbnailLibrary = new MediaLibrary(false, Path.Combine(MainWindow.Instance.ApplicationData, ThumbnailCache), mediaPath, mediaProcessors);
 
             this.mediaList = mediaList;
         }

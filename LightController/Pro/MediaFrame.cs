@@ -18,6 +18,8 @@ namespace LightController.Pro
         [ProtoMember(2)]
         private double time;
 
+        public double Time => time;
+
         public ColorRGB[] Data => data;
 
         public MediaFrame() { }

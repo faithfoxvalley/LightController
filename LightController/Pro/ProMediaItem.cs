@@ -7,6 +7,8 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Concurrent;
+using System.Linq;
 
 namespace LightController.Pro
 {
@@ -92,7 +94,7 @@ namespace LightController.Pro
             return newData;
         }
 
-        public static Task<ProMediaItem> GetItemAsync(string mediaFolder, string cacheFolder, string file, double length, IProgress<double> progress, CancellationToken cancelToken)
+        public static Task<ProMediaItem> GetItemAsync(string mediaFolder, string cacheFolder, string file, double length, int mediaProcessors, IProgress<double> progress, CancellationToken cancelToken)
         {
             Directory.CreateDirectory(cacheFolder);
             string cacheFile = Path.Combine(cacheFolder, file + ".bin");
@@ -101,53 +103,89 @@ namespace LightController.Pro
                 progress.Report(double.NaN);
                 return LoadItemAsync(cacheFile, cancelToken);
             }
-            return CreateItemAsync(Path.Combine(mediaFolder, file), cacheFile, length, progress, cancelToken);
+            return CreateItemAsync(Path.Combine(mediaFolder, file), cacheFile, length, mediaProcessors, progress, cancelToken);
         }
 
-        private static async Task<ProMediaItem> CreateItemAsync(string mediaPath, string cacheFile, double fileLength, IProgress<double> progress, CancellationToken cancelToken)
+        private static async Task<ProMediaItem> CreateItemAsync(string mediaPath, string cacheFile, double fileLength, int mediaProcessors, IProgress<double> progress, CancellationToken cancelToken)
         {
+            progress.Report(double.NaN);
+
             GetThumbnailOptions options = new GetThumbnailOptions
             {
                 OutputFormat = OutputFormat.Image2,
-                PixelFormat = MediaToolkit.Tasks.PixelFormat.Rgba,
+                PixelFormat = PixelFormat.Rgba,
                 FrameSize = new FrameSize(854, 480)
             };
 
-            List<MediaFrame> frames = new List<MediaFrame>(); 
-            for (double time = 0; time < fileLength || time == 0; time += FrameInterval)
+            ConcurrentBag<MediaFrame> frames = new ConcurrentBag<MediaFrame>();
+
+            if(fileLength == 0)
             {
-                if (fileLength > 0)
-                    progress.Report(time / fileLength);
-                else
-                    progress.Report(double.NaN);
-
-                options.SeekSpan = TimeSpan.FromSeconds(time);
-
-                GetThumbnailResult thumbnailResult = await MainWindow.Instance.Ffmpeg.ExecuteAsync(new FfTaskGetThumbnail(
-                  mediaPath,
-                  options
-                ));
-                
-                cancelToken.ThrowIfCancellationRequested();
-
-                if (thumbnailResult.ThumbnailData.Length > 0)
-                {
-                    MediaFrame frame = await Task.Run(() => MediaFrame.CreateFrame(thumbnailResult.ThumbnailData, time, cancelToken));
+                MediaFrame frame = await CreateFrameAsync(mediaPath, true, options, 0, cancelToken);
+                if (frame != null)
                     frames.Add(frame);
-                }
             }
+            else
+            {
+                List<double> tasks = new List<double>((int)(fileLength / FrameInterval) + 1);
+                for (double time = 0; time < fileLength; time += FrameInterval)
+                    tasks.Add(time);
 
-            progress.Report(double.NaN);
+                ParallelOptions parallelOptions = new ParallelOptions()
+                {
+                    CancellationToken = cancelToken,
+                    MaxDegreeOfParallelism = mediaProcessors,
+                };
+
+                await Parallel.ForEachAsync(tasks, parallelOptions, async (x, c) =>
+                {
+                    MediaFrame frame = await CreateFrameAsync(mediaPath, false, options, x, cancelToken);
+                    if (frame != null)
+                    {
+                        frames.Add(frame);
+                        progress.Report(frames.Count / (double)tasks.Count);
+                    }
+                });
+            }
 
             cancelToken.ThrowIfCancellationRequested();
 
-            // Check if thumbnail creation failed
+            progress.Report(double.NaN);
+
             if (frames.Count == 0)
+                throw new Exception("Error while reading media file: Unable to get any frames from the media.");
+
+            ProMediaItem result = new ProMediaItem();
+            result.data = frames.OrderBy(x => x.Time).ToArray();
+            using (FileStream stream = File.Create(cacheFile))
+            {
+                await Task.Run(() => Serializer.Serialize<ProMediaItem>(stream, result));
+            }
+
+            return result;
+        }
+
+        private static async Task<MediaFrame> CreateFrameAsync(string mediaPath, bool isImage, GetThumbnailOptions options, double time, CancellationToken cancelToken)
+        {
+            options.SeekSpan = TimeSpan.FromSeconds(time);
+
+            GetThumbnailResult thumbnailResult = await MainWindow.Instance.Ffmpeg.ExecuteAsync(new FfTaskGetThumbnail(
+              mediaPath,
+              options
+            ));
+
+            cancelToken.ThrowIfCancellationRequested();
+
+            if (thumbnailResult.ThumbnailData.Length > 0)
+            {
+                return await Task.Run(() => MediaFrame.CreateFrame(thumbnailResult.ThumbnailData, time, cancelToken));
+            }
+            else
             {
                 // Try again with slightly modified ffmpeg arguments if the media is an image
-                if(fileLength == 0)
+                if (isImage)
                 {
-                    GetThumbnailResult thumbnailResult = await MainWindow.Instance.Ffmpeg.ExecuteAsync(new FfTaskGetThumbnail2(
+                    thumbnailResult = await MainWindow.Instance.Ffmpeg.ExecuteAsync(new FfTaskGetThumbnail2(
                       mediaPath,
                       options
                     ));
@@ -155,30 +193,16 @@ namespace LightController.Pro
                     cancelToken.ThrowIfCancellationRequested();
 
                     if (thumbnailResult.ThumbnailData.Length > 0)
-                    {
-                        MediaFrame frame = await Task.Run(() => MediaFrame.CreateFrame(thumbnailResult.ThumbnailData, 0, cancelToken));
-                        frames.Add(frame);
-                    }
+                        return await Task.Run(() => MediaFrame.CreateFrame(thumbnailResult.ThumbnailData, 0, cancelToken));
                     else
-                    {
-                        throw new Exception("Error while reading media file: Unable to get any frames from the media.");
-                    }
+                        return null;
                 }
                 else
                 {
-                    throw new Exception("Error while reading media file: Unable to get any frames from the media.");
+                    return null;
                 }
-
             }
 
-            ProMediaItem result = new ProMediaItem();
-            result.data = frames.ToArray();
-            using (FileStream stream = File.Create(cacheFile))
-            {
-                await Task.Run(() => Serializer.Serialize<ProMediaItem>(stream, result));
-            }
-
-            return result;
         }
 
         private static async Task<ProMediaItem> LoadItemAsync(string cacheFile, CancellationToken cancelToken)

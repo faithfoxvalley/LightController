@@ -12,14 +12,16 @@ namespace LightController.Pro
         private bool motion;
         private string cacheFolder;
         private string mediaFolder;
+        private int mediaProcessors;
         private Dictionary<string, ProMediaItem> mediaNames = new Dictionary<string, ProMediaItem>();
         private Dictionary<int, ProMediaItem> mediaIds = new Dictionary<int, ProMediaItem>();
 
-        public MediaLibrary(bool motion, string cacheFolder, string mediaFolder)
+        public MediaLibrary(bool motion, string cacheFolder, string mediaFolder, int mediaProcessors)
         {
             this.motion = motion;
             this.cacheFolder = cacheFolder;
             this.mediaFolder = mediaFolder;
+            this.mediaProcessors = mediaProcessors;
         }
 
         public bool TryGetExistingItem (int id, out ProMediaItem media)
@@ -55,7 +57,7 @@ namespace LightController.Pro
                 cacheFolder,
                 fileName,
                 motion ? duration : 0,
-                progress, cancelToken);
+                mediaProcessors, progress, cancelToken);
             mediaItem.SetDetails(fileName, id, motion);
             if (mediaItem.Id.HasValue)
                 mediaIds[mediaItem.Id.Value] = mediaItem;
