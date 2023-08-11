@@ -85,7 +85,7 @@ namespace LightController
             dmx.AppendToListbox(fixtureList);
 
             dmxTimer = new TickLoop(DmxUpdateFps, UpdateDmx);
-            inputsTimer = new TickLoop(InputsUpdateFps, UpdateInputs);
+            inputsTimer = new TickLoopAsync(InputsUpdateFps, UpdateInputs);
 
             uiTimer = new System.Windows.Threading.DispatcherTimer();
             uiTimer.Interval = new TimeSpan(0, 0, 1);
@@ -147,10 +147,9 @@ namespace LightController
         }
 
         // This runs on a different thread
-        private Task UpdateDmx()
+        private void UpdateDmx()
         {
             dmx.Write();
-            return Task.CompletedTask;
         }
 
         private void btnRestart_Click(object sender, RoutedEventArgs e)
@@ -236,7 +235,7 @@ namespace LightController
 
             LogFile.Info("Closed application.");
 
-            inputsTimer.Disable();
+            inputsTimer.Dispose();
             sceneManager.Disable();
 
             Shutdown();

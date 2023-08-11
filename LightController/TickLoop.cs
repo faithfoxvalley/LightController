@@ -6,46 +6,69 @@ using System.Threading.Tasks;
 
 namespace LightController
 {
-    public class TickLoop
+    public class TickLoop : IDisposable
     {
         private const int ErrorTimeout = 5000;
 
-        private Timer timer;
-        private Func<Task> onTick;
-        private readonly int msPerTick;
+        private readonly Action onTick;
+        private readonly double msPerTick;
         private readonly int ticksPerSecond;
+
         private int actualTicksPerSecond;
         private long usagePerSecond;
         private long maxUsagePerSecond;
 
-        public TickLoop(double fps, Func<Task> onTick)
+        private CancellationTokenSource cts = new CancellationTokenSource();
+
+        private Thread thread;
+
+        public TickLoop (double fps, Action onTick)
         {
             this.onTick = onTick;
-            msPerTick = (int)Math.Round(1000d / fps);
-            ticksPerSecond = (int)Math.Round(1000d / msPerTick);
 
-            // https://stackoverflow.com/a/12797382
-            timer = new Timer(Tick, null, msPerTick, Timeout.Infinite);
+            msPerTick = TimeSpan.FromSeconds (1 / fps).TotalMilliseconds;
+            ticksPerSecond = (int)Math.Round(fps);
+
+            thread = new Thread(TickThread);
+            thread.IsBackground = true;
+            thread.Start();
         }
 
-        private async void Tick(object state)
+        public void Dispose()
         {
+            cts.Cancel();
+        }
 
+        private void TickThread()
+        {
             try
             {
-                Stopwatch sw = Stopwatch.StartNew();
+                Stopwatch sw = new Stopwatch();
+                while (!cts.IsCancellationRequested)
+                {
+                    sw.Restart();
 
-                await onTick();
+                    try
+                    {
+                        onTick();
+                    }
+                    catch (Exception ex)
+                    {
+                        LogFile.Error(ex, "An error occurred while updating!");
+                        Thread.Sleep(ErrorTimeout);
+                    }
 
-                Interlocked.Increment(ref actualTicksPerSecond);
-                Interlocked.Add(ref usagePerSecond, sw.ElapsedMilliseconds);
-                sw.Stop();
-                timer.Change(Math.Max(0, msPerTick - sw.ElapsedMilliseconds), Timeout.Infinite);
+                    Interlocked.Increment(ref actualTicksPerSecond);
+                    Interlocked.Add(ref usagePerSecond, sw.ElapsedMilliseconds);
+
+                    double ms = msPerTick - sw.Elapsed.TotalMilliseconds;
+                    if (ms > 0)
+                        Thread.Sleep((int)ms);
+                }
             }
             catch (Exception ex)
             {
-                LogFile.Error(ex, "An error occurred while updating!");
-                timer.Change(ErrorTimeout, Timeout.Infinite);
+                LogFile.Error(ex, "An error occurred while updating, updates will not continue!");
             }
         }
 
@@ -66,11 +89,6 @@ namespace LightController
                 Interlocked.Exchange(ref maxUsagePerSecond, maxDmxUsage);
             }
             sb.Append("Max: ").AppendFormat("{0:P}", maxDmxUsage / maxUsage).AppendLine();
-        }
-
-        public void Disable()
-        {
-            timer.Change(Timeout.Infinite, Timeout.Infinite);
         }
     }
 }
