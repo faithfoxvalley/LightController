@@ -29,7 +29,6 @@ namespace LightController.Config.Input
         private Percent saturation = new Percent(1);
         private object colorLock = new object();
         private InputIntensity minIntensity = new InputIntensity();
-        private static CancellationTokenSource cts = new CancellationTokenSource();
         private Dictionary<int, int> idToIndex = new Dictionary<int, int>();
 
 
@@ -70,12 +69,9 @@ namespace LightController.Config.Input
         }
 
 
-        public override async Task StartAsync(Midi.MidiNote note)
+        public override async Task StartAsync(Midi.MidiNote note, CancellationToken cancelToken)
         {
             runtime = int.MinValue;
-
-            if(cts != null)
-                cts.Cancel();
 
             int? id = null;
             if (note != null && note.Intensity.HasValue && note.Intensity.Value > 0)
@@ -83,50 +79,41 @@ namespace LightController.Config.Input
 
             // Initialize info about current background
 
-            using (var myCts = new CancellationTokenSource())
+            Progress<double> progress = new Progress<double>();
+            progress.ProgressChanged += ReportMediaProgress;
+            ReportMediaProgress(null, double.NaN);
+
+            try
             {
-                cts = myCts;
+                Stopwatch sw = Stopwatch.StartNew();
+                ProMediaItem newMedia = await pro.GetCurrentMediaAsync(HasMotion, progress, cancelToken, id);
+                media = newMedia;
+                transportLayerTime = 0;
+                lastUpdateTime = DateTime.Now;
 
-                Progress<double> progress = new Progress<double>();
-                progress.ProgressChanged += ReportMediaProgress;
-                ReportMediaProgress(null, double.NaN);
-
-                try
+                lock (colorLock)
                 {
-                    Stopwatch sw = Stopwatch.StartNew();
-                    ProMediaItem newMedia = await pro.GetCurrentMediaAsync(HasMotion, progress, cts.Token, id);
-                    media = newMedia;
-                    transportLayerTime = 0;
-                    lastUpdateTime = DateTime.Now;
-
-                    lock (colorLock)
-                    {
-                        colors = media.GetData(pixelWidth, transportLayerTime);
-                        media.GetColorValueBounds(pixelWidth, out maxColorValue, out minColorValue);
-                    }
-                    LogFile.Info($"{(HasMotion ? "Media" : "Thumbnail")} generation took {sw.ElapsedMilliseconds}ms");
+                    colors = media.GetData(pixelWidth, transportLayerTime);
+                    media.GetColorValueBounds(pixelWidth, out maxColorValue, out minColorValue);
                 }
-                catch (HttpRequestException)
-                {
-                    LogFile.Error("Unable to communicate with ProPresenter");
-                }
-                catch (OperationCanceledException)
-                {
-                    LogFile.Info($"Canceled {(HasMotion ? "media" : "thumbnail")} generation");
-                }
-
-                ReportMediaProgress(null, 0);
-                if (cts == myCts)
-                    cts = null;
-
+                LogFile.Info($"{(HasMotion ? "Media" : "Thumbnail")} generation took {sw.ElapsedMilliseconds}ms");
             }
+            catch (HttpRequestException)
+            {
+                LogFile.Error("Unable to communicate with ProPresenter");
+            }
+            catch (OperationCanceledException)
+            {
+                LogFile.Info($"Canceled {(HasMotion ? "media" : "thumbnail")} generation");
+            }
+
+            ReportMediaProgress(null, 0);
+
 
         }
 
-        public override Task StopAsync()
+        public override Task StopAsync(CancellationToken cancelToken)
         {
-            if (cts != null)
-                cts.Cancel();
             return pro.DeselectMediaItem();
         }
 
@@ -153,7 +140,7 @@ namespace LightController.Config.Input
             });
         }
 
-        public override async Task UpdateAsync()
+        public override async Task UpdateAsync(CancellationToken cancelToken)
         {
             // Update the current color based on the background frame and estimated time
             if (media == null || !HasMotion)
@@ -162,13 +149,13 @@ namespace LightController.Config.Input
             double time = 0;
             if (runtime <= 0)
             {
-                if (await TryUpdateTransportLayerTime())
+                if (await TryUpdateTransportLayerTime(cancelToken))
                 {
                     runtime = 0;
                     time = transportLayerTime;
                 }
             }
-            else if ((runtime % UpdateRate == 0) && await TryUpdateTransportLayerTime())
+            else if ((runtime % UpdateRate == 0) && await TryUpdateTransportLayerTime(cancelToken))
             {
                 time = transportLayerTime;
             }
@@ -187,9 +174,9 @@ namespace LightController.Config.Input
             runtime++;
         }
 
-        public async Task<bool> TryUpdateTransportLayerTime()
+        public async Task<bool> TryUpdateTransportLayerTime(CancellationToken cancelToken)
         {
-            double temp = await pro.AsyncGetTransportLayerTime(Layer.Presentation);
+            double temp = await pro.AsyncGetTransportLayerTime(Layer.Presentation, cancelToken);
             if (double.IsNaN(temp))
                 return false;
             transportLayerTime = temp;

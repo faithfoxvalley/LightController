@@ -3,6 +3,7 @@ using LightController.Dmx;
 using LightController.Midi;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -15,6 +16,10 @@ namespace LightController
         private MidiInput midiDevice;
         private DmxProcessor dmx;
         private System.Windows.Controls.ListBox sceneList;
+        private CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
+
+        private MidiNote incomingNote;
+        private object incomingNoteLock = new object();
 
         public string ActiveSceneName => activeScene?.Name;
 
@@ -81,30 +86,60 @@ namespace LightController
         public Task ActivateSceneAsync()
         {
             if (activeScene != null)
-                return activeScene.ActivateAsync();
+                return activeScene.ActivateAsync(cancelTokenSource.Token);
             return Task.CompletedTask;
         }
 
-        public Task UpdateAsync()
+        public async Task UpdateAsync()
         {
+            await ProcessIncomingNote();
             if (activeScene != null)
-                return activeScene.UpdateAsync();
-            return Task.CompletedTask;
+                await activeScene.UpdateAsync(cancelTokenSource.Token);
         }
 
-        private async void MidiDevice_NoteEvent(MidiNote note)
+        private void MidiDevice_NoteEvent(MidiNote note)
         {
-            if (TryFindScene(s => s.MidiNote == note, out Scene newScene, out int newSceneIndex))
+            lock(incomingNoteLock)
             {
-                LogFile.Info("Activating scene " + newScene.Name);
+                incomingNote = note;
 
-                foreach (Scene s in scenes)
-                    await s.DeactivateAsync();
+                cancelTokenSource.Cancel();
+                cancelTokenSource = new CancellationTokenSource();
+            }
+        }
 
-                await newScene.ActivateAsync(note);
-                activeScene = newScene;
-                UpdateSceneUI(newSceneIndex);
-                UpdateDmx(newScene);
+        private bool TryGetIncomingNote(out MidiNote note, out CancellationToken cancelToken)
+        {
+            lock (incomingNoteLock)
+            {
+                note = incomingNote;
+                incomingNote = null;
+
+                if (note == null)
+                    cancelToken = CancellationToken.None;
+                else
+                    cancelToken = cancelTokenSource.Token;
+            }
+
+            return note != null;
+        }
+
+        private async Task ProcessIncomingNote()
+        {
+            while(TryGetIncomingNote(out MidiNote note, out CancellationToken cancelToken))
+            {
+                if (TryFindScene(s => s.MidiNote == note, out Scene newScene, out int newSceneIndex))
+                {
+                    LogFile.Info("Activating scene " + newScene.Name);
+
+                    foreach (Scene s in scenes)
+                        await s.DeactivateAsync(cancelTokenSource.Token);
+
+                    await newScene.ActivateAsync(cancelTokenSource.Token, note);
+                    activeScene = newScene;
+                    UpdateSceneUI(newSceneIndex);
+                    UpdateDmx(newScene);
+                }
             }
         }
 

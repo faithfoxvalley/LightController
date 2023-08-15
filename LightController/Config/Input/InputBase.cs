@@ -1,4 +1,5 @@
 ﻿using LightController.Color;
+using System.Threading;
 using System.Threading.Tasks;
 using YamlDotNet.Serialization;
 
@@ -55,17 +56,17 @@ namespace LightController.Config.Input
 
         }
 
-        public virtual Task StartAsync(Midi.MidiNote note)
+        public virtual Task StartAsync(Midi.MidiNote note, CancellationToken cancelToken)
         {
             return Task.CompletedTask;
         }
 
-        public virtual Task UpdateAsync()
+        public virtual Task UpdateAsync(CancellationToken cancelToken)
         {
             return Task.CompletedTask;
         }
 
-        public virtual Task StopAsync()
+        public virtual Task StopAsync(CancellationToken cancelToken)
         {
             return Task.CompletedTask;
         }

@@ -76,7 +76,9 @@ namespace LightController.Pro
                 }
             }
 
-            TransportLayerStatus status = await GetTransportStatusAsync(Layer.Presentation);
+            TransportLayerStatus status = await GetTransportStatusAsync(Layer.Presentation, cancelToken);
+            if (cancelToken.IsCancellationRequested)
+                throw new TaskCanceledException();
             if (status.audio_only || string.IsNullOrWhiteSpace(status.name))
                 throw new HttpRequestException("No ProPresenter media available!");
             mediaName = status.name;
@@ -108,11 +110,11 @@ namespace LightController.Pro
             });
         }
 
-        public async Task<TransportLayerStatus> GetTransportStatusAsync(Layer layer)
+        public async Task<TransportLayerStatus> GetTransportStatusAsync(Layer layer, CancellationToken cancelToken)
         {
             try
             {
-                string responseBody = await client.GetStringAsync(url + "transport/" + layer.ToString().ToLowerInvariant() + "/current");
+                string responseBody = await client.GetStringAsync(url + "transport/" + layer.ToString().ToLowerInvariant() + "/current", cancelToken);
                 return await Task.FromResult(JsonConvert.DeserializeObject<TransportLayerStatus>(responseBody));
             }
             catch
@@ -121,13 +123,13 @@ namespace LightController.Pro
             return await Task.FromResult(new TransportLayerStatus());
         }
 
-        public async Task<double> AsyncGetTransportLayerTime(Layer layer)
+        public async Task<double> AsyncGetTransportLayerTime(Layer layer, CancellationToken cancelToken)
         {
             Stopwatch sw = Stopwatch.StartNew();
 
             try
             {
-                string responseBody = await client.GetStringAsync(url + "transport/" + layer.ToString().ToLowerInvariant() + "/time");
+                string responseBody = await client.GetStringAsync(url + "transport/" + layer.ToString().ToLowerInvariant() + "/time", cancelToken);
                 double time = double.Parse(responseBody);
                 sw.Stop();
                 time += sw.ElapsedMilliseconds / 2000.0;

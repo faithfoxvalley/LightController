@@ -1,5 +1,6 @@
 ﻿using LightController.Color;
 using LightController.Midi;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -29,7 +30,7 @@ namespace LightController.Config.Input
             }
         }
 
-        public override async Task StartAsync(MidiNote note)
+        public override async Task StartAsync(MidiNote note, CancellationToken cancelToken)
         {
             await Application.Current.Dispatcher.BeginInvoke(() =>
             {
@@ -37,7 +38,7 @@ namespace LightController.Config.Input
             });
         }
 
-        public override async Task StopAsync()
+        public override async Task StopAsync(CancellationToken cancelToken)
         {
             await Application.Current.Dispatcher.BeginInvoke(() =>
             {

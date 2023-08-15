@@ -1,6 +1,7 @@
 ﻿using LightController.Config.Input;
 using LightController.Midi;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using YamlDotNet.Serialization;
 
@@ -61,14 +62,14 @@ namespace LightController.Config
         /// Called when the scene is activated
         /// </summary>
         /// <param name="note">The note used to activate this scene</param>
-        public Task ActivateAsync(MidiNote note = null)
+        public Task ActivateAsync(CancellationToken cancelToken, MidiNote note = null)
         {
             if (active)
                 return Task.CompletedTask;
 
             Task[] tasks = new Task[Inputs.Count];
             for (int i = 0; i < Inputs.Count; i++)
-                tasks[i] = Inputs[i].StartAsync(note);
+                tasks[i] = Inputs[i].StartAsync(note, cancelToken);
 
             active = true;
 
@@ -78,28 +79,28 @@ namespace LightController.Config
         /// <summary>
         /// Called when the scene is deactivated
         /// </summary>
-        public Task DeactivateAsync()
+        public Task DeactivateAsync(CancellationToken cancelToken)
         {
             if (!active)
                 return Task.CompletedTask;
 
             Task[] tasks = new Task[Inputs.Count];
             for (int i = 0; i < Inputs.Count; i++)
-                tasks[i] = Inputs[i].StopAsync();
+                tasks[i] = Inputs[i].StopAsync(cancelToken);
 
             active = false;
 
             return Task.WhenAll(tasks);
         }
 
-        public Task UpdateAsync()
+        public Task UpdateAsync(CancellationToken cancelToken)
         {
             if (!active)
                 return Task.CompletedTask;
 
             Task[] tasks = new Task[Inputs.Count];
             for (int i = 0; i < Inputs.Count; i++)
-                tasks[i] = Inputs[i].UpdateAsync();
+                tasks[i] = Inputs[i].UpdateAsync(cancelToken);
 
             return Task.WhenAll(tasks);
         }

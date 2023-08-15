@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using YamlDotNet.Serialization;
 using LightController.ColorAnimation;
+using System.Threading;
 
 namespace LightController.Config.Input
 {
@@ -84,7 +85,7 @@ namespace LightController.Config.Input
                 loops.Add(defaultLoop);
         }
 
-        public override Task StartAsync(MidiNote note)
+        public override Task StartAsync(MidiNote note, CancellationToken cancelToken)
         {
             DateTime utcNow = ClockTime.UtcNow;
             foreach(AnimationLoop loop in loops)
@@ -92,7 +93,7 @@ namespace LightController.Config.Input
             return Task.CompletedTask;
         }
 
-        public override Task UpdateAsync()
+        public override Task UpdateAsync(CancellationToken cancelToken)
         {
             DateTime utcNow = ClockTime.UtcNow;
             foreach (AnimationLoop loop in loops)
