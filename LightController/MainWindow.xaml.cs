@@ -23,7 +23,8 @@ namespace LightController
     {
         private const int DmxUpdateFps = 30;
         private const int InputsUpdateFps = 20;
-        private const int ErrorTimeout = 5000;
+        private const string AppGuid = "a013f8c4-0875-49e3-b671-f4e16a1f1fe4";
+        private const int AcquireMutexTimeout = 1000;
 
         private ProPresenter pro;
         private IMediaToolkitService ffmpeg;
@@ -34,6 +35,9 @@ namespace LightController
         private TickLoop inputsTimer; // Runs on different thread
         private bool inputActivated = false;
         private string customConfig;
+
+        private static Mutex mutex;
+        private static bool mutexActive;
 
         private System.Windows.Threading.DispatcherTimer uiTimer;
 
@@ -50,6 +54,13 @@ namespace LightController
             InitializeComponent();
 
             InitAppData();
+
+            if (!IsOnlyInstance())
+            {
+                ErrorBox.Show("Error: The lighting controller is already running!");
+                return;
+            }
+
             InitFfmpeg();
 
             ClockTime.Init();
@@ -91,6 +102,24 @@ namespace LightController
             uiTimer.Interval = new TimeSpan(0, 0, 1);
             uiTimer.Tick += UiTimer_Tick;
             uiTimer.Start();
+        }
+
+        private static bool IsOnlyInstance()
+        {
+            mutex = new Mutex(true, AppGuid, out mutexActive);
+            if (!mutexActive)
+            {
+                try
+                {
+                    mutexActive = mutex.WaitOne(AcquireMutexTimeout);
+                    if (!mutexActive)
+                        return false;
+                }
+                catch (AbandonedMutexException)
+                { } // Abandoned probably means that the process was killed or crashed
+            }
+
+            return true;
         }
 
         private void UiTimer_Tick(object sender, EventArgs e)
@@ -254,6 +283,8 @@ namespace LightController
         {
             dmx.TurnOff();
             dmx.Write();
+            if(mutexActive)
+                mutex.ReleaseMutex();
         }
     }
 }
