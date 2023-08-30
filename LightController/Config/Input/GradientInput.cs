@@ -32,7 +32,7 @@ namespace LightController.Config.Input
             for(int i = 0; i < fixtures.Length; i++)
             {
                 double percent = i / (double)fixtures.Length;
-                while(currentFrame.Location < percent)
+                while(percent < currentFrame.Location)
                 {
                     if (frameIndex == frames.Count - 1)
                         break;
@@ -50,7 +50,10 @@ namespace LightController.Config.Input
                 {
                     GradientInputFrame nextFrame = frames[frameIndex + 1];
                     double framePercent = (percent - currentFrame.Location) / (nextFrame.Location - currentFrame.Location);
-                    colors[fixtureId] = ColorHSV.Lerp(currentFrame.Color, nextFrame.Color, framePercent);
+                    if (framePercent < 0 || framePercent > 1)
+                        colors[fixtureId] = ColorHSV.Black;
+                    else
+                        colors[fixtureId] = ColorHSV.Lerp(currentFrame.Color, nextFrame.Color, framePercent);
                 }
             }
         }
