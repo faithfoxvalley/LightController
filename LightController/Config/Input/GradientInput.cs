@@ -24,31 +24,44 @@ namespace LightController.Config.Input
             if (Colors == null || Colors.Count == 0)
                 return;
 
+            if(Colors.Count == 1)
+            {
+                ColorHSV color = Colors[0].Color;
+                foreach(int id in FixtureIds.EnumerateValues())
+                    colors[id] = color;
+                return;
+            }
+
             List<GradientInputFrame> frames = GetInputFrames();
-            GradientInputFrame currentFrame = frames.First();
-            int frameIndex = 0;
+            GradientInputFrame currentFrame = frames[0];
+            GradientInputFrame nextFrame = frames[1];
+            int frameIndex = 1;
 
             int[] fixtures = FixtureIds.EnumerateValues().ToArray();
             for(int i = 0; i < fixtures.Length; i++)
             {
                 double percent = i / (double)fixtures.Length;
-                while(percent < currentFrame.Location)
+
+                while (percent > nextFrame.Location || percent < currentFrame.Location)
                 {
                     if (frameIndex == frames.Count - 1)
                         break;
                     frameIndex++;
-                    currentFrame = frames[frameIndex];
+                    currentFrame = nextFrame;
+                    nextFrame = frames[frameIndex];
                 }
-
                 int fixtureId = fixtures[i];
 
-                if (currentFrame.Location == percent || frameIndex == frames.Count - 1)
+                if (currentFrame.Location == percent)
                 {
                     colors[fixtureId] = currentFrame.Color;
                 }
+                else if (nextFrame.Location == percent)
+                {
+                    colors[fixtureId] = nextFrame.Color;
+                }
                 else
                 {
-                    GradientInputFrame nextFrame = frames[frameIndex + 1];
                     double framePercent = (percent - currentFrame.Location) / (nextFrame.Location - currentFrame.Location);
                     if (framePercent < 0 || framePercent > 1)
                         colors[fixtureId] = ColorHSV.Black;
