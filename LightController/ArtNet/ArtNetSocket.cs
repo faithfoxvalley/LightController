@@ -21,6 +21,8 @@ namespace LightController.ArtNet
         private UdpClient udpClient;
         private IPAddress broadcastAddress;
 
+        public bool IsOpen { get; private set; }
+
         public ArtNetSocket()
         {
         }
@@ -54,6 +56,7 @@ namespace LightController.ArtNet
             udpClient.EnableBroadcast = true;
             udpClient.MulticastLoopback = false;
             udpClient.BeginReceive(ReceiveCallback, null);
+            IsOpen = true;
         }
 
         private void ReceiveCallback(IAsyncResult ar)
@@ -91,6 +94,7 @@ namespace LightController.ArtNet
         public void Dispose()
         {
             udpClient?.Dispose();
+            IsOpen = false;
         }
     }
 }

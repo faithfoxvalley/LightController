@@ -1,4 +1,5 @@
-﻿using LightController.Config;
+﻿using LightController.ArtNet;
+using LightController.Config;
 using LightController.Config.Dmx;
 using OpenDMX.NET;
 using System;
@@ -14,6 +15,7 @@ namespace LightController.Dmx
         private bool debug;
         private List<DmxFixture> fixtures = new List<DmxFixture>();
         private DmxController controller = new DmxController();
+        private ArtNetController artnet = new ArtNetController();
 
         public DmxProcessor(DmxConfig config)
         {
@@ -23,13 +25,28 @@ namespace LightController.Dmx
                 return;
             }
 
-            while (!OpenDevice(config.DmxDevice))
+            // TODO: Refactor so that dmx OR artnet can be used
+            if(config.ArtNet)
             {
+                while (!artnet.TryOpenSocket(config.ArtNetAddress))
+                {
 #if DEBUG
-                break;
+                    break;
 #else
-                ErrorBox.ExitOnCancel("DMX Device not found. Press OK to try again or Cancel to exit."); 
+                    ErrorBox.ExitOnCancel("Art-Net compatible interface not found. Press OK to try again or Cancel to exit."); 
 #endif
+                }
+            }
+            else
+            {
+                while (!OpenDevice(config.DmxDevice))
+                {
+#if DEBUG
+                    break;
+#else
+                    ErrorBox.ExitOnCancel("DMX Device not found. Press OK to try again or Cancel to exit."); 
+#endif
+                }
             }
 
             if (config.Addresses == null || config.Addresses.Count == 0)
@@ -125,7 +142,7 @@ namespace LightController.Dmx
         public void Write()
         {
 #if !DEBUG
-            if (!controller.IsOpen)
+            if (!controller.IsOpen && !artnet.IsOpen)
                 return;
 #endif
             StringBuilder sb = null;
@@ -148,7 +165,10 @@ namespace LightController.Dmx
                     sb.AppendLine();
                 }
 
-                controller.SetChannels(frame.StartAddress, frame.Data);
+                if(controller.IsOpen)
+                    controller.SetChannels(frame.StartAddress, frame.Data);
+                if (artnet.IsOpen)
+                    artnet.SetChannels(frame.StartAddress, frame.Data);
             }
 
             if (sb != null)
@@ -158,6 +178,11 @@ namespace LightController.Dmx
             if(controller.IsOpen)
 #endif
             controller.WriteData();
+
+#if DEBUG
+            if (artnet.IsOpen)
+#endif
+            artnet.WriteData();
         }
 
         public void WriteDebug()
