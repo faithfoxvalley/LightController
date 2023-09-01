@@ -82,6 +82,43 @@ namespace OpenDMX.NET
             buffer[channel] = value;
         }
 
+        public void WriteDebugInfo(StringBuilder sb, int columns)
+        {
+            sb.Append("___|_");
+            for (int i = 0; i < columns; i++)
+            {
+                if (i < 100)
+                    sb.Append('_');
+                if (i < 10)
+                    sb.Append('_');
+                sb.Append(i).Append('_');
+            }
+            sb.AppendLine();
+            int column = 0;
+            for(int i = 0; i < 512 && i < buffer.Length; i++)
+            {
+                if(column % columns == 0)
+                {
+                    if(i > 0)
+                        sb.AppendLine();
+                    if (i < 100)
+                        sb.Append(' ');
+                    if (i < 10)
+                        sb.Append(' ');
+                    sb.Append(i + 1).Append("| ");
+                }
+
+                byte b = buffer[i];
+                if (b < 100)
+                    sb.Append(' ');
+                if (b < 10)
+                    sb.Append(' ');
+                sb.Append(b).Append(' ');
+
+                column++;
+            }
+        }
+
         /// <summary>
         /// Sets values of a channel range.
         /// </summary>

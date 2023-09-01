@@ -128,31 +128,21 @@ namespace LightController.Dmx
             if (!controller.IsOpen)
                 return;
 #endif
-            StringBuilder sb = null;
-            if(debug)
-            {
-                sb = new StringBuilder().AppendLine("DMX frames by fixture:");
-                debug = false;
-            }
 
             foreach (DmxFixture fixture in fixtures)
             {
                 DmxFrame frame = fixture.GetFrame();
-                if(sb != null)
-                {
-                    sb.Append(fixture.FixtureId).Append(" dmx frame: ");
-                    foreach(byte b in frame.Data)
-                        sb.Append(b).Append(',');
-                    if (frame.Data.Length > 0)
-                        sb.Length--;
-                    sb.AppendLine();
-                }
-
                 controller.SetChannels(frame.StartAddress, frame.Data);
             }
 
-            if (sb != null)
+            if (debug)
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine("DMX data:");
+                controller.WriteDebugInfo(sb, 8);
+                debug = false;
                 LogFile.Info(sb.ToString());
+            }
 
 #if DEBUG
             if(controller.IsOpen)
