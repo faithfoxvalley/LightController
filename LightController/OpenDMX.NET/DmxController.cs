@@ -95,17 +95,16 @@ namespace OpenDMX.NET
             }
             sb.AppendLine();
             int column = 0;
-            for(int i = 0; i < 512 && i < buffer.Length; i++)
+            for(int i = 1; i < buffer.Length; i++)
             {
                 if(column % columns == 0)
                 {
-                    if(i > 0)
-                        sb.AppendLine();
+                    sb.AppendLine();
                     if (i < 100)
                         sb.Append(' ');
                     if (i < 10)
                         sb.Append(' ');
-                    sb.Append(i + 1).Append("| ");
+                    sb.Append(i).Append("| ");
                 }
 
                 byte b = buffer[i];
