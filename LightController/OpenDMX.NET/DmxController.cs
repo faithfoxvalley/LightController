@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using LightController;
 using OpenDMX.NET.FTDI;
 using System;
 using System.Text;
@@ -33,8 +34,6 @@ namespace OpenDMX.NET
     {
         public bool IsOpen { get => handle != IntPtr.Zero; }
         public volatile bool IsDisposed;
-        public event EventHandler BeforeDataWrite;
-        public event EventHandler AfterDataWrite;
 
         private byte[] buffer = new byte[513];
         private IntPtr handle = IntPtr.Zero;
@@ -93,7 +92,7 @@ namespace OpenDMX.NET
                     sb.Append('_');
                 sb.Append(i).Append('_');
             }
-            sb.AppendLine();
+
             int column = 0;
             for(int i = 1; i < buffer.Length; i++)
             {
@@ -141,9 +140,9 @@ namespace OpenDMX.NET
                 throw new OpenDMXException("Could not get devices count.", status);
             }
 
-            var devices = new Device[count];
-            var serial = new byte[16];
-            var description = new byte[64];
+            Device[] devices = new Device[count];
+            byte[] serial = new byte[16];
+            byte[] description = new byte[64];
 
             for (uint i = 0; i < count; i++)
             {
@@ -159,7 +158,7 @@ namespace OpenDMX.NET
                 devices[i].SerialNumber = Encoding.ASCII.GetString(serial);
                 devices[i].Description = Encoding.ASCII.GetString(description);
 
-                var nullIndex = devices[i].SerialNumber.IndexOf('\0');
+                int nullIndex = devices[i].SerialNumber.IndexOf('\0');
                 if (nullIndex != -1)
                     devices[i].SerialNumber = devices[i].SerialNumber.Substring(0, nullIndex);
 
@@ -179,11 +178,7 @@ namespace OpenDMX.NET
         public void WriteData()
         {
             if (!IsDisposed)
-            {
-                BeforeDataWrite?.Invoke(this, null);
                 WriteBuffer();
-                AfterDataWrite?.Invoke(this, null);
-            }
         }
 
         private void WriteBuffer()
@@ -196,10 +191,11 @@ namespace OpenDMX.NET
             uint bytesWritten = 0;
             status = FTD2XX.Write(handle, buffer, (uint)buffer.Length, ref bytesWritten);
 
+            if (bytesWritten < buffer.Length)
+                LogFile.Warn($"Unable to write {buffer.Length} bytes to DMX device, only wrote {buffer.Length} bytes.");
+
             if (status != Status.Ok)
-            {
                 throw new OpenDMXException("Data write error.", status);
-            }
         }
 
         private void ClearBuffer()
