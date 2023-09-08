@@ -191,8 +191,8 @@ namespace OpenDMX.NET
             uint bytesWritten = 0;
             status = FTD2XX.Write(handle, buffer, (uint)buffer.Length, ref bytesWritten);
 
-            if (bytesWritten < buffer.Length)
-                LogFile.Warn($"Unable to write {buffer.Length} bytes to DMX device, only wrote {buffer.Length} bytes.");
+            if (bytesWritten != buffer.Length)
+                LogFile.Warn($"Unable to write {buffer.Length} bytes to DMX device, only wrote {bytesWritten} bytes.");
 
             if (status != Status.Ok)
                 throw new OpenDMXException("Data write error.", status);
