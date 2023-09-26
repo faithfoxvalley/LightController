@@ -1,11 +1,11 @@
-﻿using LightController.BacNet;
+﻿using LightController.Bacnet;
 using LightController.Midi;
 using System.Collections.Generic;
 using YamlDotNet.Serialization;
 
-namespace LightController.Config.BacNet
+namespace LightController.Config.Bacnet
 {
-    public class BacNetEvent
+    public class BacnetEvent
     {
         [YamlMember]
         public string Name { get; set; }
@@ -14,14 +14,14 @@ namespace LightController.Config.BacNet
         public MidiNote MidiNote { get; set; }
 
         [YamlMember]
-        public List<BacNetProperty> Properties { get; set; } = new List<BacNetProperty>();
+        public List<BacnetProperty> Properties { get; set; } = new List<BacnetProperty>();
 
         public void Init()
         {
             if (Properties == null)
-                Properties = new List<BacNetProperty>();
+                Properties = new List<BacnetProperty>();
 
-            foreach (BacNetProperty prop in Properties)
+            foreach (BacnetProperty prop in Properties)
                 prop.Init();
         }
     }

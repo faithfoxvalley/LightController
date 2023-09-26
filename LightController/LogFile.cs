@@ -27,7 +27,7 @@ namespace LightController
 
 
             Logger commonLog = new LoggerConfiguration()
-                .Enrich.With(new PrefixEnricher("[BacNet]"))
+                .Enrich.With(new PrefixEnricher("[Bacnet]"))
                 .WriteTo.Logger(log) 
                 .CreateLogger();
 

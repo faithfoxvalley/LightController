@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO.BACnet;
-using LightController.Config.BacNet;
+using LightController.Config.Bacnet;
 using System.Net;
 using System.Collections.Concurrent;
 using System.Threading;
@@ -11,26 +11,26 @@ using OpenDMX.NET.FTDI;
 using LightController.Midi;
 using System.Linq;
 
-namespace LightController.BacNet
+namespace LightController.Bacnet
 {
-    public partial class BacNetProcessor
+    public partial class BacnetProcessor
     {
         private readonly BacnetClient bacnetClient;
         private readonly ConcurrentDictionary<uint, BacNode> nodes = new ConcurrentDictionary<uint, BacNode>();
-        private readonly Dictionary<string, BacNetEvent> namedEvents = new Dictionary<string, BacNetEvent>();
-        private readonly Dictionary<MidiNote, BacNetEvent> midiEvents = new Dictionary<MidiNote, BacNetEvent>();
+        private readonly Dictionary<string, BacnetEvent> namedEvents = new Dictionary<string, BacnetEvent>();
+        private readonly Dictionary<MidiNote, BacnetEvent> midiEvents = new Dictionary<MidiNote, BacnetEvent>();
 
         private readonly object writeRequestsLock = new object();
-        private readonly Dictionary<BacNetEndpoint, BacnetValue> writeRequests = new Dictionary<BacNetEndpoint, BacnetValue>();
+        private readonly Dictionary<BacnetEndpoint, BacnetValue> writeRequests = new Dictionary<BacnetEndpoint, BacnetValue>();
 
         public bool Enabled { get; }
 
-        public BacNetProcessor(BacNetConfig config)
+        public BacnetProcessor(BacnetConfig config)
         {
             if (config?.Events == null || config.Events.Count == 0)
                 return;
 
-            foreach(BacNetEvent e in config.Events)
+            foreach(BacnetEvent e in config.Events)
             {
                 e.Init();
                 if(!string.IsNullOrWhiteSpace(e.Name))
@@ -47,12 +47,12 @@ namespace LightController.BacNet
             if (string.IsNullOrWhiteSpace(config.BindIp) || !IPAddress.TryParse(config.BindIp, out _))
             {
                 transport = new BacnetIpUdpProtocolTransport(port);
-                LogFile.Info($"Starting BacNet client at {IPAddress.Any}:{port}");
+                LogFile.Info($"Starting Bacnet client at {IPAddress.Any}:{port}");
             }
             else
             {
                 transport = new BacnetIpUdpProtocolTransport(port, localEndpointIp: config.BindIp);
-                LogFile.Info($"Starting BacNet client at {config.BindIp}:{port}");
+                LogFile.Info($"Starting Bacnet client at {config.BindIp}:{port}");
             }
             bacnetClient = new BacnetClient(transport);
             bacnetClient.Start();
@@ -67,13 +67,13 @@ namespace LightController.BacNet
             if (!Enabled)
                 return;
 
-            if (!midiEvents.TryGetValue(note, out BacNetEvent e))
+            if (!midiEvents.TryGetValue(note, out BacnetEvent e))
                 return;
 
             lock (writeRequestsLock)
             {
-                foreach (BacNetProperty prop in e.Properties)
-                    writeRequests[new BacNetEndpoint(prop.DeviceId, prop.BacnetId)] = prop.BacnetValue;
+                foreach (BacnetProperty prop in e.Properties)
+                    writeRequests[new BacnetEndpoint(prop.DeviceId, prop.BacnetId)] = prop.BacnetValue;
             }
         }
 
@@ -82,33 +82,33 @@ namespace LightController.BacNet
             if (!Enabled)
                 return;
             
-            List<BacNetEvent> events = new List<BacNetEvent>();
-            if (midiEvents.TryGetValue(note, out BacNetEvent midiEvent))
+            List<BacnetEvent> events = new List<BacnetEvent>();
+            if (midiEvents.TryGetValue(note, out BacnetEvent midiEvent))
                 events.Add(midiEvent);
 
             foreach(string name in names)
             {
-                if(namedEvents.TryGetValue(name, out BacNetEvent namedEvent))
+                if(namedEvents.TryGetValue(name, out BacnetEvent namedEvent))
                     events.Add(namedEvent);
             }
 
             lock (writeRequestsLock)
             {
-                foreach(BacNetEvent e in events)
+                foreach(BacnetEvent e in events)
                 {
-                    foreach (BacNetProperty prop in e.Properties)
-                        writeRequests[new BacNetEndpoint(prop.DeviceId, prop.BacnetId)] = prop.BacnetValue;
+                    foreach (BacnetProperty prop in e.Properties)
+                        writeRequests[new BacnetEndpoint(prop.DeviceId, prop.BacnetId)] = prop.BacnetValue;
                 }
             }
         }
 
-        private async Task BacNetTest()
+        private async Task BacnetTest()
         {
             try
             {
                 await Task.Delay(2000);
 
-                BacNetProperty prop = new BacNetProperty()
+                BacnetProperty prop = new BacnetProperty()
                 {
                     DeviceId = 42001,
                     PropertyId = 2,
@@ -152,7 +152,7 @@ namespace LightController.BacNet
 
         private void OnIamReceived(BacnetClient sender, BacnetAddress adr, uint deviceId, uint maxApdu, BacnetSegmentations segmentation, ushort vendorId)
         {
-            LogFile.Info($"BacNet device: {adr} - {deviceId}");
+            LogFile.Info($"Bacnet device: {adr} - {deviceId}");
             nodes.TryAdd(deviceId, new BacNode(adr, deviceId));
         }
 
@@ -205,7 +205,7 @@ namespace LightController.BacNet
         {
             if (nodes.TryGetValue(deviceId, out BacNode node))
                 return bacnetClient.WritePropertyRequest(node.Address, objectId, BacnetPropertyIds.PROP_PRESENT_VALUE, new[] { value });
-            LogFile.Warn("BacNet device not found: " + deviceId);
+            LogFile.Warn("Bacnet device not found: " + deviceId);
             return false;
         }
 
@@ -219,7 +219,7 @@ namespace LightController.BacNet
 
         public void Update()
         {
-            (BacNetEndpoint, BacnetValue)[] writeRequests;
+            (BacnetEndpoint, BacnetValue)[] writeRequests;
             lock (writeRequestsLock)
             {
                 writeRequests = this.writeRequests.Select(x => (x.Key, x.Value)).ToArray();

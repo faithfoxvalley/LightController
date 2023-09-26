@@ -6,9 +6,9 @@ using System.Text;
 using System.Threading.Tasks;
 using YamlDotNet.Serialization;
 
-namespace LightController.Config.BacNet
+namespace LightController.Config.Bacnet
 {
-    public class BacNetConfig
+    public class BacnetConfig
     {
         [YamlMember(Description = "The local ip to bind, or blank for any address")]
         public string BindIp { get; set; }
@@ -17,7 +17,7 @@ namespace LightController.Config.BacNet
         public ushort Port { get; set; } = 0xBAC0;
 
         [YamlMember]
-        public List<BacNetEvent> Events { get; set; } = new List<BacNetEvent>();
+        public List<BacnetEvent> Events { get; set; } = new List<BacnetEvent>();
 
     }
 }

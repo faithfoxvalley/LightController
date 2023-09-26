@@ -2,16 +2,16 @@
 using System.Collections.Generic;
 using System.IO.BACnet;
 
-namespace LightController.BacNet
+namespace LightController.Bacnet
 {
-    public partial class BacNetProcessor
+    public partial class BacnetProcessor
     {
-        private class BacNetEndpoint : IEquatable<BacNetEndpoint>
+        private class BacnetEndpoint : IEquatable<BacnetEndpoint>
         {
             public uint DeviceId { get; }
             public BacnetObjectId ObjectId { get; }
 
-            public BacNetEndpoint(uint deviceId, BacnetObjectId objectId)
+            public BacnetEndpoint(uint deviceId, BacnetObjectId objectId)
             {
                 DeviceId = deviceId;
                 ObjectId = objectId;
@@ -19,10 +19,10 @@ namespace LightController.BacNet
 
             public override bool Equals(object obj)
             {
-                return Equals(obj as BacNetEndpoint);
+                return Equals(obj as BacnetEndpoint);
             }
 
-            public bool Equals(BacNetEndpoint other)
+            public bool Equals(BacnetEndpoint other)
             {
                 return other is not null &&
                        DeviceId == other.DeviceId &&
@@ -34,12 +34,12 @@ namespace LightController.BacNet
                 return HashCode.Combine(DeviceId, ObjectId);
             }
 
-            public static bool operator ==(BacNetEndpoint left, BacNetEndpoint right)
+            public static bool operator ==(BacnetEndpoint left, BacnetEndpoint right)
             {
-                return EqualityComparer<BacNetEndpoint>.Default.Equals(left, right);
+                return EqualityComparer<BacnetEndpoint>.Default.Equals(left, right);
             }
 
-            public static bool operator !=(BacNetEndpoint left, BacNetEndpoint right)
+            public static bool operator !=(BacnetEndpoint left, BacnetEndpoint right)
             {
                 return !(left == right);
             }

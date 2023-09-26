@@ -36,7 +36,7 @@ namespace LightController.Config
         public List<InputBase> Inputs { get; set; } = new List<InputBase>();
 
         [YamlMember]
-        public List<string> BacNetEvents { get; set; } = new List<string>();
+        public List<string> BacnetEvents { get; set; } = new List<string>();
 
         private bool active = false;
 

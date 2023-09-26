@@ -1,4 +1,4 @@
-﻿using LightController.Config.BacNet;
+﻿using LightController.Config.Bacnet;
 using LightController.Config.Dmx;
 using System;
 using System.Collections.Generic;
@@ -31,8 +31,8 @@ namespace LightController.Config
         [YamlMember(Description = "Transition time in seconds for switching scenes")]
         public double DefaultTransitionTime { get; set; } = 1;
 
-        [YamlMember(Description = "BacNet settings")]
-        public BacNetConfig BacNet { get; set; } = new BacNetConfig();
+        [YamlMember(Description = "BACnet settings")]
+        public BacnetConfig Bacnet { get; set; } = new BacnetConfig();
 
         private string fileLocation;
 

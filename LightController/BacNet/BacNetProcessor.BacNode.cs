@@ -1,8 +1,8 @@
 ﻿using System.IO.BACnet;
 
-namespace LightController.BacNet
+namespace LightController.Bacnet
 {
-    public partial class BacNetProcessor
+    public partial class BacnetProcessor
     {
         private class BacNode
         {

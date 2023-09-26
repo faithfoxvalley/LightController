@@ -1,4 +1,4 @@
-﻿using LightController.BacNet;
+﻿using LightController.Bacnet;
 using OpenDMX.NET.FTDI;
 using System;
 using System.Collections.Generic;
@@ -8,9 +8,9 @@ using System.Text;
 using System.Threading.Tasks;
 using YamlDotNet.Serialization;
 
-namespace LightController.Config.BacNet
+namespace LightController.Config.Bacnet
 {
-    public class BacNetProperty
+    public class BacnetProperty
     {
         [YamlMember(Alias = "Device")]
         public uint DeviceId { get; set; }

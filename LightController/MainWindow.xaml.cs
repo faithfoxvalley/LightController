@@ -13,7 +13,7 @@ using Microsoft.Win32;
 using System.Threading.Tasks;
 using LightController.Color;
 using System.Collections.Generic;
-using LightController.BacNet;
+using LightController.Bacnet;
 
 namespace LightController
 {
@@ -24,7 +24,7 @@ namespace LightController
     {
         private const int DmxUpdateFps = 30;
         private const int InputsUpdateFps = 20;
-        private const int BacNetUpdateFps = 10;
+        private const int BacnetUpdateFps = 10;
         private const string AppGuid = "a013f8c4-0875-49e3-b671-f4e16a1f1fe4";
         private const int AcquireMutexTimeout = 1000;
 
@@ -33,7 +33,7 @@ namespace LightController
         private ConfigFile config;
         private SceneManager sceneManager;
         private DmxProcessor dmx;
-        private BacNetProcessor bacNet;
+        private BacnetProcessor bacNet;
         private TickLoop dmxTimer; // Runs on different thread
         private TickLoop inputsTimer; // Runs on different thread
         private TickLoop bacNetTimer; // Runs on different thread
@@ -90,7 +90,7 @@ namespace LightController
 
             pro = new ProPresenter(config.ProPresenter, mediaList);
             dmx = new DmxProcessor(config.Dmx);
-            bacNet = new BacNetProcessor(config.BacNet);
+            bacNet = new BacnetProcessor(config.Bacnet);
 
             string defaultScene;
             if(!args.TryGetFlagArg("scene", 0, out defaultScene))
@@ -103,7 +103,7 @@ namespace LightController
             dmxTimer = new TickLoop(DmxUpdateFps, UpdateDmx);
             inputsTimer = new TickLoopAsync(InputsUpdateFps, UpdateInputs);
             if (bacNet.Enabled)
-                bacNetTimer = new TickLoop(BacNetUpdateFps, UpdateBacNet);
+                bacNetTimer = new TickLoop(BacnetUpdateFps, UpdateBacnet);
 
             uiTimer = new System.Windows.Threading.DispatcherTimer();
             uiTimer.Interval = new TimeSpan(0, 0, 1);
@@ -140,7 +140,7 @@ namespace LightController
             if(bacNetTimer != null)
             {
                 sb.AppendLine();
-                sb.Append("BacNet").AppendLine();
+                sb.Append("Bacnet").AppendLine();
                 bacNetTimer.AppendPerformanceInfo(sb);
             }
             performanceInfo.Text = sb.ToString();
@@ -195,7 +195,7 @@ namespace LightController
         }
 
         // This runs on a different thread
-        private void UpdateBacNet()
+        private void UpdateBacnet()
         {
             bacNet.Update();
         }
