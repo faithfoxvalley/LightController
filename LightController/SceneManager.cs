@@ -1,4 +1,5 @@
-﻿using LightController.Config;
+﻿using LightController.BacNet;
+using LightController.Config;
 using LightController.Dmx;
 using LightController.Midi;
 using System;
@@ -15,6 +16,7 @@ namespace LightController
         private Scene activeScene;
         private MidiInput midiDevice;
         private DmxProcessor dmx;
+        private readonly BacNetProcessor bacNet;
         private System.Windows.Controls.ListBox sceneList;
         private CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
 
@@ -24,10 +26,11 @@ namespace LightController
         public string ActiveSceneName => activeScene?.Name;
 
         public SceneManager(List<Scene> scenes, string midiDevice, string defaultScene, DmxProcessor dmx, 
-            double transitionTime, System.Windows.Controls.ListBox sceneList)
+            double transitionTime, System.Windows.Controls.ListBox sceneList, BacNetProcessor bacNet)
         {
             this.scenes = scenes;
             this.dmx = dmx;
+            this.bacNet = bacNet;
             this.sceneList = sceneList;
             if (double.IsNaN(transitionTime) || double.IsInfinity(transitionTime) || transitionTime < 0)
                 transitionTime = 0;
@@ -139,6 +142,12 @@ namespace LightController
                     activeScene = newScene;
                     UpdateSceneUI(newSceneIndex);
                     UpdateDmx(newScene);
+
+                    bacNet.TriggerEvents(note, newScene.BacNetEvents);
+                }
+                else
+                {
+                    bacNet.TriggerEvents(note);
                 }
             }
         }
