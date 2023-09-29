@@ -4,10 +4,6 @@ using System.IO.BACnet;
 using LightController.Config.Bacnet;
 using System.Net;
 using System.Collections.Concurrent;
-using System.Threading;
-using System.IO.BACnet.Storage;
-using System.Threading.Tasks;
-using OpenDMX.NET.FTDI;
 using LightController.Midi;
 using System.Linq;
 
@@ -21,7 +17,12 @@ namespace LightController.Bacnet
         private readonly Dictionary<MidiNote, BacnetEvent> midiEvents = new Dictionary<MidiNote, BacnetEvent>();
 
         private readonly object writeRequestsLock = new object();
-        private readonly Dictionary<BacnetEndpoint, BacnetValue> writeRequests = new Dictionary<BacnetEndpoint, BacnetValue>();
+        private readonly Dictionary<BacnetEndpoint, BacnetRequest> writeRequests = new Dictionary<BacnetEndpoint, BacnetRequest>();
+
+        // used to send whois packets every 10ish seconds
+        private int WhoIsTick = 0; 
+        private const int WhoIsInterval = 100;
+
 
         public bool Enabled { get; }
 
@@ -47,12 +48,12 @@ namespace LightController.Bacnet
             if (string.IsNullOrWhiteSpace(config.BindIp) || !IPAddress.TryParse(config.BindIp, out _))
             {
                 transport = new BacnetIpUdpProtocolTransport(port);
-                LogFile.Info($"Starting Bacnet client at {IPAddress.Any}:{port}");
+                LogFile.Info($"[Bacnet] Starting Bacnet client at {IPAddress.Any}:{port}");
             }
             else
             {
                 transport = new BacnetIpUdpProtocolTransport(port, localEndpointIp: config.BindIp);
-                LogFile.Info($"Starting Bacnet client at {config.BindIp}:{port}");
+                LogFile.Info($"[Bacnet] Starting Bacnet client at {config.BindIp}:{port}");
             }
             bacnetClient = new BacnetClient(transport);
             bacnetClient.Start();
@@ -73,7 +74,7 @@ namespace LightController.Bacnet
             lock (writeRequestsLock)
             {
                 foreach (BacnetProperty prop in e.Properties)
-                    writeRequests[new BacnetEndpoint(prop.DeviceId, prop.BacnetId)] = prop.BacnetValue;
+                    writeRequests[prop.Endpoint] = prop.ValueRequest;
             }
         }
 
@@ -92,120 +93,29 @@ namespace LightController.Bacnet
                     events.Add(namedEvent);
             }
 
+            if (events.Count == 0)
+                return;
+
             lock (writeRequestsLock)
             {
                 foreach(BacnetEvent e in events)
                 {
                     foreach (BacnetProperty prop in e.Properties)
-                        writeRequests[new BacnetEndpoint(prop.DeviceId, prop.BacnetId)] = prop.BacnetValue;
+                        writeRequests[prop.Endpoint] = prop.ValueRequest;
                 }
             }
         }
 
-        private async Task BacnetTest()
-        {
-            try
-            {
-                await Task.Delay(2000);
-
-                BacnetProperty prop = new BacnetProperty()
-                {
-                    DeviceId = 42001,
-                    PropertyId = 2,
-                    AnalogType = false,
-                    OutputType = false,
-                    Value = 1,
-                };
-                prop.Init();
-                bool result = WriteValue(prop.DeviceId, prop.BacnetId, prop.BacnetValue);
-            }
-            catch (Exception e)
-            {
-                throw;
-            }
-        }
-
-
-        private void ReadWriteExample()
-        {
-
-            BacnetValue Value;
-            bool ret;
-            // Read Present_Value property on the object ANALOG_INPUT:0 provided by the device 12345
-            // Scalar value only
-            ret = ReadScalarValue(12345, new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 0), BacnetPropertyIds.PROP_PRESENT_VALUE, out Value);
-
-            if (ret == true)
-            {
-                Console.WriteLine("Read value : " + Value.Value.ToString());
-
-                // Write Present_Value property on the object ANALOG_OUTPUT:0 provided by the device 4000
-                BacnetValue newValue = new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_REAL, Convert.ToSingle(Value.Value));   // expect it's a float
-                ret = WriteScalarValue(4000, new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_OUTPUT, 0), BacnetPropertyIds.PROP_PRESENT_VALUE, newValue);
-
-                Console.WriteLine("Write feedback : " + ret.ToString());
-            }
-            else
-                Console.WriteLine("Error somewhere !");
-        }
-
-
         private void OnIamReceived(BacnetClient sender, BacnetAddress adr, uint deviceId, uint maxApdu, BacnetSegmentations segmentation, ushort vendorId)
         {
-            LogFile.Info($"Bacnet device: {adr} - {deviceId}");
+            LogFile.Info($"[Bacnet] Found Bacnet device: {adr} - {deviceId}");
             nodes.TryAdd(deviceId, new BacNode(adr, deviceId));
-        }
-
-
-        private bool ReadScalarValue(int deviceId, BacnetObjectId BacnetObjet, BacnetPropertyIds Propriete, out BacnetValue Value)
-        {
-            BacnetAddress adr;
-            IList<BacnetValue> NoScalarValue;
-
-            Value = new BacnetValue(null);
-
-            // Looking for the device
-            adr = DeviceAddr((uint)deviceId);
-            if (adr == null) return false;  // not found
-
-            // Property Read
-            if (bacnetClient.ReadPropertyRequest(adr, BacnetObjet, Propriete, out NoScalarValue) == false)
-                return false;
-
-            Value = NoScalarValue[0];
-            return true;
-        }
-
-
-        private bool WriteScalarValue(int deviceId, BacnetObjectId BacnetObjet, BacnetPropertyIds Propriete, BacnetValue Value)
-        {
-            BacnetAddress adr;
-
-            // Looking for the device
-            adr = DeviceAddr((uint)deviceId);
-            if (adr == null) return false;  // not found
-
-            // Property Write
-            BacnetValue[] NoScalarValue = { Value };
-            if (bacnetClient.WritePropertyRequest(adr, BacnetObjet, Propriete, NoScalarValue) == false)
-                return false;
-
-            return true;
-        }
-
-
-        private BacnetAddress DeviceAddr(uint deviceId)
-        {
-            if (nodes.TryGetValue(deviceId, out BacNode node))
-                return node.Address;
-            return null;
         }
 
         public bool WriteValue(uint deviceId, BacnetObjectId objectId, BacnetValue value)
         {
             if (nodes.TryGetValue(deviceId, out BacNode node))
                 return bacnetClient.WritePropertyRequest(node.Address, objectId, BacnetPropertyIds.PROP_PRESENT_VALUE, new[] { value });
-            LogFile.Warn("Bacnet device not found: " + deviceId);
             return false;
         }
 
@@ -219,15 +129,53 @@ namespace LightController.Bacnet
 
         public void Update()
         {
-            (BacnetEndpoint, BacnetValue)[] writeRequests;
+            List<BacnetRequest> writeRequests;
             lock (writeRequestsLock)
             {
-                writeRequests = this.writeRequests.Select(x => (x.Key, x.Value)).ToArray();
+                writeRequests = this.writeRequests.Values.ToList();
                 this.writeRequests.Clear();
             }
 
-            foreach(var tuple in writeRequests)
-                WriteValue(tuple.Item1.DeviceId, tuple.Item1.ObjectId, tuple.Item2);
+            bool sendWhoIs = false;
+            for (int i = writeRequests.Count - 1; i >= 0; i--)
+            {
+                BacnetRequest request = writeRequests[i];
+                if (WriteValue(request.Endpoint.DeviceId, request.Endpoint.ObjectId, request.Value))
+                {
+                    int lastIndex = writeRequests.Count - 1;
+                    if (i < lastIndex)
+                        writeRequests[i] = writeRequests[lastIndex];
+                    writeRequests.RemoveAt(lastIndex);
+                }
+                else
+                {
+                    sendWhoIs = true;
+                }
+            }
+
+            if (sendWhoIs)
+            {
+                if (WhoIsTick % WhoIsInterval == 0)
+                {
+                    LogFile.Info("[Bacnet] Failed to contact one or more Bacnet devices. Sending Bacnet WhoIs request");
+                    bacnetClient.WhoIs();
+                }
+                WhoIsTick++;
+            }
+            else
+            {
+                WhoIsTick = 0;
+            }
+
+            if (writeRequests.Count <= 0)
+                return;
+
+            lock (writeRequestsLock)
+            {
+                foreach (BacnetRequest request in writeRequests)
+                    this.writeRequests.TryAdd(request.Endpoint, request);
+            }
         }
+
     }
 }

@@ -28,21 +28,22 @@ namespace LightController.Config.Bacnet
         public double Value { get; set; }
 
         [YamlIgnore]
-        public BacnetObjectId BacnetId { get; private set; }
+        public BacnetEndpoint Endpoint { get; private set; }
 
         [YamlIgnore]
-        public BacnetValue BacnetValue { get; private set; }
+        public BacnetRequest ValueRequest { get; private set; }
 
         public void Init()
         {
             BacnetObjectTypes type;
+            BacnetValue val;
             if(OutputType)
             {
                 if (AnalogType)
                     type = BacnetObjectTypes.OBJECT_ANALOG_OUTPUT;
                 else
                     type = BacnetObjectTypes.OBJECT_BINARY_OUTPUT;
-                BacnetValue = new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_REAL, (float)Value);
+                val = new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_REAL, (float)Value);
             }
             else
             {
@@ -50,9 +51,10 @@ namespace LightController.Config.Bacnet
                     type = BacnetObjectTypes.OBJECT_ANALOG_VALUE;
                 else
                     type = BacnetObjectTypes.OBJECT_BINARY_VALUE;
-                BacnetValue = new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED, (uint)Value);
+                val = new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED, (uint)Value);
             }
-            BacnetId = new BacnetObjectId(type, PropertyId);
+            Endpoint = new BacnetEndpoint(DeviceId, type, PropertyId);
+            ValueRequest = new BacnetRequest(Endpoint, val);
         }
     }
 }
