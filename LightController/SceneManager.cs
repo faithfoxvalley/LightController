@@ -45,6 +45,7 @@ namespace LightController
                 while (!midiDevices.TryGetFirstDevice(out this.midiDevice))
                 {
 #if DEBUG
+                    LogFile.Warn("Midi device not found!");
                     break;
 #else
                     ErrorBox.ExitOnCancel("Midi device not found. Press OK to try again or Cancel to exit.");
