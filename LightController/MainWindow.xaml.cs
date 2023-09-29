@@ -11,8 +11,6 @@ using System.Windows;
 using System.Text;
 using Microsoft.Win32;
 using System.Threading.Tasks;
-using LightController.Color;
-using System.Collections.Generic;
 using LightController.Bacnet;
 
 namespace LightController

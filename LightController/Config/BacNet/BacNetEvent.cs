@@ -1,5 +1,4 @@
-﻿using LightController.Bacnet;
-using LightController.Midi;
+﻿using LightController.Midi;
 using System.Collections.Generic;
 using YamlDotNet.Serialization;
 

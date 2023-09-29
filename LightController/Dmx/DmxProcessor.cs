@@ -1,11 +1,9 @@
 ﻿using LightController.Config;
 using LightController.Config.Dmx;
 using OpenDMX.NET;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Windows;
 
 namespace LightController.Dmx
 {

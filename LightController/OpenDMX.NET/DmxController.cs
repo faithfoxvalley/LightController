@@ -26,7 +26,6 @@ using LightController;
 using OpenDMX.NET.FTDI;
 using System;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace OpenDMX.NET
 {
