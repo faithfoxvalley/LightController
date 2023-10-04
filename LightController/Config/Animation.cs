@@ -50,14 +50,50 @@ namespace LightController.Config
         {
             if (!string.IsNullOrWhiteSpace(animation))
             {
-                string[] args = animation.Split(';');
-                foreach (string arg in args)
+                string[] steps = animation.Split(';');
+                foreach (string step in steps)
                 {
-                    if (!string.IsNullOrWhiteSpace(arg))
+                    // 6;14-20|13-7
+                    if (string.IsNullOrWhiteSpace(step))
+                        continue;
+
+                    string[] concurrentGroups = step.Split("|");
+                    ValueSet[] groupSets = concurrentGroups
+                        .Where(x => !string.IsNullOrWhiteSpace (x))
+                        .Select(x => new ValueSet(x.Trim()))
+                        .ToArray();
+                    if (groupSets.Length == 0)
+                        continue;
+                    if(groupSets.Length == 1)
                     {
-                        ValueSet set = new ValueSet(arg.Trim());
-                        animationOrder.Add(set);
+                        animationOrder.Add(groupSets[0]);
+                        continue;
                     }
+
+                    List<ValueSet> resultSets = new List<ValueSet>();
+                    foreach (ValueSet group in groupSets)
+                    {
+                        int i = 0;
+                        foreach(int id in group.EnumerateValues())
+                        {
+                            ValueSet resultSet;
+                            if(i == resultSets.Count)
+                            {
+                                resultSet = new ValueSet();
+                                resultSets.Add(resultSet);
+                                animationOrder.Add(resultSet);
+                            }
+                            else
+                            {
+                                resultSet = resultSets[i];
+                            }
+
+                            resultSet.AddValue(id);
+
+                            i++;
+                        }
+                    }
+
                 }
             }
         }

@@ -39,6 +39,17 @@ namespace LightController.Config
         public ValueSet(int start, int end)
         {
             ranges = new List<Range>();
+            AddRange(start, end);
+        }
+
+        public void AddValue(int value)
+        {
+            if (ranges.Count == 0 || !ranges[ranges.Count - 1].TryExpand(value))
+                ranges.Add(new Range(value, value));
+        }
+
+        public void AddRange(int start, int end)
+        {
             ranges.Add(new Range(start, end));
         }
 
@@ -144,10 +155,11 @@ namespace LightController.Config
                 }
             }
 
-            public Range(int start, int end)
+            public Range(int start, int end, bool reversed = false)
             {
                 this.start = start;
                 this.end = end;
+                this.reversed = reversed;
             }
 
             public bool Contains(int value)
@@ -166,6 +178,27 @@ namespace LightController.Config
                 int end = Math.Min(this.end, other.end);
                 result = new Range(start, end);
                 return true;
+            }
+
+            public bool TryExpand(int value)
+            {
+                if(reversed)
+                {
+                    if(start == value - 1)
+                    {
+                        start = value;
+                        return true;
+                    }
+                }
+                else
+                {
+                    if(end == value - 1)
+                    {
+                        end = value;
+                        return true;
+                    }
+                }
+                return false;
             }
 
             public void AppendString(StringBuilder sb)
