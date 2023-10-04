@@ -67,7 +67,7 @@ namespace LightController.Bacnet
             if (!Enabled)
                 return;
 
-            if (!midiEvents.TryGetValue(note, out BacnetEvent e))
+            if (note == null || !midiEvents.TryGetValue(note, out BacnetEvent e))
                 return;
 
             lock (writeRequestsLock)
@@ -83,13 +83,16 @@ namespace LightController.Bacnet
                 return;
             
             List<BacnetEvent> events = new List<BacnetEvent>();
-            if (midiEvents.TryGetValue(note, out BacnetEvent midiEvent))
+            if (note != null && midiEvents.TryGetValue(note, out BacnetEvent midiEvent))
                 events.Add(midiEvent);
 
-            foreach(string name in names)
+            if (names != null)
             {
-                if(namedEvents.TryGetValue(name, out BacnetEvent namedEvent))
-                    events.Add(namedEvent);
+                foreach (string name in names)
+                {
+                    if (name != null && namedEvents.TryGetValue(name, out BacnetEvent namedEvent))
+                        events.Add(namedEvent);
+                }
             }
 
             if (events.Count == 0)

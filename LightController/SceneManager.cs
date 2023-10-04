@@ -82,6 +82,8 @@ namespace LightController
                     activeScene = scene;
                     UpdateSceneUI(sceneIndex);
                     UpdateDmx(scene, false);
+
+                    bacNet.TriggerEvents(scene.MidiNote, scene.BacnetEvents);
                 }
             }
 
