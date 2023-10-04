@@ -182,7 +182,21 @@ namespace LightController.Config
 
             public bool TryExpand(int value)
             {
-                if(reversed)
+                if(start == end)
+                {
+                    if(value == end + 1)
+                    {
+                        end = value;
+                        return true;
+                    }
+                    else if (value == start - 1)
+                    {
+                        start = value;
+                        reversed = true;
+                        return true;
+                    }
+                }
+                else if(reversed)
                 {
                     if(start == value - 1)
                     {
