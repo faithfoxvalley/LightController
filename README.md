@@ -36,6 +36,8 @@ scenes:
   midi_note:
     channel: 1
     note: 0
+  # List of Bacnet event names to trigger with the scene
+  bacnet_events:
   # The scene input list
   inputs:
 ```
@@ -48,7 +50,7 @@ Each scene has a list of inputs that tell the light fixtures what color to be. E
     # Comma seperated list of fixture ids assigned to this input
     # Order may matter depending on the input type
     fixture_ids: 1,2,4-5
-    # Maximum intensity as a percent or "auto" to calculate the intensity from amount of black in the color
+    # Maximum intensity as a percent
     intensity: 100%
 ```
 
@@ -244,6 +246,45 @@ pro:
   # Path to the media assets folder, usually located in the Documents folder
   media_assets_path: 
 ```
+
+### BACnet
+
+To utilize the lighting controller to set BACnet values on your BACnet/IP network, you may use these settings. BACnet events can either be triggered directly by midi notes, or they can be triggered by scenes using the scene `bacnet_events` setting.
+
+```yml
+# BACnet settings
+bacnet:
+  # The local ip to bind, or blank for any address
+  bind_ip: 
+  # The port to use for communication, or blank for 0xBAC0/47808
+  port: 
+  # List of events to be triggered by a scene or midi note
+  events:
+```
+
+#### BACnet Events
+
+BACnet events are lists of BACnet properties that will be set when triggered.
+
+```yml
+    # The name of the event
+  - name: LightsOn
+    # The midi note that triggers this event
+    midi_note: 
+    # Bacnet properties to set in this event
+    properties:
+      # Device id
+    - device: 41099
+      # True = Analog, False = Binary
+      analog_type: false
+      # True = Output, False = Value
+      output_type: false
+      # Bacnet property id
+      id: 2
+      # Decimal value to set the property to
+      value: 1
+```
+
 ---
 
 ## Changing Scenes with ProPresenter
