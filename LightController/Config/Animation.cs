@@ -56,7 +56,6 @@ namespace LightController.Config
                     if (string.IsNullOrWhiteSpace(step))
                         continue;
 
-
                     if (step[step.Length - 1] == ')')
                     {
                         string groupStep = step.TrimStart();
@@ -66,22 +65,25 @@ namespace LightController.Config
                             numStart++;
                             int numLength = groupStep.Length - (numStart + 1);
                             int groupCount = int.Parse(groupStep.Substring(numStart, numLength));
-                            ValueSet groupSet = new ValueSet(groupStep.Substring(0, groupStep.Length - (numLength + 2)));
-                            int i = 0;
-                            ValueSet currentSet = new ValueSet();
-                            animationOrder.Add(currentSet);
-                            foreach(int id in groupSet.EnumerateValues())
+                            if(groupCount > 0)
                             {
-                                if(i == groupCount)
+                                ValueSet groupSet = new ValueSet(groupStep.Substring(0, groupStep.Length - (numLength + 2)));
+                                int i = 0;
+                                ValueSet currentSet = new ValueSet();
+                                animationOrder.Add(currentSet);
+                                foreach (int id in groupSet.EnumerateValues())
                                 {
-                                    currentSet = new ValueSet();
-                                    animationOrder.Add(currentSet);
-                                    i = 0;
+                                    if (i == groupCount)
+                                    {
+                                        currentSet = new ValueSet();
+                                        animationOrder.Add(currentSet);
+                                        i = 0;
+                                    }
+                                    currentSet.AddValue(id);
+                                    i++;
                                 }
-                                currentSet.AddValue(id);
-                                i++;
+                                continue;
                             }
-                            continue;
                         }
                     }
 
