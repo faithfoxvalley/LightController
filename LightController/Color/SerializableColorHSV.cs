@@ -7,26 +7,51 @@ namespace LightController.Color
     {
         public double Hue
         {
-            get => hue;
-            set => hue = Math.Clamp(value, 0, 360);
+            get => color.Hue;
+            set => color.Hue = Math.Clamp(value, 0, 360);
         }
 
         public string Saturation
         {
-            get => sat.ToString();
-            set => sat = Percent.Parse(value, 1);
+            get
+            {
+                return sat.ToString();
+            }
+
+            set
+            {
+                sat = Percent.Parse(value, 1);
+                color.Saturation = sat.Value;
+            }
         }
 
         public string Value
         {
-            get => val.ToString();
-            set => val = Percent.Parse(value, 1);
+            get
+            {
+                return val.ToString();
+            }
+
+            set
+            {
+                val = Percent.Parse(value, 1);
+                color.Value = val.Value;
+            }
         }
 
-        public ColorHSV Color => new ColorHSV(hue, sat.Value, val.Value);
+        public ColorHSV Color => color;
 
-        private double hue;
         private Percent sat = new Percent(1);
         private Percent val = new Percent(1);
+        private readonly ColorHSV color = new ColorHSV(0, 1, 1);
+
+        public SerializableColorHSV() { }
+
+        public SerializableColorHSV(ColorHSV color)
+        {
+            this.color = color;
+            sat = new Percent(color.Saturation);
+            val = new Percent(color.Value);
+        }
     }
 }
