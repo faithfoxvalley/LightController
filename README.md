@@ -74,6 +74,35 @@ Use an [online color picker](https://www.google.com/search?q=color+picker) to ge
     intensity: 40%
 ```
 
+##### Gradient Input
+`!gradient_input` allows you to specify a color gradient 
+```yml
+  - !gradient_input
+    # List of color frames
+    colors:
+      # The location that this color appears in the gradient as a percentage
+    - location: 0%
+      # HSV hue
+      hue: 0
+      # HSV saturation percentage (default 100%)
+      saturation: 100%
+      # Light intensity modifier (default 100%)
+      intensity: 100% 
+
+    - location: 50%
+      hue: 180
+      saturation: 100%
+      intensity: 100%
+    - location: 100%
+      hue: 360
+      saturation: 100%
+      intensity: 100%
+    # When true, location is ignored and set automatically to space the frames evenly
+    space_evenly: false
+    fixture_ids: 7-13,6,14-20
+    intensity: 80%
+```
+
 ##### ProPresenter Input
 `!propresenter_input` uses the media that is showing on screen to generate the colors. The lighting controller will only look up the media once when the scene is activated, so if you change the background without reactivating the scene it will not update the light color.
 ```yml
