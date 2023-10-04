@@ -11,7 +11,7 @@ namespace LightController.Config.Bacnet
         [YamlMember(Description = "The port to use for communication, or blank for 0xBAC0/47808")]
         public ushort Port { get; set; } = 0xBAC0;
 
-        [YamlMember]
+        [YamlMember(Description = "List of events to be triggered by scene or midi note")]
         public List<BacnetEvent> Events { get; set; } = new List<BacnetEvent>();
 
     }
