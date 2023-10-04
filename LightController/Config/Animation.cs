@@ -53,7 +53,6 @@ namespace LightController.Config
                 string[] steps = animation.Split(';');
                 foreach (string step in steps)
                 {
-                    // 6;14-20|13-7
                     if (string.IsNullOrWhiteSpace(step))
                         continue;
 
