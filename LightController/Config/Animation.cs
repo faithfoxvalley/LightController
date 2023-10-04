@@ -56,6 +56,35 @@ namespace LightController.Config
                     if (string.IsNullOrWhiteSpace(step))
                         continue;
 
+
+                    if (step[step.Length - 1] == ')')
+                    {
+                        string groupStep = step.TrimStart();
+                        int numStart = groupStep.IndexOf('(');
+                        if(numStart > 0)
+                        {
+                            numStart++;
+                            int numLength = groupStep.Length - (numStart + 1);
+                            int groupCount = int.Parse(groupStep.Substring(numStart, numLength));
+                            ValueSet groupSet = new ValueSet(groupStep.Substring(0, groupStep.Length - (numLength + 2)));
+                            int i = 0;
+                            ValueSet currentSet = new ValueSet();
+                            animationOrder.Add(currentSet);
+                            foreach(int id in groupSet.EnumerateValues())
+                            {
+                                if(i == groupCount)
+                                {
+                                    currentSet = new ValueSet();
+                                    animationOrder.Add(currentSet);
+                                    i = 0;
+                                }
+                                currentSet.AddValue(id);
+                                i++;
+                            }
+                            continue;
+                        }
+                    }
+
                     string[] concurrentGroups = step.Split("|");
                     ValueSet[] groupSets = concurrentGroups
                         .Where(x => !string.IsNullOrWhiteSpace (x))

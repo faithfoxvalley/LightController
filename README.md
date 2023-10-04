@@ -166,6 +166,25 @@ Use an [online color picker](https://www.google.com/search?q=color+picker) to ge
     intensity: 100%
 ```
 
+
+#### Animation Syntax
+Animation fields like the one in the scene transition and animated inputs have fairly complex syntax. As specified earlier, an animation consists of a set of steps seperated by semicolons, and each step contains a set of `fixture_ids`. However, there are additional ways to specify steps:
+
+To specify multple steps where two or more sets of `fixture_ids` are happening concurrently use the `fixture_ids|fixture_ids|...` syntax:
+```yml
+# The following animations are equivalent
+animation_1: 5;4-1|6-9
+animation_2: 5;4,6;3,7;2,8;1,9
+```
+To specify a step where a set of `fixture_ids` should be expanded into groups use the `fixture_ids(num)` syntax:
+```yml
+# The following animations are equivalent
+animation_1: 1-10(2);11
+animation_2: 1-2;3-4;5-6;7-8;9-10;11
+```
+
+
+
 ### DMX Settings
 
 ```yml
