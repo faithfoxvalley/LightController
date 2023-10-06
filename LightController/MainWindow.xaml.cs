@@ -88,7 +88,9 @@ namespace LightController
 
             pro = new ProPresenter(config.ProPresenter, mediaList);
             dmx = new DmxProcessor(config.Dmx);
-            bacNet = new BacnetProcessor(config.Bacnet);
+            bacNet = new BacnetProcessor(config.Bacnet, bacnetList);
+            if (bacNet.Enabled)
+                bacnetContainer.Visibility = Visibility.Visible;
 
             string defaultScene;
             if(!args.TryGetFlagArg("scene", 0, out defaultScene))

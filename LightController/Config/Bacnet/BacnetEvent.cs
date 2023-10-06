@@ -26,7 +26,9 @@ namespace LightController.Config.Bacnet
 
         public override string ToString()
         {
-            return Name;
+            if (MidiNote == null)
+                return Name;
+            return $"{MidiNote.Channel},{MidiNote.Note} - {Name}";
         }
     }
 }

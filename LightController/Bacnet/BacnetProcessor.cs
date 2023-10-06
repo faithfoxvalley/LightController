@@ -25,7 +25,7 @@ namespace LightController.Bacnet
 
         public bool Enabled { get; }
 
-        public BacnetProcessor(BacnetConfig config)
+        public BacnetProcessor(BacnetConfig config, System.Windows.Controls.ListBox bacnetList)
         {
             if (config?.Events == null || config.Events.Count == 0)
                 return;
@@ -37,6 +37,7 @@ namespace LightController.Bacnet
                     namedEvents[e.Name] = e;
                 if (e.MidiNote != null)
                     midiEvents[e.MidiNote] = e;
+                bacnetList.Items.Add(e.ToString());
             }
 
             ushort port = 0xBAC0;
