@@ -66,8 +66,10 @@ namespace LightController.Config
             return newFile;
         }
 
-        public void Save()
+        public void Save(string fileLocation = null)
         {
+            if (fileLocation == null)
+                fileLocation = this.fileLocation;
             using(StreamWriter writer = File.CreateText(fileLocation))
             {
                 SerializerBuilder serializer = new SerializerBuilder()

@@ -251,9 +251,35 @@ namespace LightController
             }
         }
 
-        private void btnSaveConfig_Click(object sender, RoutedEventArgs e)
+        private void btnSaveDefault_Click(object sender, RoutedEventArgs e)
         {
-            config.Save();
+            try
+            {
+                config.Save(Path.Combine(ApplicationData, "config.yml"));
+            }
+            catch (Exception ex)
+            {
+                LogFile.Error(ex, "An error occurred while saving the config file!");
+                ErrorBox.Show("An error occurred while saving the config file!", false);
+            }
+        }
+
+        private void btnSaveAsConfig_Click(object sender, RoutedEventArgs e)
+        {
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Filter = "Yaml file (*.yml)|*.yml;*.yaml";
+            if (saveFileDialog.ShowDialog() == true && !string.IsNullOrWhiteSpace(saveFileDialog.FileName))
+            {
+                try
+                {
+                    config.Save(saveFileDialog.FileName);
+                }
+                catch (Exception ex)
+                {
+                    LogFile.Error(ex, "An error occurred while saving the config file!");
+                    ErrorBox.Show("An error occurred while saving the config file!", false);
+                }
+            }
         }
 
         private void ListBox_DisableMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)

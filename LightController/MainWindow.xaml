@@ -23,9 +23,10 @@
                 <MenuItem Header="Debug DMX" Click="DebugDmx_Click"/>
             </MenuItem>
             <MenuItem Header="_Config">
-                <MenuItem Header="_Show" Click="btnOpenConfig_Click"/>
+                <MenuItem Header="_Edit" Click="btnOpenConfig_Click"/>
                 <MenuItem Header="_Load" Click="btnLoadConfig_Click"/>
-                <MenuItem Header="_Save" Click="btnSaveConfig_Click"/>
+                <MenuItem Header="_Save As" Click="btnSaveAsConfig_Click"/>
+                <MenuItem Header="Save As Default" Click="btnSaveDefault_Click"/>
             </MenuItem>
         </Menu>
         <Grid DockPanel.Dock="Right" MaxWidth="200px" Margin="0,10,10,10">

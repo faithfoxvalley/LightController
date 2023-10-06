@@ -5,11 +5,14 @@ namespace LightController
 {
     public static class ErrorBox
     {
-        public static void Show(string msg)
+        public static void Show(string msg, bool kill = true)
         {
             MessageBox.Show(msg, "Light Controller", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.None, MessageBoxOptions.DefaultDesktopOnly);
-            LogFile.Error("Application closed: '" + msg + "'");
-            Process.GetCurrentProcess().Kill();
+            if(kill)
+            {
+                LogFile.Error("Application closed: '" + msg + "'");
+                Process.GetCurrentProcess().Kill();
+            }
         }
 
         /// <summary>
