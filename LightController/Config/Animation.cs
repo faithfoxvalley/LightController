@@ -7,6 +7,7 @@ namespace LightController.Config
     public class Animation
     {
         private List<ValueSet> animationOrder = new List<ValueSet>();
+        private string animationString;
 
         public IEnumerable<ValueSet> AnimationOrder => animationOrder;
 
@@ -48,8 +49,12 @@ namespace LightController.Config
 
         public Animation(string animation)
         {
-            if (!string.IsNullOrWhiteSpace(animation))
+            if (string.IsNullOrWhiteSpace(animation))
             {
+                animationString = null;
+                return;
+            }
+            animationString = animation;
                 string[] steps = animation.Split(';');
                 foreach (string step in steps)
                 {
@@ -60,12 +65,12 @@ namespace LightController.Config
                     {
                         string groupStep = step.TrimStart();
                         int numStart = groupStep.IndexOf('(');
-                        if(numStart > 0)
+                        if (numStart > 0)
                         {
                             numStart++;
                             int numLength = groupStep.Length - (numStart + 1);
                             int groupCount = int.Parse(groupStep.Substring(numStart, numLength));
-                            if(groupCount > 0)
+                            if (groupCount > 0)
                             {
                                 ValueSet groupSet = new ValueSet(groupStep.Substring(0, groupStep.Length - (numLength + 2)));
                                 int i = 0;
@@ -89,12 +94,12 @@ namespace LightController.Config
 
                     string[] concurrentGroups = step.Split("|");
                     ValueSet[] groupSets = concurrentGroups
-                        .Where(x => !string.IsNullOrWhiteSpace (x))
+                        .Where(x => !string.IsNullOrWhiteSpace(x))
                         .Select(x => new ValueSet(x.Trim()))
                         .ToArray();
                     if (groupSets.Length == 0)
                         continue;
-                    if(groupSets.Length == 1)
+                    if (groupSets.Length == 1)
                     {
                         animationOrder.Add(groupSets[0]);
                         continue;
@@ -104,10 +109,10 @@ namespace LightController.Config
                     foreach (ValueSet group in groupSets)
                     {
                         int i = 0;
-                        foreach(int id in group.EnumerateValues())
+                        foreach (int id in group.EnumerateValues())
                         {
                             ValueSet resultSet;
-                            if(i == resultSets.Count)
+                            if (i == resultSets.Count)
                             {
                                 resultSet = new ValueSet();
                                 resultSets.Add(resultSet);
@@ -125,7 +130,6 @@ namespace LightController.Config
                     }
 
                 }
-            }
         }
 
         private void UpdateStepLength()
@@ -142,12 +146,7 @@ namespace LightController.Config
 
         public override string ToString()
         {
-            StringBuilder sb = new StringBuilder();
-            foreach (ValueSet set in animationOrder)
-                sb.Append(set).Append(';');
-            if (sb.Length > 0)
-                sb.Length--;
-            return sb.ToString();
+            return animationString;
         }
 
         public double GetLength(int fixtureId)
