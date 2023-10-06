@@ -23,5 +23,10 @@ namespace LightController.Config.Bacnet
             foreach (BacnetProperty prop in Properties)
                 prop.Init();
         }
+
+        public override string ToString()
+        {
+            return Name;
+        }
     }
 }

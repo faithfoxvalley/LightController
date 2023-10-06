@@ -70,6 +70,8 @@ namespace LightController.Bacnet
             if (note == null || !midiEvents.TryGetValue(note, out BacnetEvent e))
                 return;
 
+            LogFile.Info("[Bacnet] Event: " + e);
+
             lock (writeRequestsLock)
             {
                 foreach (BacnetProperty prop in e.Properties)
@@ -98,6 +100,9 @@ namespace LightController.Bacnet
             if (events.Count == 0)
                 return;
 
+            foreach (BacnetEvent e in events)
+                LogFile.Info("[Bacnet] Event: " + e);
+
             lock (writeRequestsLock)
             {
                 foreach(BacnetEvent e in events)
@@ -125,6 +130,9 @@ namespace LightController.Bacnet
 
             if (events.Count == 0)
                 return;
+
+            foreach (BacnetEvent e in events)
+                LogFile.Info("[Bacnet] Event: " + e);
 
             lock (writeRequestsLock)
             {
