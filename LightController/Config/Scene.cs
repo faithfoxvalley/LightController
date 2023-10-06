@@ -42,6 +42,8 @@ namespace LightController.Config
         [YamlMember]
         public List<InputBase> Inputs { get; set; } = new List<InputBase>();
 
+        [YamlIgnore]
+        public int Index { get; set; }
 
         private bool active = false;
 

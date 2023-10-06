@@ -108,6 +108,34 @@ namespace LightController.Bacnet
             }
         }
 
+        public void TriggerEvents(IEnumerable<string> names)
+        {
+            if (!Enabled)
+                return;
+            
+            if (names == null)
+                return;
+
+            List<BacnetEvent> events = new List<BacnetEvent>();
+            foreach (string name in names)
+            {
+                if (name != null && namedEvents.TryGetValue(name, out BacnetEvent namedEvent))
+                    events.Add(namedEvent);
+            }
+
+            if (events.Count == 0)
+                return;
+
+            lock (writeRequestsLock)
+            {
+                foreach(BacnetEvent e in events)
+                {
+                    foreach (BacnetProperty prop in e.Properties)
+                        writeRequests[prop.Endpoint] = prop.ValueRequest;
+                }
+            }
+        }
+
         private void OnIamReceived(BacnetClient sender, BacnetAddress adr, uint deviceId, uint maxApdu, BacnetSegmentations segmentation, ushort vendorId)
         {
             LogFile.Info($"[Bacnet] Found Bacnet device: {adr} - {deviceId}");

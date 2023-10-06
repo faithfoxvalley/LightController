@@ -51,7 +51,7 @@
                 <RowDefinition Height="auto"/>
             </Grid.RowDefinitions>
             <Label Content="Scenes" Grid.Row="0"/>
-            <ListBox x:Name="sceneList" Grid.Row="1" ItemContainerStyle="{StaticResource ListBoxNoSelection}"/>
+            <ListBox x:Name="sceneList" Grid.Row="1"/>
             <colorpicker:PortableColorPicker HorizontalAlignment="Left" x:Name="colorPicker" Width="40" Height="40" Grid.Row="2" Visibility="Collapsed"/>
         </Grid>
         <Grid Margin="10,10,10,10">
