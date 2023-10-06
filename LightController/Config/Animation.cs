@@ -55,81 +55,81 @@ namespace LightController.Config
                 return;
             }
             animationString = animation;
-                string[] steps = animation.Split(';');
-                foreach (string step in steps)
+            string[] steps = animation.Split(';');
+            foreach (string step in steps)
+            {
+                if (string.IsNullOrWhiteSpace(step))
+                    continue;
+
+                if (step[step.Length - 1] == ')')
                 {
-                    if (string.IsNullOrWhiteSpace(step))
-                        continue;
-
-                    if (step[step.Length - 1] == ')')
+                    string groupStep = step.TrimStart();
+                    int numStart = groupStep.IndexOf('(');
+                    if (numStart > 0)
                     {
-                        string groupStep = step.TrimStart();
-                        int numStart = groupStep.IndexOf('(');
-                        if (numStart > 0)
+                        numStart++;
+                        int numLength = groupStep.Length - (numStart + 1);
+                        int groupCount = int.Parse(groupStep.Substring(numStart, numLength));
+                        if (groupCount > 0)
                         {
-                            numStart++;
-                            int numLength = groupStep.Length - (numStart + 1);
-                            int groupCount = int.Parse(groupStep.Substring(numStart, numLength));
-                            if (groupCount > 0)
+                            ValueSet groupSet = new ValueSet(groupStep.Substring(0, groupStep.Length - (numLength + 2)));
+                            int i = 0;
+                            ValueSet currentSet = new ValueSet();
+                            animationOrder.Add(currentSet);
+                            foreach (int id in groupSet.EnumerateValues())
                             {
-                                ValueSet groupSet = new ValueSet(groupStep.Substring(0, groupStep.Length - (numLength + 2)));
-                                int i = 0;
-                                ValueSet currentSet = new ValueSet();
-                                animationOrder.Add(currentSet);
-                                foreach (int id in groupSet.EnumerateValues())
+                                if (i == groupCount)
                                 {
-                                    if (i == groupCount)
-                                    {
-                                        currentSet = new ValueSet();
-                                        animationOrder.Add(currentSet);
-                                        i = 0;
-                                    }
-                                    currentSet.AddValue(id);
-                                    i++;
+                                    currentSet = new ValueSet();
+                                    animationOrder.Add(currentSet);
+                                    i = 0;
                                 }
-                                continue;
+                                currentSet.AddValue(id);
+                                i++;
                             }
+                            continue;
                         }
                     }
-
-                    string[] concurrentGroups = step.Split("|");
-                    ValueSet[] groupSets = concurrentGroups
-                        .Where(x => !string.IsNullOrWhiteSpace(x))
-                        .Select(x => new ValueSet(x.Trim()))
-                        .ToArray();
-                    if (groupSets.Length == 0)
-                        continue;
-                    if (groupSets.Length == 1)
-                    {
-                        animationOrder.Add(groupSets[0]);
-                        continue;
-                    }
-
-                    List<ValueSet> resultSets = new List<ValueSet>();
-                    foreach (ValueSet group in groupSets)
-                    {
-                        int i = 0;
-                        foreach (int id in group.EnumerateValues())
-                        {
-                            ValueSet resultSet;
-                            if (i == resultSets.Count)
-                            {
-                                resultSet = new ValueSet();
-                                resultSets.Add(resultSet);
-                                animationOrder.Add(resultSet);
-                            }
-                            else
-                            {
-                                resultSet = resultSets[i];
-                            }
-
-                            resultSet.AddValue(id);
-
-                            i++;
-                        }
-                    }
-
                 }
+
+                string[] concurrentGroups = step.Split("|");
+                ValueSet[] groupSets = concurrentGroups
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Select(x => new ValueSet(x.Trim()))
+                    .ToArray();
+                if (groupSets.Length == 0)
+                    continue;
+                if (groupSets.Length == 1)
+                {
+                    animationOrder.Add(groupSets[0]);
+                    continue;
+                }
+
+                List<ValueSet> resultSets = new List<ValueSet>();
+                foreach (ValueSet group in groupSets)
+                {
+                    int i = 0;
+                    foreach (int id in group.EnumerateValues())
+                    {
+                        ValueSet resultSet;
+                        if (i == resultSets.Count)
+                        {
+                            resultSet = new ValueSet();
+                            resultSets.Add(resultSet);
+                            animationOrder.Add(resultSet);
+                        }
+                        else
+                        {
+                            resultSet = resultSets[i];
+                        }
+
+                        resultSet.AddValue(id);
+
+                        i++;
+                    }
+                }
+
+            }
         }
 
         private void UpdateStepLength()
