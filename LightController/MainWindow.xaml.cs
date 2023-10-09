@@ -12,6 +12,7 @@ using System.Text;
 using Microsoft.Win32;
 using System.Threading.Tasks;
 using LightController.Bacnet;
+using System.Linq;
 
 namespace LightController
 {
@@ -92,9 +93,9 @@ namespace LightController
             if (bacNet.Enabled)
                 bacnetContainer.Visibility = Visibility.Visible;
 
-            string defaultScene;
-            if(!args.TryGetFlagArg("scene", 0, out defaultScene))
-                defaultScene = config.DefaultScene;
+            string defaultScene = config.DefaultScene;
+            if(args.TryGetFlagArg("scene", 0, out string sceneFlag) && config.Scenes.Any(x => x.Name == sceneFlag.Trim()))
+                defaultScene = sceneFlag;
             sceneManager = new SceneManager(config.Scenes, config.MidiDevice, defaultScene, dmx, config.DefaultTransitionTime, sceneList, bacNet);
 
             // Update fixture list
