@@ -47,13 +47,13 @@ namespace LightController.Config.Input
                             }
                             else
                             {
-                                int[] fixtures = fixtureIdSet.EnumerateValues().ToArray();
-                                for (int i = 0; i < fixtures.Length; i++)
+                                int[] fixtureIdsExpanded = fixtureIdSet.EnumerateValues().ToArray();
+                                for (int i = 0; i < fixtureIdsExpanded.Length; i++)
                                 {
-                                    int id = fixtures[i];
-                                    if (fixtures.Length > 1)
+                                    int id = fixtureIdsExpanded[i];
+                                    if (fixtureIdsExpanded.Length > 1)
                                     {
-                                        double lerpPercent = (double)i / (fixtureIds.Length - 1);
+                                        double lerpPercent = (double)i / (fixtureIdsExpanded.Length - 1);
                                         result.intensityMap[id] = Lerp(minIntensity, maxIntensity, lerpPercent);
                                     }
                                     else
