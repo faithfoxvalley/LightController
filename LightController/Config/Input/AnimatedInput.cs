@@ -111,7 +111,7 @@ namespace LightController.Config.Input
 
         public override double GetIntensity(int fixtureid, ColorHSV target)
         {
-            return (intensity.Value ?? 1) * GetLoopForFixture(fixtureid).GetIntensity();
+            return (intensity.GetIntensity(fixtureid)) * GetLoopForFixture(fixtureid).GetIntensity();
 
         }
     }

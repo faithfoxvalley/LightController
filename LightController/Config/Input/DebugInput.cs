@@ -59,7 +59,7 @@ namespace LightController.Config.Input
 
         public override double GetIntensity(int fixtureId, ColorHSV target)
         {
-            return pickerIntensity * base.GetIntensity(fixtureId, target);
+            return pickerIntensity * intensity.GetIntensity(fixtureId);
         }
     }
 }

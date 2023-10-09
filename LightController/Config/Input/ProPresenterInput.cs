@@ -27,7 +27,7 @@ namespace LightController.Config.Input
         private int pixelWidth;
         private Percent saturation = new Percent(1);
         private object colorLock = new object();
-        private InputIntensity minIntensity = new InputIntensity();
+        private InputIntensity minIntensity = new InputIntensity(0);
         private Dictionary<int, int> idToIndex = new Dictionary<int, int>();
 
 
@@ -41,7 +41,7 @@ namespace LightController.Config.Input
             }
             set
             {
-                minIntensity = InputIntensity.Parse(value);
+                minIntensity = InputIntensity.Parse(value, 0);
             }
         }
 
@@ -208,8 +208,8 @@ namespace LightController.Config.Input
         public override double GetIntensity(int fixtureid, ColorHSV color)
         {
             // intensity provided by user
-            double targetMaxIntensity = intensity.Value ?? 1;
-            double targetMinIntensity = minIntensity.Value ?? 0;
+            double targetMaxIntensity = intensity.GetIntensity(fixtureid);
+            double targetMinIntensity = minIntensity.GetIntensity(fixtureid);
             if (targetMinIntensity >= targetMaxIntensity)
                 return targetMaxIntensity;
 

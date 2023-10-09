@@ -22,5 +22,10 @@ namespace LightController.Config.Input
                 return HSV.Color;
             return ColorHSV.Black;
         }
+
+        public override double GetIntensity(int fixtureid, ColorHSV target)
+        {
+            return intensity.GetIntensity(fixtureid);
+        }
     }
 }
