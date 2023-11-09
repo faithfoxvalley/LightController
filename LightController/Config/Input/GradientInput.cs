@@ -1,9 +1,6 @@
 ﻿using LightController.Color;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using YamlDotNet.Serialization;
 
 namespace LightController.Config.Input
@@ -105,6 +102,11 @@ namespace LightController.Config.Input
             if (colors.TryGetValue(fixtureId, out ColorHSV result))
                 return result;
             return ColorHSV.Black;
+        }
+
+        public override double GetIntensity(int fixtureid, ColorHSV target)
+        {
+            return target.Value * intensity.GetIntensity(fixtureid);
         }
     }
 }

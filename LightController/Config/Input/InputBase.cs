@@ -35,14 +35,11 @@ namespace LightController.Config.Input
             }
             set
             {
-                if (value == null)
-                    intensity = new InputIntensity();
-                else
-                    intensity = InputIntensity.Parse(value);
+                intensity = InputIntensity.Parse(value, 1);
             }
         }
 
-        protected InputIntensity intensity = new InputIntensity();
+        protected InputIntensity intensity = new InputIntensity(1);
 
         protected InputBase() { }
 
@@ -73,9 +70,6 @@ namespace LightController.Config.Input
 
         public abstract ColorHSV GetColor(int fixtureId);
 
-        public virtual double GetIntensity(int fixtureid, ColorHSV target)
-        {
-            return intensity.GetIntensity(target);
-        }
+        public abstract double GetIntensity(int fixtureid, ColorHSV target);
     }
 }

@@ -12,8 +12,10 @@ namespace LightController.Config
     /// </summary>
     public class Scene
     {
+        [YamlMember]
         public string Name { get; set; }
 
+        [YamlMember]
         public double? TransitionTime { get; set; }
 
         [YamlMember(Alias = "Animation")]
@@ -31,9 +33,17 @@ namespace LightController.Config
         [YamlIgnore]
         public Animation TransitionAnimation { get; set; } = new Animation();
 
+        [YamlMember]
         public MidiNote MidiNote { get; set; }
 
+        [YamlMember]
+        public List<string> BacnetEvents { get; set; } = new List<string>();
+
+        [YamlMember]
         public List<InputBase> Inputs { get; set; } = new List<InputBase>();
+
+        [YamlIgnore]
+        public int Index { get; set; }
 
         private bool active = false;
 

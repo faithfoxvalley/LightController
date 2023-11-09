@@ -1,4 +1,5 @@
-﻿using LightController.Config.Dmx;
+﻿using LightController.Config.Bacnet;
+using LightController.Config.Dmx;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -29,6 +30,9 @@ namespace LightController.Config
 
         [YamlMember(Description = "Transition time in seconds for switching scenes")]
         public double DefaultTransitionTime { get; set; } = 1;
+
+        [YamlMember(Description = "BACnet settings")]
+        public BacnetConfig Bacnet { get; set; } = new BacnetConfig();
 
         private string fileLocation;
 
@@ -62,8 +66,10 @@ namespace LightController.Config
             return newFile;
         }
 
-        public void Save()
+        public void Save(string fileLocation = null)
         {
+            if (fileLocation == null)
+                fileLocation = this.fileLocation;
             using(StreamWriter writer = File.CreateText(fileLocation))
             {
                 SerializerBuilder serializer = new SerializerBuilder()

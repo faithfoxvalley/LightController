@@ -1,4 +1,5 @@
-﻿using LightController.Config;
+﻿using LightController.Bacnet;
+using LightController.Config;
 using LightController.Dmx;
 using LightController.Midi;
 using System;
@@ -15,25 +16,32 @@ namespace LightController
         private Scene activeScene;
         private MidiInput midiDevice;
         private DmxProcessor dmx;
+        private readonly BacnetProcessor bacNet;
         private System.Windows.Controls.ListBox sceneList;
         private CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
 
+        private Scene incomingScene;
         private MidiNote incomingNote;
-        private object incomingNoteLock = new object();
+        private object incomingSceneLock = new object();
 
         public string ActiveSceneName => activeScene?.Name;
 
         public SceneManager(List<Scene> scenes, string midiDevice, string defaultScene, DmxProcessor dmx, 
-            double transitionTime, System.Windows.Controls.ListBox sceneList)
+            double transitionTime, System.Windows.Controls.ListBox sceneList, BacnetProcessor bacNet)
         {
             this.scenes = scenes;
             this.dmx = dmx;
+            this.bacNet = bacNet;
             this.sceneList = sceneList;
             if (double.IsNaN(transitionTime) || double.IsInfinity(transitionTime) || transitionTime < 0)
                 transitionTime = 0;
 
-            foreach (var scene in scenes)
+            foreach (Scene scene in scenes)
+            {
+                scene.Index = sceneList.Items.Count;
                 sceneList.Items.Add(scene.ToString());
+            }
+            sceneList.SelectionChanged += SceneListChanged;
 
             MidiDeviceList midiDevices = new MidiDeviceList();
 
@@ -42,6 +50,7 @@ namespace LightController
                 while (!midiDevices.TryGetFirstDevice(out this.midiDevice))
                 {
 #if DEBUG
+                    LogFile.Warn("Midi device not found!");
                     break;
 #else
                     ErrorBox.ExitOnCancel("Midi device not found. Press OK to try again or Cancel to exit.");
@@ -72,12 +81,14 @@ namespace LightController
 
             if (!string.IsNullOrWhiteSpace(defaultScene))
             {
-                if (TryFindScene(x => x.Name == defaultScene.Trim(), out Scene scene, out int sceneIndex))
+                if (TryFindScene(x => x.Name == defaultScene.Trim(), out Scene scene))
                 {
                     LogFile.Info("Activating scene " + scene.Name);
                     activeScene = scene;
-                    UpdateSceneUI(sceneIndex);
+                    UpdateSceneUI(scene.Index);
                     UpdateDmx(scene, false);
+
+                    bacNet.TriggerEvents(scene.MidiNote, scene.BacnetEvents);
                 }
             }
 
@@ -99,8 +110,17 @@ namespace LightController
 
         private void MidiDevice_NoteEvent(MidiNote note)
         {
-            lock(incomingNoteLock)
+            if (TryFindScene(x => x.MidiNote == note, out Scene scene))
+                ActivateScene(scene, note);
+
+            bacNet.TriggerEvents(note);
+        }
+
+        public void ActivateScene(Scene scene, MidiNote note = null)
+        {
+            lock (incomingSceneLock)
             {
+                incomingScene = scene;
                 incomingNote = note;
 
                 cancelTokenSource.Cancel();
@@ -108,38 +128,41 @@ namespace LightController
             }
         }
 
-        private bool TryGetIncomingNote(out MidiNote note, out CancellationToken cancelToken)
+        private bool TryGetIncomingScene(out Scene scene, out MidiNote note)
         {
-            lock (incomingNoteLock)
-            {
-                note = incomingNote;
-                incomingNote = null;
+            note = null;
 
-                if (note == null)
-                    cancelToken = CancellationToken.None;
-                else
-                    cancelToken = cancelTokenSource.Token;
+            lock (incomingSceneLock)
+            {
+                scene = incomingScene;
+                if(scene != null)
+                {
+                    note = incomingNote;
+
+                    incomingScene = null;
+                    incomingNote = null;
+                }
             }
 
-            return note != null;
+            return scene != null;
         }
 
         private async Task ProcessIncomingNote()
         {
-            while(TryGetIncomingNote(out MidiNote note, out CancellationToken cancelToken))
+            while(TryGetIncomingScene(out Scene newScene, out MidiNote note))
             {
-                if (TryFindScene(s => s.MidiNote == note, out Scene newScene, out int newSceneIndex))
-                {
-                    LogFile.Info("Activating scene " + newScene.Name);
+                int newSceneIndex = newScene.Index;
+                LogFile.Info("Activating scene " + newScene.Name);
 
-                    foreach (Scene s in scenes)
-                        await s.DeactivateAsync(cancelTokenSource.Token);
+                foreach (Scene s in scenes)
+                    await s.DeactivateAsync(cancelTokenSource.Token);
 
-                    await newScene.ActivateAsync(cancelTokenSource.Token, note);
-                    activeScene = newScene;
-                    UpdateSceneUI(newSceneIndex);
-                    UpdateDmx(newScene);
-                }
+                await newScene.ActivateAsync(cancelTokenSource.Token, note);
+                activeScene = newScene;
+                UpdateSceneUI(newSceneIndex);
+                UpdateDmx(newScene);
+
+                bacNet.TriggerEvents(newScene.BacnetEvents);
             }
         }
 
@@ -148,7 +171,7 @@ namespace LightController
             dmx.SetInputs(scene.Inputs, useAnimation ? scene.TransitionAnimation : new Animation());
         }
 
-        private bool TryFindScene(Func<Scene, bool> func, out Scene scene, out int index)
+        private bool TryFindScene(Func<Scene, bool> func, out Scene scene)
         {
             for (int i = 0; i < scenes.Count; i++)
             {
@@ -156,12 +179,10 @@ namespace LightController
                 if (func(s))
                 {
                     scene = s;
-                    index = i;
                     return true;
                 }
             }
             scene = null;
-            index = -1;
             return false;
         }
 
@@ -174,9 +195,9 @@ namespace LightController
                     return;
 
                 if (sceneIndex >= count)
-                    sceneList.SelectedIndex = count - 1;
+                    SetSceneListSelection(count - 1);
                 else
-                    sceneList.SelectedIndex = sceneIndex;
+                    SetSceneListSelection(sceneIndex);
             });
         }
 
@@ -184,6 +205,31 @@ namespace LightController
         {
             if(midiDevice != null)
                 midiDevice.NoteEvent -= MidiDevice_NoteEvent;
+        }
+
+        private void SetSceneListSelection(int index)
+        {
+            sceneList.SelectionChanged -= SceneListChanged;
+            sceneList.SelectedIndex = index;
+            sceneList.SelectionChanged += SceneListChanged;
+        }
+
+        private void SceneListChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            int prevSelection = -1;
+            if (e.RemovedItems.Count > 0)
+                prevSelection = sceneList.Items.IndexOf(e.RemovedItems[0]);
+            if (prevSelection < 0 || prevSelection >= sceneList.Items.Count)
+                return;
+            
+            int currSelection = -1;
+            if(e.AddedItems.Count > 0)
+                currSelection = sceneList.Items.IndexOf(e.AddedItems[0]);
+            if (currSelection < 0 || currSelection >= sceneList.Items.Count || currSelection == prevSelection)
+                return;
+
+            ActivateScene(scenes[currSelection]);
+            SetSceneListSelection(prevSelection);
         }
     }
 }

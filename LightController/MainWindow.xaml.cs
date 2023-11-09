@@ -11,8 +11,8 @@ using System.Windows;
 using System.Text;
 using Microsoft.Win32;
 using System.Threading.Tasks;
-using LightController.Color;
-using System.Collections.Generic;
+using LightController.Bacnet;
+using System.Linq;
 
 namespace LightController
 {
@@ -23,6 +23,7 @@ namespace LightController
     {
         private const int DmxUpdateFps = 30;
         private const int InputsUpdateFps = 20;
+        private const int BacnetUpdateFps = 10;
         private const string AppGuid = "a013f8c4-0875-49e3-b671-f4e16a1f1fe4";
         private const int AcquireMutexTimeout = 1000;
 
@@ -31,8 +32,10 @@ namespace LightController
         private ConfigFile config;
         private SceneManager sceneManager;
         private DmxProcessor dmx;
+        private BacnetProcessor bacNet;
         private TickLoop dmxTimer; // Runs on different thread
         private TickLoop inputsTimer; // Runs on different thread
+        private TickLoop bacNetTimer; // Runs on different thread
         private bool inputActivated = false;
         private string customConfig;
 
@@ -86,17 +89,22 @@ namespace LightController
 
             pro = new ProPresenter(config.ProPresenter, mediaList);
             dmx = new DmxProcessor(config.Dmx);
+            bacNet = new BacnetProcessor(config.Bacnet, bacnetList);
+            if (bacNet.Enabled)
+                bacnetContainer.Visibility = Visibility.Visible;
 
-            string defaultScene;
-            if(!args.TryGetFlagArg("scene", 0, out defaultScene))
-                defaultScene = config.DefaultScene;
-            sceneManager = new SceneManager(config.Scenes, config.MidiDevice, defaultScene, dmx, config.DefaultTransitionTime, sceneList);
+            string defaultScene = config.DefaultScene;
+            if(args.TryGetFlagArg("scene", 0, out string sceneFlag) && config.Scenes.Any(x => x.Name == sceneFlag.Trim()))
+                defaultScene = sceneFlag;
+            sceneManager = new SceneManager(config.Scenes, config.MidiDevice, defaultScene, dmx, config.DefaultTransitionTime, sceneList, bacNet);
 
             // Update fixture list
             dmx.AppendToListbox(fixtureList);
 
             dmxTimer = new TickLoop(DmxUpdateFps, UpdateDmx);
             inputsTimer = new TickLoopAsync(InputsUpdateFps, UpdateInputs);
+            if (bacNet.Enabled)
+                bacNetTimer = new TickLoop(BacnetUpdateFps, UpdateBacnet);
 
             uiTimer = new System.Windows.Threading.DispatcherTimer();
             uiTimer.Interval = new TimeSpan(0, 0, 1);
@@ -130,6 +138,12 @@ namespace LightController
             sb.AppendLine();
             sb.Append("Input").AppendLine();
             inputsTimer.AppendPerformanceInfo(sb);
+            if(bacNetTimer != null)
+            {
+                sb.AppendLine();
+                sb.Append("Bacnet").AppendLine();
+                bacNetTimer.AppendPerformanceInfo(sb);
+            }
             performanceInfo.Text = sb.ToString();
         }
 
@@ -179,6 +193,12 @@ namespace LightController
         private void UpdateDmx()
         {
             dmx.Write();
+        }
+
+        // This runs on a different thread
+        private void UpdateBacnet()
+        {
+            bacNet.Update();
         }
 
         private void btnRestart_Click(object sender, RoutedEventArgs e)
@@ -234,9 +254,35 @@ namespace LightController
             }
         }
 
-        private void btnSaveConfig_Click(object sender, RoutedEventArgs e)
+        private void btnSaveDefault_Click(object sender, RoutedEventArgs e)
         {
-            config.Save();
+            try
+            {
+                config.Save(Path.Combine(ApplicationData, "config.yml"));
+            }
+            catch (Exception ex)
+            {
+                LogFile.Error(ex, "An error occurred while saving the config file!");
+                ErrorBox.Show("An error occurred while saving the config file!", false);
+            }
+        }
+
+        private void btnSaveAsConfig_Click(object sender, RoutedEventArgs e)
+        {
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Filter = "Yaml file (*.yml)|*.yml;*.yaml";
+            if (saveFileDialog.ShowDialog() == true && !string.IsNullOrWhiteSpace(saveFileDialog.FileName))
+            {
+                try
+                {
+                    config.Save(saveFileDialog.FileName);
+                }
+                catch (Exception ex)
+                {
+                    LogFile.Error(ex, "An error occurred while saving the config file!");
+                    ErrorBox.Show("An error occurred while saving the config file!", false);
+                }
+            }
         }
 
         private void ListBox_DisableMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
@@ -265,6 +311,7 @@ namespace LightController
             LogFile.Info("Closed application.");
 
             inputsTimer.Dispose();
+            bacNetTimer?.Dispose();
             sceneManager.Disable();
 
             Shutdown();

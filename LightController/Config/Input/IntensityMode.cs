@@ -1,68 +1,154 @@
 ﻿using LightController.Color;
+using static LightController.Pro.Packet.TransportLayerStatus;
+using YamlDotNet.Core.Tokens;
+using System.Collections.Generic;
+using System;
+using System.Linq;
 
 namespace LightController.Config.Input
 {
     public class InputIntensity
     {
-        private string intensityString = "auto";
-        private double? intensity;
+        private readonly Dictionary<int, double> intensityMap = new Dictionary<int, double>();
+        private string intensityString;
+        private double intensity;
 
-        public double? Value => intensity;
-
-        public InputIntensity() { }
-
-        public InputIntensity(double intensity, string intensityString)
+        public InputIntensity(double intensity)
         {
-            this.intensityString = intensityString;
             this.intensity = intensity;
+            intensityString = $"{intensity * 100:0.#}%";
         }
 
-        public static InputIntensity Parse(string value)
+        public static InputIntensity Parse(string value, double defaultValue)
         {
-            if (value == null)
-                return new InputIntensity();
+            InputIntensity result = new InputIntensity(defaultValue);
 
-            string stringValue = value;
-            value = value.Trim().ToLowerInvariant();
-            if (value == "auto")
-                return new InputIntensity();
+            if (string.IsNullOrWhiteSpace(value))
+                return result;
 
-            if(value.EndsWith('%'))
+            string[] args = value.Split(';');
+            foreach(string arg in args)
             {
-                if(double.TryParse(value.Substring(0, value.Length - 1), out double percent) 
+                int colon = arg.IndexOf(':');
+                if(colon >= 0 && colon < arg.Length - 1)
+                {
+                    string percent = arg.Substring(colon + 1);
+                    if(TryParseIntensityRange(percent, out double minIntensity, out double maxIntensity))
+                    {
+                        string fixtureIds = arg.Substring(0, colon);
+                        ValueSet fixtureIdSet;
+                        try
+                        {
+                            fixtureIdSet = new ValueSet(fixtureIds);
+                            if(minIntensity == maxIntensity)
+                            {
+                                foreach(int id in fixtureIdSet.EnumerateValues())
+                                    result.intensityMap[id] = minIntensity;
+                            }
+                            else
+                            {
+                                int[] fixtureIdsExpanded = fixtureIdSet.EnumerateValues().ToArray();
+                                for (int i = 0; i < fixtureIdsExpanded.Length; i++)
+                                {
+                                    int id = fixtureIdsExpanded[i];
+                                    if (fixtureIdsExpanded.Length > 1)
+                                    {
+                                        double lerpPercent = (double)i / (fixtureIdsExpanded.Length - 1);
+                                        result.intensityMap[id] = Lerp(minIntensity, maxIntensity, lerpPercent);
+                                    }
+                                    else
+                                    {
+                                        result.intensityMap[id] = maxIntensity;
+                                    }
+                                }
+                            }
+                        }
+                        catch (Exception e) 
+                        {
+                            
+                        }
+                        continue;
+                    }
+                }
+
+                if(TryParseIntensity(arg, out double defaultIntensity))
+                    result.intensity = defaultIntensity;
+                else
+                    LogFile.Warn("'" + arg + "' is not a valid intensity.");
+            }
+
+            result.intensityString = value;
+            return result;
+        }
+
+        private static double Lerp(double a, double b, double percent)
+        {
+            // a = 5, b = 27, per = 0.14
+            return a + (b - a) * percent;
+        }
+
+        private static bool TryParseIntensityRange(string value, out double minIntensity, out double maxIntensity)
+        {
+            int dashIndex = value.IndexOf('-');
+            minIntensity = 0;
+            maxIntensity = 0;
+
+            if (dashIndex >= value.Length - 1)
+                return false;
+
+            if(dashIndex < 0)
+            {
+                if(TryParseIntensity(value, out double intensity))
+                {
+                    minIntensity = intensity;
+                    maxIntensity = intensity;
+                    return true;
+                }
+                return false;
+            }
+
+            string minString = value.Substring(0, dashIndex);
+            if (!TryParseIntensity(minString, out minIntensity))
+                return false;
+
+            string maxString = value.Substring(dashIndex + 1);
+            if (!TryParseIntensity(maxString, out maxIntensity))
+                return false;
+
+            return true;
+        }
+
+        private static bool TryParseIntensity(string value, out double intensity)
+        {
+            if (value.EndsWith('%'))
+            {
+                if (double.TryParse(value.Substring(0, value.Length - 1), out double percent)
                     && !double.IsNaN(percent) && !double.IsInfinity(percent) && percent >= 0 && percent <= 100)
                 {
-                    return new InputIntensity(percent / 100d, stringValue);
+                    intensity = percent / 100d;
+                    return true;
                 }
             }
-            else if (byte.TryParse(value, out byte intensity))
+            else if (byte.TryParse(value, out byte intensityByte))
             {
-                return new InputIntensity(intensity / 255d, stringValue);
+                intensity = intensityByte / 255d;
+                return true;
             }
 
-            LogFile.Warn("'" + value + "' is not a valid intensity.");
-            return new InputIntensity();
+            intensity = 0;
+            return false;
         }
 
-        public double GetIntensity(ColorRGB rgb)
+        public double GetIntensity(int fixtureId)
         {
-            if (intensity.HasValue)
-                return intensity.Value;
-
-            return rgb.Max() / 255d;
-        }
-
-        public double GetIntensity(ColorHSV hsv)
-        {
-            if (intensity.HasValue)
-                return intensity.Value;
-
-            return hsv.Value;
+            if (intensityMap.TryGetValue(fixtureId, out double fixtureIntensity))
+                return fixtureIntensity;
+            return intensity;
         }
 
         public override string ToString()
         {
-            return intensity.HasValue ? intensityString : "auto";
+            return intensityString;
         }
     }
 }

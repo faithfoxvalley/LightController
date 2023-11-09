@@ -2,8 +2,6 @@
 using LightController.Midi;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using YamlDotNet.Serialization;
 using LightController.ColorAnimation;
@@ -113,7 +111,7 @@ namespace LightController.Config.Input
 
         public override double GetIntensity(int fixtureid, ColorHSV target)
         {
-            return (intensity.Value ?? 1) * GetLoopForFixture(fixtureid).GetIntensity();
+            return (intensity.GetIntensity(fixtureid)) * GetLoopForFixture(fixtureid).GetIntensity();
 
         }
     }
