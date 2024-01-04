@@ -23,35 +23,40 @@ SOFTWARE.
 */
 
 using LightController;
+using LightController.Dmx;
 using OpenDMX.NET.FTDI;
 using System;
 using System.Text;
 
 namespace OpenDMX.NET
 {
-    public class DmxController : IDisposable
+    public class OpenDmxController : IDisposable, IDmxController
     {
         public bool IsOpen { get => handle != IntPtr.Zero; }
         public volatile bool IsDisposed;
 
         private byte[] buffer = new byte[513];
         private IntPtr handle = IntPtr.Zero;
-        private Status status;
 
         /// <summary>
         /// Creates a new OpenDMX instance.
         /// </summary>
-        public DmxController()
+        private OpenDmxController()
         {
+        }
+
+        private OpenDmxController(uint deviceIndex)
+        {
+            Open(deviceIndex);
         }
 
         /// <summary>
         /// Initializes device of a given index.
         /// </summary>
         /// <exception cref="OpenDMXException"></exception>
-        public void Open(uint deviceIndex)
+        private void Open(uint deviceIndex)
         {
-            status = FTD2XX.Open(deviceIndex, ref handle);
+            Status status = FTD2XX.Open(deviceIndex, ref handle);
             status = FTD2XX.ResetDevice(handle);
             status = FTD2XX.SetDivisor(handle, (char)12);
             status = FTD2XX.SetDataCharacteristics(handle, DataBits.Bits8, StopBits.StopBits2, Parity.None);
@@ -129,11 +134,32 @@ namespace OpenDMX.NET
             Buffer.BlockCopy(values, 0, buffer, startChannel, values.Length);
         }
 
-        public Device[] GetDevices()
+        public static bool TryOpenDevice(string device, out OpenDmxController controller)
+        {
+            try
+            {
+                Device[] devices = GetDevices();
+                if(int.TryParse(device, out int deviceIndex) && deviceIndex >= 0 && deviceIndex < devices.Length)
+                {
+                    controller = new OpenDmxController((uint)deviceIndex);
+                    return true;
+                }
+                controller = new OpenDmxController(0);
+                return true;
+            }
+            catch (Exception e)
+            {
+                LogFile.Error(e, "Error accessing Open DMX USB device: ");
+            }
+            controller = null;
+            return false;
+        }
+
+        private static Device[] GetDevices()
         {
             uint count = 0;
 
-            status = FTD2XX.CreateDeviceInfoList(ref count);
+            Status status = FTD2XX.CreateDeviceInfoList(ref count);
             if (status != Status.Ok)
             {
                 throw new OpenDMXException("Could not get devices count.", status);
@@ -182,7 +208,7 @@ namespace OpenDMX.NET
 
         private void WriteBuffer()
         {
-            status = FTD2XX.Purge(handle, Purge.PurgeTx);
+            Status status = FTD2XX.Purge(handle, Purge.PurgeTx);
             status = FTD2XX.Purge(handle, Purge.PurgeRx);
             status = FTD2XX.SetBreakOn(handle);
             status = FTD2XX.SetBreakOff(handle);

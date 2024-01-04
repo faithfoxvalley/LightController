@@ -1,6 +1,7 @@
 ﻿using LightController.Config;
 using LightController.Config.Dmx;
 using OpenDMX.NET;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,7 +12,7 @@ namespace LightController.Dmx
     {
         private bool debug;
         private List<DmxFixture> fixtures = new List<DmxFixture>();
-        private DmxController controller = new DmxController();
+        private IDmxController controller = new NullDmxController();
 
         public DmxProcessor(DmxConfig config)
         {
@@ -21,7 +22,7 @@ namespace LightController.Dmx
                 return;
             }
 
-            while (!OpenDevice(config.DmxDevice))
+            while (!OpenDevice((int)config.DmxDevice))
             {
 #if DEBUG
                 break;
@@ -91,17 +92,14 @@ namespace LightController.Dmx
                 list.Items.Add(fixture);
         }
 
-        private bool OpenDevice(uint deviceIndex)
+        private bool OpenDevice(int device)
         {
-            try
+            if(FtdiDmxController.TryOpenDevice(device, out FtdiDmxController controller))
             {
-                var devices = controller.GetDevices();
-                if (deviceIndex < devices.Length)
-                {
-                    controller.Open(deviceIndex);
-                    return true;
-                }
-            } catch { }
+                this.controller = controller;
+                return true;
+            }
+            this.controller = new NullDmxController();
             return false;
         }
 
@@ -142,10 +140,8 @@ namespace LightController.Dmx
                 LogFile.Info(sb.ToString());
             }
 
-#if DEBUG
             if(controller.IsOpen)
-#endif
-            controller.WriteData();
+                controller.WriteData();
         }
 
         public void WriteDebug()
