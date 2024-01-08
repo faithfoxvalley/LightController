@@ -63,7 +63,7 @@ namespace LightController.Config.Input
                                 }
                             }
                         }
-                        catch (Exception e) 
+                        catch (Exception) 
                         {
                             
                         }
