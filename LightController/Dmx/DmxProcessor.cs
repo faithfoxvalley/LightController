@@ -1,6 +1,5 @@
 ﻿using LightController.Config;
 using LightController.Config.Dmx;
-using OpenDMX.NET;
 using System;
 using System.Collections.Generic;
 using System.Linq;
