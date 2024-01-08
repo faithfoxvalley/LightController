@@ -11,14 +11,24 @@ namespace LightController.Dmx
     {
         private readonly FTDI ftdi;
         private readonly byte[] buffer = new byte[513];
+        private int bufferOffset = 0;
+        private bool usbPro;
 
         public bool IsOpen => ftdi.IsOpen;
 
-        private FtdiDmxController(FTDI ftdi)
+        private FtdiDmxController(FTDI ftdi, bool usbPro = false)
         {
             this.ftdi = ftdi;
+            this.usbPro = usbPro;
 
             Array.Clear(buffer, 0, buffer.Length);
+
+            if(usbPro)
+            {
+                buffer = ENTTEC.Devices.Data.DmxUsbProUtils.CreatePacketForDevice(ENTTEC.Devices.Data.DmxUsbProConstants.SEND_DMX_PACKET_REQUEST_LABEL, buffer);
+                bufferOffset = 4;
+            }
+
             WriteData();
         }
 
@@ -29,7 +39,7 @@ namespace LightController.Dmx
                 throw new ArgumentOutOfRangeException(nameof(channel), "Channel number must be between 1 and 512.");
             }
 
-            buffer[channel] = value;
+            buffer[channel + bufferOffset] = value;
         }
 
         public void SetChannels(int startChannel, byte[] values)
@@ -41,7 +51,7 @@ namespace LightController.Dmx
                 throw new ArgumentOutOfRangeException(nameof(startChannel), "Start channel number must be between 1 and 512.");
             }
 
-            Buffer.BlockCopy(values, 0, buffer, startChannel, values.Length);
+            Buffer.BlockCopy(values, 0, buffer, startChannel + bufferOffset, values.Length);
         }
 
         public void WriteData()
@@ -54,7 +64,7 @@ namespace LightController.Dmx
             uint bytesWritten = 0;
             FTDI.FT_STATUS status = ftdi.Write(buffer, buffer.Length, ref bytesWritten);
             if(status != FTDI.FT_STATUS.FT_OK)
-                throw new DmxException("Error occurred while writing dmx data: ", status);
+                throw new DmxException("Error occurred while writing dmx data: " + status, status);
 
             if (bytesWritten != buffer.Length)
                 LogFile.Warn($"Unable to write {buffer.Length} bytes to DMX device, only wrote {bytesWritten} bytes.");
@@ -73,7 +83,7 @@ namespace LightController.Dmx
             }
 
             int column = 0;
-            for (int i = 1; i < buffer.Length; i++)
+            for (int i = 1 + bufferOffset; i < (513 + bufferOffset); i++)
             {
                 if (column % columns == 0)
                 {
@@ -159,7 +169,7 @@ namespace LightController.Dmx
                     return false;
                 }
 
-                status = ftdi.SetBaudRate(9600);
+                status = ftdi.SetBaudRate(250000);
                 if (status != FTDI.FT_STATUS.FT_OK)
                 {
                     LogFile.Error("Failed to set device baud rate (error " + status.ToString() + ")");
@@ -187,7 +197,7 @@ namespace LightController.Dmx
                     return false;
                 }
 
-                controller = new FtdiDmxController(ftdi);
+                controller = new FtdiDmxController(ftdi, deviceInfo.Description == "DMX USB PRO");
                 return true;
             }
             catch (Exception e)
