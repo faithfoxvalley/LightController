@@ -101,16 +101,16 @@ namespace LightController.Pro
             return newData;
         }
 
-        public static Task<ProMediaItem> GetItemAsync(string mediaFolder, string cacheFolder, string file, double length, int mediaProcessors, IProgress<double> progress, CancellationToken cancelToken)
+        public static Task<ProMediaItem> GetItemAsync(string cacheFolder, string file, double length, int mediaProcessors, IProgress<double> progress, CancellationToken cancelToken)
         {
             Directory.CreateDirectory(cacheFolder);
-            string cacheFile = Path.Combine(cacheFolder, file + ".bin");
+            string cacheFile = Path.Combine(cacheFolder, Path.GetFileName(file) + ".bin");
             if(File.Exists(cacheFile))
             {
                 progress.Report(double.NaN);
                 return LoadItemAsync(cacheFile, cancelToken);
             }
-            return CreateItemAsync(Path.Combine(mediaFolder, file), cacheFile, length, mediaProcessors, progress, cancelToken);
+            return CreateItemAsync(file, cacheFile, length, mediaProcessors, progress, cancelToken);
         }
 
         private static async Task<ProMediaItem> CreateItemAsync(string mediaPath, string cacheFile, double fileLength, int mediaProcessors, IProgress<double> progress, CancellationToken cancelToken)

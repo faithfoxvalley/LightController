@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -50,10 +51,28 @@ namespace LightController.Pro
             else
                 LogFile.Info("Starting thumbnail generation for " + fileName);
 
+            string fullPath = Path.Combine(mediaFolder, fileName);
+            if(!File.Exists(fullPath))
+            {
+                fullPath = null;
+                string mediaRoot = Path.GetDirectoryName(mediaFolder.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+                foreach(string folder in Directory.EnumerateDirectories(mediaRoot, "*", SearchOption.AllDirectories))
+                {
+                    string folderMedia = Path.Combine(folder, fileName);
+                    if(File.Exists(folderMedia))
+                    {
+                        fullPath = folderMedia;
+                        break;
+                    }
+                }
+                if (fullPath == null)
+                    throw new FileNotFoundException(fileName + " not found in " + mediaRoot, fileName);
+            }
+            
+
             ProMediaItem mediaItem = await ProMediaItem.GetItemAsync(
-                mediaFolder,
                 cacheFolder,
-                fileName,
+                fullPath,
                 motion ? duration : 0,
                 mediaProcessors, progress, cancelToken);
             mediaItem.SetDetails(fileName, id, motion);

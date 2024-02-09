@@ -105,6 +105,10 @@ namespace LightController.Config.Input
             {
                 LogFile.Info($"Canceled {(HasMotion ? "media" : "thumbnail")} generation");
             }
+            catch (Exception e)
+            {
+                LogFile.Error(e);
+            }
 
             ReportMediaProgress(null, 0);
 
