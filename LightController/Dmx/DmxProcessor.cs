@@ -109,6 +109,7 @@ namespace LightController.Dmx
         {
             foreach (DmxFixture fixture in fixtures)
                 fixture.TurnOff();
+            Write();
         }
 
         public void SetInputs(IEnumerable<Config.Input.InputBase> inputs, Animation animation)

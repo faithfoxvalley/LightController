@@ -329,7 +329,6 @@ namespace LightController
         public void Shutdown()
         {
             dmx.TurnOff();
-            dmx.Write();
             if(mutexActive)
                 mutex.ReleaseMutex();
         }
