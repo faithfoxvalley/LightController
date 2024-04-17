@@ -18,6 +18,7 @@
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_Application">
+                <MenuItem Header="Open _Preview" Click="OpenPreview_Click"/>
                 <MenuItem Header="_Restart" Click="btnRestart_Click"/>
                 <MenuItem Header="Show _Logs" Click="ShowLogs_Click"/>
                 <MenuItem Header="Debug DMX" Click="DebugDmx_Click"/>

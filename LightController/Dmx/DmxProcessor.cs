@@ -1,9 +1,11 @@
-﻿using LightController.Config;
+﻿using LightController.Color;
+using LightController.Config;
 using LightController.Config.Dmx;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Windows.Documents;
 
 namespace LightController.Dmx
 {
@@ -12,6 +14,8 @@ namespace LightController.Dmx
         private bool debug;
         private List<DmxFixture> fixtures = new List<DmxFixture>();
         private IDmxController controller = new NullDmxController();
+
+        public event Action<int, System.Windows.Media.Color, double> OnColorUpdated;
 
         public DmxProcessor(DmxConfig config)
         {
@@ -129,6 +133,7 @@ namespace LightController.Dmx
             {
                 DmxFrame frame = fixture.GetFrame();
                 controller.SetChannels(frame.StartAddress, frame.Data);
+                OnColorUpdated?.Invoke(fixture.FixtureId, frame.PreviewColor, frame.PreviewIntensity);
             }
 
             if (debug)
@@ -147,6 +152,12 @@ namespace LightController.Dmx
         public void WriteDebug()
         {
             debug = true;
+        }
+
+        public void InitPreview(PreviewWindow preview)
+        {
+            preview.Init(fixtures);
+
         }
     }
 }

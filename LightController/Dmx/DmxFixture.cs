@@ -1,4 +1,5 @@
 ﻿using LightController.Color;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -19,6 +20,7 @@ namespace LightController.Dmx
         private string detailString;
 
         public int FixtureId => fixtureId;
+
 
         public DmxFixture(Config.Dmx.DmxDeviceProfile profile, int dmxStartAddress, int fixtureId)
         {
@@ -132,6 +134,9 @@ namespace LightController.Dmx
 
             if(intensityChannel != null)
                 frame.Set(intensityChannel.Index, intensity * 255);
+
+            // Note: This is before mixing, so that means that any color mixing from the previous scene wont make it to the preview
+            frame.SetPreviewData(rgb, intensity);
 
             foreach (DmxChannel channel in colorChannels)
             {

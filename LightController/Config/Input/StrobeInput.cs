@@ -83,9 +83,9 @@ namespace LightController.Config.Input
             return GetLoopForFixture(fixtureId).Color;
         }
 
-        public override double GetIntensity(int fixtureid, ColorHSV target)
+        public override double GetIntensity(int fixtureId, ColorHSV target)
         {
-            return intensity.GetIntensity(fixtureid) * target.Value;
+            return intensity.GetIntensity(fixtureId) * GetLoopForFixture(fixtureId).Intensity;
         }
 
         public class StrobeState
@@ -97,8 +97,23 @@ namespace LightController.Config.Input
 
             public double MaxLength { get; set; }
 
+            private Percent minIntensity = new Percent(1);
+            public string MinIntensity
+            {
+                get => minIntensity.ToString();
+                set => minIntensity = Percent.Parse(value, 1);
+            }
+
+            private Percent maxIntensity = new Percent(1);
+            public string MaxIntensity
+            {
+                get => maxIntensity.ToString();
+                set => maxIntensity = Percent.Parse(value, 1);
+            }
+
             private TimeSpan lengthRange;
             private TimeSpan minLength;
+            private double intensityRange;
 
             public StrobeState() { }
 
@@ -110,6 +125,9 @@ namespace LightController.Config.Input
                     MaxLength = MinLength;
                 minLength = TimeSpan.FromSeconds(MinLength);
                 lengthRange = TimeSpan.FromSeconds(MaxLength) - minLength;
+
+                if(maxIntensity.Value > minIntensity.Value)
+                    intensityRange = maxIntensity.Value - minIntensity.Value;
             }
 
             public TimeSpan GetLength(Random random)
@@ -117,6 +135,13 @@ namespace LightController.Config.Input
                 if (lengthRange.Ticks == 0)
                     return minLength;
                 return minLength + (random.NextDouble() * lengthRange);
+            }
+
+            public double GetIntensity(Random random)
+            {
+                if (maxIntensity.Value == 0)
+                    return minIntensity.Value;
+                return minIntensity.Value + (random.NextDouble() * intensityRange);
             }
         }
 
@@ -129,6 +154,7 @@ namespace LightController.Config.Input
             private bool isOn = true;
 
             public ColorHSV Color { get; private set; }
+            public double Intensity { get; private set; }
 
             public StrobeLoop(StrobeState on, StrobeState off, Random random)
             {
@@ -141,23 +167,27 @@ namespace LightController.Config.Input
             {
                 isOn = true;
                 nextState = now + on.GetLength(random);
+                Color = on.HSV.Color;
+                Intensity = on.GetIntensity(random);
             }
 
             public void Update(DateTime now)
             {
-                if (now >= nextState)
-                {
-                    isOn = !isOn;
-                    if (isOn)
-                        nextState = now + on.GetLength(random);
-                    else
-                        nextState = now + off.GetLength(random);
-                }
+                bool isNew = now >= nextState;
+                if (!isNew)
+                    return;
 
+                isOn = !isOn;
+
+                StrobeState state;
                 if (isOn)
-                    Color = on.HSV.Color;
+                    state = on;
                 else
-                    Color = off.HSV.Color;
+                    state = off;
+
+                nextState = now + state.GetLength(random);
+                Intensity = state.GetIntensity(random);
+                Color = state.HSV.Color;
             }
         }
     }

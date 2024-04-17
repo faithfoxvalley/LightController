@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LightController.Color;
+using System;
 using System.Collections.Generic;
 
 namespace LightController.Dmx
@@ -16,6 +17,9 @@ namespace LightController.Dmx
         public byte[] Data => data;
         public int StartAddress { get; }
 
+        public System.Windows.Media.Color PreviewColor { get; private set; }
+        public double PreviewIntensity { get; private set; }
+
         public DmxFrame(byte[] baseData, int addressStart) 
         {
             this.baseData = baseData;
@@ -24,6 +28,17 @@ namespace LightController.Dmx
             rawData = new double[baseData.Length];
             StartAddress = addressStart;
             Reset();
+        }
+
+        public void SetPreviewData(ColorRGB color, double intensity)
+        {
+            PreviewColor = new System.Windows.Media.Color()
+            {
+                R = color.Red,
+                G = color.Green,
+                B = color.Blue,
+            };
+            PreviewIntensity = intensity;
         }
 
         public void Reset()

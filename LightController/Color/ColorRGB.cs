@@ -26,6 +26,10 @@ namespace LightController.Color
             Blue = data[start];
         }
 
+        public ColorRGB(ColorRGB other) : this(other.Red, other.Green, other.Blue)
+        {
+        }
+
         [ProtoMember(1)]
         public byte Red { get; set; }
 

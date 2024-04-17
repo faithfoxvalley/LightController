@@ -43,6 +43,7 @@ namespace LightController
         private static bool mutexActive;
 
         private System.Windows.Threading.DispatcherTimer uiTimer;
+        private PreviewWindow preview;
 
         public static MainWindow Instance { get; private set; }
 
@@ -78,7 +79,7 @@ namespace LightController
                     customConfig = configFile;
                 else
                     configFile = Path.Combine(ApplicationData, "config.yml");
-
+                configFile = @"P:\0 ProPresenter\LightController Configs\BackToTheBeginning.yml";
                 config = ConfigFile.Load(configFile);
             }
             catch (Exception e)
@@ -303,6 +304,26 @@ namespace LightController
             dmx.WriteDebug();
         }
 
+        private void OpenPreview_Click(object sender, RoutedEventArgs e)
+        {
+            if(preview == null)
+            {
+                preview = new PreviewWindow();
+                preview.Loaded += (o, e) =>
+                {
+                    dmx.InitPreview(preview);
+                    dmx.OnColorUpdated += preview.UpdatePreviewColor;
+                };
+                
+            }
+            preview.Show();
+            preview.Closing += (o, e) =>
+            {
+                dmx.OnColorUpdated -= preview.UpdatePreviewColor;
+                preview = null;
+            };
+        }
+
         private void Window_Closed(object sender, EventArgs e)
         {
             if (dmx == null)
@@ -324,6 +345,8 @@ namespace LightController
             if (messageBoxResult != MessageBoxResult.Yes)
                 e.Cancel = true;
 #endif
+            if (preview != null)
+                preview.Close();
         }
 
         public void Shutdown()
