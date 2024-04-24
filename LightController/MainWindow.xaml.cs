@@ -79,7 +79,7 @@ namespace LightController
                     customConfig = configFile;
                 else
                     configFile = Path.Combine(ApplicationData, "config.yml");
-                configFile = @"P:\0 ProPresenter\LightController Configs\BackToTheBeginning.yml";
+
                 config = ConfigFile.Load(configFile);
             }
             catch (Exception e)
