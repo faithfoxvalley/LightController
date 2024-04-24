@@ -1,7 +1,9 @@
 ﻿using LightController.Config.Bacnet;
 using LightController.Config.Dmx;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -96,11 +98,63 @@ namespace LightController.Config
 
         public void Open()
         {
-            using Process fileopener = new Process();
+            try
+            {
+                ProcessStartInfo startInfo = new ProcessStartInfo()
+                {
+                    FileName = "code",
+                    Arguments = "\"" + fileLocation + "\"",
+                    UseShellExecute = true,
+                    WindowStyle = ProcessWindowStyle.Hidden,
+                };
 
-            fileopener.StartInfo.FileName = "explorer";
-            fileopener.StartInfo.Arguments = "\"" + fileLocation + "\"";
-            fileopener.Start();
+                Process.Start(startInfo);
+            }
+            catch (Win32Exception e)
+            {
+                if (e.NativeErrorCode != 0x00000002)
+                    throw;
+
+                ProcessStartInfo startInfo = new ProcessStartInfo()
+                {
+                    FileName = "explorer",
+                    Arguments = "/select,\"" + fileLocation + "\"",
+                };
+
+                Process.Start(startInfo);
+            }
+        }
+
+
+        public static OpenFileDialog CreateOpenDialog()
+        {
+            return new OpenFileDialog()
+            {
+                Filter = "Light Show file (*.show)|*.show|YAML files (.yml)|*.yml;*.yaml",
+                Multiselect = false,
+            };
+        }
+
+        public static SaveFileDialog CreateSaveDialog()
+        {
+            return new SaveFileDialog()
+            {
+                Filter = "Light Show file (*.show)|*.show|Yaml file (*.yml)|*.yml;*.yaml"
+            };
+        }
+
+        public static bool TryGetFilePathFromArgs(CommandLineOptions args, out string configFile)
+        {
+            if (args.TryGetFlaglessArg(0, out configFile) && IsValidExtension(configFile) && File.Exists(configFile))
+                return true;
+            return args.TryGetFlagArg("config", 0, out configFile) && IsValidExtension(configFile) && File.Exists(configFile);
+        }
+        
+        public static bool IsValidExtension(string file)
+        {
+            return file.EndsWith(".yaml", StringComparison.InvariantCultureIgnoreCase)
+                || file.EndsWith(".yml", StringComparison.InvariantCultureIgnoreCase)
+                || file.EndsWith(".show", StringComparison.InvariantCultureIgnoreCase);
         }
     }
 }

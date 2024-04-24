@@ -70,12 +70,13 @@ namespace LightController
             ClockTime.Init();
 
             CommandLineOptions args = new CommandLineOptions(Environment.GetCommandLineArgs());
-            LogFile.Info("Command: " + args.ToString());
+            string command = args.ToString();
+            if (!string.IsNullOrWhiteSpace(command))
+                LogFile.Info("Command: " + command);
 
             try
             {
-                string configFile;
-                if (args.TryGetFlagArg("config", 0, out configFile) && File.Exists(configFile))
+                if (ConfigFile.TryGetFilePathFromArgs(args, out string configFile))
                     customConfig = configFile;
                 else
                     configFile = Path.Combine(ApplicationData, "config.yml");
@@ -243,11 +244,7 @@ namespace LightController
 
         private void btnLoadConfig_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog openFileDialog = new OpenFileDialog()
-            {
-                Filter = "YAML files (.yml)|*.yml;*.yaml",
-                Multiselect = false,
-            };
+            OpenFileDialog openFileDialog = ConfigFile.CreateOpenDialog();
             if (openFileDialog.ShowDialog() == true && File.Exists(openFileDialog.FileName))
             {
                 customConfig = openFileDialog.FileName;
@@ -270,8 +267,7 @@ namespace LightController
 
         private void btnSaveAsConfig_Click(object sender, RoutedEventArgs e)
         {
-            SaveFileDialog saveFileDialog = new SaveFileDialog();
-            saveFileDialog.Filter = "Yaml file (*.yml)|*.yml;*.yaml";
+            SaveFileDialog saveFileDialog = ConfigFile.CreateSaveDialog();
             if (saveFileDialog.ShowDialog() == true && !string.IsNullOrWhiteSpace(saveFileDialog.FileName))
             {
                 try
