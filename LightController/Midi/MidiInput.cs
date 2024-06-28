@@ -11,7 +11,7 @@ namespace LightController.Midi
         public MidiInput(MidiIn input, string name)
         {
             Input = input;
-            Name = name;
+            Name = name ?? "unknown";
             input.MessageReceived += Input_MessageReceived;
         }
 
