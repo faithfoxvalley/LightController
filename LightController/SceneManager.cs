@@ -57,12 +57,6 @@ namespace LightController
                     midiDevices.UpdateMidiDeviceList();
 #endif
                 }
-
-                if(this.midiDevice != null)
-                {
-                    this.midiDevice.NoteEvent += MidiDevice_NoteEvent;
-                    this.midiDevice.Input.Start();
-                }
             }
             else
             {
@@ -71,9 +65,14 @@ namespace LightController
                     ErrorBox.ExitOnCancel("No Midi device found with name '" + midiDevice + "', please check your config. Press OK to try again or Cancel to exit.");
                     midiDevices.UpdateMidiDeviceList();
                 }
+            }
 
+
+            if (this.midiDevice != null)
+            {
                 this.midiDevice.NoteEvent += MidiDevice_NoteEvent;
                 this.midiDevice.Input.Start();
+                LogFile.Info("Using midi device: " + this.midiDevice.Name);
             }
 
             foreach (Scene s in scenes)
