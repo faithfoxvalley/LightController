@@ -13,7 +13,7 @@ namespace LightController
     /// <summary>
     /// Interaction logic for PreviewWindow.xaml
     /// </summary>
-    public partial class PreviewWindow : Window
+    public partial class PreviewWindow
     {
         private const double FixtureItemHeight = 70;
         private const double FixtureItemWidth = 50;

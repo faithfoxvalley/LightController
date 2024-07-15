@@ -19,7 +19,7 @@ namespace LightController
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow
     {
         private const int DmxUpdateFps = 30;
         private const int InputsUpdateFps = 20;
