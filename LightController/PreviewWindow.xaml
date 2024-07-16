@@ -7,9 +7,12 @@
         xmlns:controls="clr-namespace:LightController.Controls"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         mc:Ignorable="d"
-        Title="PreviewWindow" Height="450" Width="800" Closing="OnWindowClosing">
-    <ScrollViewer x:Name="fixtureScrollBox" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
-        <Grid x:Name="fixtureGrid" Margin="10">
-        </Grid>
-    </ScrollViewer>
+        Title="DMX Preview" Height="450" Width="800" Closing="OnWindowClosing">
+    <StackPanel>
+        <ui:TitleBar Title="DMX Preview"/>
+        <ScrollViewer x:Name="fixtureScrollBox" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+            <Grid x:Name="fixtureGrid" Margin="10">
+            </Grid>
+        </ScrollViewer>
+    </StackPanel>
 </ui:FluentWindow>

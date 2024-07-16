@@ -7,7 +7,11 @@
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         mc:Ignorable="d"
         Title="Light Controller" Height="450" Width="800" Closing="Window_Closing" Closed="Window_Closed"
-        MinHeight="200px" MinWidth="600px">
+        MinHeight="200px" MinWidth="600px"
+                 
+        ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
+        ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+        Foreground="{DynamicResource TextFillColorPrimaryBrush}">
     <Window.TaskbarItemInfo>
         <TaskbarItemInfo/>
     </Window.TaskbarItemInfo>
