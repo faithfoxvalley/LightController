@@ -9,6 +9,6 @@
     <Grid Width="50" Height="70">
         <Rectangle Fill="{Binding Color, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}" Height="50" VerticalAlignment="Bottom"/>
         <TextBlock Text="{Binding Percent, StringFormat={}{0}%, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="14" Background="Black" Margin="0,20,0,0"/>
-        <TextBlock Text="{Binding FixtureName, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="14"/>
+        <TextBlock Text="{Binding FixtureName, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="14"/>
     </Grid>
 </UserControl>
