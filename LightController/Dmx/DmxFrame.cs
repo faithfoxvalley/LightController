@@ -98,13 +98,17 @@ namespace LightController.Dmx
             }
         }
 
-        public void Clamp(IEnumerable<int> indicies)
+        /// <summary>
+        /// Normalizes the dmx data to be between 0 and 255 if the maximum is larger than 255
+        /// </summary>
+        /// <param name="indices">The indices to normalize</param>
+        public void Clamp(IEnumerable<int> indices)
         {
             if (maxData <= 255)
                 return;
 
             double factor = 255 / maxData;
-            foreach(int i in indicies)
+            foreach(int i in indices)
             {
                 double packet = rawData[i] * factor;
                 if (packet > 254.5)
