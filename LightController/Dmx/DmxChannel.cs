@@ -11,6 +11,8 @@ namespace LightController.Dmx
         private byte? constantValue;
         private string stringValue;
         private double intensity = 1;
+        private double intensityMin = 0;
+        private double intensityRange = 1;
 
         public int Index { get; private set; }
         public byte? Constant => constantValue;
@@ -25,6 +27,12 @@ namespace LightController.Dmx
             Index = index;
         }
 
+        public void ApplyIntensityModifier(double minIntensity)
+        {
+            intensityMin = minIntensity;
+            intensityRange = 1 - intensityMin;
+        }
+
         public static DmxChannel Parse(string value, int index)
         {
             if (value == null)
@@ -35,6 +43,24 @@ namespace LightController.Dmx
                 return null;
 
             string originalString = value;
+            if(value.StartsWith("intensity"))
+            {
+                DmxChannel intensityResult = new DmxChannel(null, originalString, index)
+                {
+                    IsIntensity = true
+                };
+
+                int minIntensityIndex = value.IndexOf('>');
+                if (minIntensityIndex > 0 && minIntensityIndex < value.Length - 1 
+                    && double.TryParse(value.Substring(minIntensityIndex + 1), out double minIntensity)
+                    && minIntensity > 0)
+                {
+                    if (minIntensity > 255)
+                        minIntensity = 255;
+                    intensityResult.ApplyIntensityModifier(minIntensity / 255);
+                }
+                return intensityResult;
+            }
 
             if (value[value.Length - 1] == 'k')
             {
@@ -87,7 +113,7 @@ namespace LightController.Dmx
                 case "amber":
                     mask = new ColorRGB(255, 126, 0);
                     break;
-                case "intensity":
+                case "intensity": // This probably wont ever be triggered
                     return new DmxChannel(null, originalString, index)
                     {
                         IsIntensity = true
@@ -136,6 +162,15 @@ namespace LightController.Dmx
         public override string ToString()
         {
             return stringValue;
+        }
+
+        internal double GetIntensityByte(double intensity)
+        {
+            if (intensity <= 0)
+                return 0;
+            if (intensityMin > 0)
+                intensity = (intensity * intensityRange) + intensityMin;
+            return intensity * 255;
         }
     }
 

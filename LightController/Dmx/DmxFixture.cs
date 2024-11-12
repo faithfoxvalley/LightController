@@ -129,7 +129,7 @@ namespace LightController.Dmx
             ColorRGB rgb = (ColorRGB)new ColorHSV(hsv.Hue, hsv.Saturation, 1);
 
             if(intensityChannel != null)
-                frame.Set(intensityChannel.Index, intensity * 255);
+                frame.Set(intensityChannel.Index, intensityChannel.GetIntensityByte(intensity));
 
             // Note: This is before mixing, so that means that any color mixing from the previous scene wont make it to the preview
             frame.SetPreviewData(rgb, intensity);
@@ -145,12 +145,6 @@ namespace LightController.Dmx
             frame.Clamp(colorChannels.Select(x => x.Index));
             frame.Mix();
 
-            return frame;
-        }
-
-        public DmxFrame GetOffFrame()
-        {
-            frame.Reset();
             return frame;
         }
 
