@@ -4,8 +4,10 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
-    <AssemblyVersion>1.7.0.0</AssemblyVersion>
+    <AssemblyVersion>$(Version)</AssemblyVersion>
     <Platforms>AnyCPU;x64</Platforms>
+    <Version>1.7.1</Version>
+    <FileVersion>$(Version)</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

@@ -174,7 +174,7 @@ namespace LightController
 
             LogFile.Init(Path.Combine(ApplicationData, "Logs", appname + ".log"));
             if(mainAssemblyName.Version != null)
-                LogFile.Info("Started application - v" + mainAssemblyName.Version);
+                LogFile.Info("Started application - v" + mainAssemblyName.Version.ToString(3));
             else
                 LogFile.Info("Started application");
         }

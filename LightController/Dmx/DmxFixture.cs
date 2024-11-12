@@ -42,7 +42,7 @@ namespace LightController.Dmx
                 }
             }
 
-            if (colorChannels.All(x => x.Lumens.HasValue))
+            if (colorChannels.Count > 0 && colorChannels.All(x => x.Lumens.HasValue))
                 maxLumens = colorChannels.Max(x => x.Lumens.Value);
 
             frame = new DmxFrame(data, dmxStartAddress);

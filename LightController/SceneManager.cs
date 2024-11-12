@@ -218,8 +218,6 @@ namespace LightController
             int prevSelection = -1;
             if (e.RemovedItems.Count > 0)
                 prevSelection = sceneList.Items.IndexOf(e.RemovedItems[0]);
-            if (prevSelection < 0 || prevSelection >= sceneList.Items.Count)
-                return;
             
             int currSelection = -1;
             if(e.AddedItems.Count > 0)
@@ -228,7 +226,8 @@ namespace LightController
                 return;
 
             ActivateScene(scenes[currSelection]);
-            SetSceneListSelection(prevSelection);
+            if(prevSelection < sceneList.Items.Count)
+                SetSceneListSelection(prevSelection);
         }
     }
 }
