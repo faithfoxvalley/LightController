@@ -1,11 +1,9 @@
-﻿using LightController.Color;
-using LightController.Config;
+﻿using LightController.Config.Animation;
 using LightController.Config.Dmx;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Windows.Documents;
 
 namespace LightController.Dmx
 {
@@ -116,10 +114,13 @@ namespace LightController.Dmx
             Write();
         }
 
-        public void SetInputs(IEnumerable<Config.Input.InputBase> inputs, Animation animation)
+        public void SetInputs(IEnumerable<Config.Input.InputBase> inputs, TransitionAnimation transition)
         {
             foreach (DmxFixture fixture in fixtures)
-                fixture.SetInput(inputs, animation.GetLength(fixture.FixtureId), animation.GetDelay(fixture.FixtureId));
+            {
+                transition.GetMixDetails(fixture.FixtureId, out double mixLength, out double mixDelay);
+                fixture.SetInput(inputs, mixLength, mixDelay);
+            }
         }
         
         public void Write()

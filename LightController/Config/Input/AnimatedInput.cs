@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using YamlDotNet.Serialization;
 using LightController.ColorAnimation;
 using System.Threading;
+using LightController.Config.Animation;
 
 namespace LightController.Config.Input
 {
@@ -27,23 +28,13 @@ namespace LightController.Config.Input
             }
             set
             {
-                animation = new Animation(value);
+                animation = new AnimationOrder(value);
             }
         }
         [YamlMember(Alias = "DelayLength")]
-        public double DelayLength
-        {
-            get
-            {
-                return animation.Length;
-            }
-            set
-            {
-                animation.Length = value;
-            }
-        }
+        public double DelayLength { get; set; }
 
-        private Animation animation = new Animation();
+        private AnimationOrder animation = new AnimationOrder();
         private readonly List<AnimationLoop> loops = new List<AnimationLoop>();
         private readonly Dictionary<int, int> loopsByFixture = new Dictionary<int, int>();
 
@@ -54,13 +45,16 @@ namespace LightController.Config.Input
             if (Colors == null)
                 Colors = new List<AnimatedInputFrame>();
 
-            animation.LengthIncludesLastSet = false;
+            double stepDelay = 0;
+            if(animation.Count > 1)
+                stepDelay = DelayLength / (animation.Count - 1);
+
             int i = 0;
-            foreach(ValueSet set in animation.AnimationOrder)
+            foreach(ValueSet set in animation.Values)
             {
                 if (set.GetOverlap(FixtureIds, out ValueSet overlap))
                 {
-                    TimeSpan delay = TimeSpan.FromSeconds(animation.GetDelayForSetIndex(i));
+                    TimeSpan delay = TimeSpan.FromSeconds(stepDelay * i);
                     AnimationLoop loop = new AnimationLoop(Loop, Colors, delay);
                     foreach (int id in overlap.EnumerateValues())
                         loopsByFixture[id] = loops.Count;
@@ -109,9 +103,9 @@ namespace LightController.Config.Input
             return GetLoopForFixture(fixtureId).GetColor();
         }
 
-        public override double GetIntensity(int fixtureid, ColorHSV target)
+        public override double GetIntensity(int fixtureId, ColorHSV target)
         {
-            return (intensity.GetIntensity(fixtureid)) * GetLoopForFixture(fixtureid).GetIntensity();
+            return (intensity.GetIntensity(fixtureId)) * GetLoopForFixture(fixtureId).GetIntensity();
 
         }
     }

@@ -1,10 +1,10 @@
 ﻿using LightController.Color;
+using LightController.Config.Animation;
 using LightController.Midi;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Media.Animation;
 using YamlDotNet.Serialization;
 
 namespace LightController.Config.Input
@@ -16,19 +16,19 @@ namespace LightController.Config.Input
         public StrobeState Off { get; set; } = new StrobeState();
 
         [YamlMember(Alias = "animation", ApplyNamingConventions = false)]
-        public string Groups
+        public string Animation
         {
             get
             {
-                return groups?.ToString();
+                return animation?.ToString();
             }
             set
             {
-                groups = new Animation(value);
+                animation = new AnimationOrder(value);
             }
         }
 
-        private Animation groups = new Animation();
+        private AnimationOrder animation = new AnimationOrder();
         private readonly Random random = new Random();
         private readonly List<StrobeLoop> loops = new List<StrobeLoop>();
         private readonly Dictionary<int, StrobeLoop> fixtureLoops = new Dictionary<int, StrobeLoop>();
@@ -48,7 +48,7 @@ namespace LightController.Config.Input
             loops.Add(defaultLoop);
             foreach(int fixtureId in FixtureIds.EnumerateValues())
                 fixtureLoops[fixtureId] = defaultLoop;
-            foreach(ValueSet set in groups.AnimationOrder)
+            foreach(ValueSet set in animation.Values)
             {
                 StrobeLoop loop = new StrobeLoop(On, Off, random);
                 loops.Add(loop);

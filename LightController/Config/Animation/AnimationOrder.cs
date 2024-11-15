@@ -1,53 +1,23 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
-namespace LightController.Config
+namespace LightController.Config.Animation
 {
-    public class Animation
+    public class AnimationOrder
     {
         private List<ValueSet> animationOrder = new List<ValueSet>();
         private string animationString;
 
-        public IEnumerable<ValueSet> AnimationOrder => animationOrder;
+        public IEnumerable<ValueSet> Values => animationOrder;
 
-        public double Length
-        {
-            get => length;
-            set
-            {
-                length = value;
-                UpdateStepLength();
-            }
-        }
-        private double length;
-        private double stepLength;
+        public int Count => animationOrder.Count;
 
-        /// <summary>
-        /// True = Length defines start to end
-        /// False = Length defines start to start of last set
-        /// </summary>
-        public bool LengthIncludesLastSet 
-        { 
-            get
-            {
-                return lengthIncludesLastSet;
-            }
-            set
-            {
-                lengthIncludesLastSet = value;
-                UpdateStepLength();
-            }
-        }
-        private bool lengthIncludesLastSet = true;
-
-
-        public Animation()
+        public AnimationOrder()
         {
 
         }
 
-        public Animation(string animation)
+        public AnimationOrder(string animation)
         {
             if (string.IsNullOrWhiteSpace(animation))
             {
@@ -132,50 +102,25 @@ namespace LightController.Config
             }
         }
 
-        private void UpdateStepLength()
-        {
-            if (animationOrder.Count == 0)
-                stepLength = 0;
-            else if (lengthIncludesLastSet)
-                stepLength = length / animationOrder.Count;
-            else if (animationOrder.Count == 1)
-                stepLength = 0;
-            else
-                stepLength = length / (animationOrder.Count - 1);
-        }
-
         public override string ToString()
         {
             return animationString;
         }
 
-        public double GetLength(int fixtureId)
+        public bool TryGetStepForFixture(int fixtureId, out int stepIndex)
         {
-            if (animationOrder.Count == 0)
-                return Length;
-            if (animationOrder.Any(x => x.Contains(fixtureId)))
-                return stepLength;
-            return Length;
-        }
-
-        public double GetDelay(int fixtureId)
-        {
-            if (animationOrder.Count == 0)
-                return 0;
+            stepIndex = 0;
             for (int i = 0; i < animationOrder.Count; i++)
             {
                 ValueSet set = animationOrder[i];
                 if (set.Contains(fixtureId))
-                    return stepLength * i;
+                {
+                    stepIndex = i;
+                    return true;
+                }
             }
-            return 0;
+            return false;
         }
 
-        public double GetDelayForSetIndex(int index)
-        {
-            if (index < 0 || index >= animationOrder.Count)
-                return 0;
-            return stepLength * index;
-        }
     }
 }

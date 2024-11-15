@@ -1,4 +1,5 @@
-﻿using LightController.Config.Input;
+﻿using LightController.Config.Animation;
+using LightController.Config.Input;
 using LightController.Midi;
 using System.Collections.Generic;
 using System.Threading;
@@ -19,19 +20,10 @@ namespace LightController.Config
         public double? TransitionTime { get; set; }
 
         [YamlMember(Alias = "Animation")]
-        public string AnimationValue
-        {
-            get
-            {
-                return TransitionAnimation?.ToString();
-            }
-            set
-            {
-                TransitionAnimation = new Animation(value);
-            }
-        }
+        public string AnimationValue { get; set; }
+
         [YamlIgnore]
-        public Animation TransitionAnimation { get; set; } = new Animation();
+        public TransitionAnimation TransitionAnimation { get; private set; }
 
         [YamlMember]
         public MidiNote MidiNote { get; set; }
@@ -55,7 +47,7 @@ namespace LightController.Config
         }
         
         /// <summary>
-        /// Called after the scene has been created, regardless of wether it is currently active
+        /// Called after the scene has been created, regardless of whether it is currently active
         /// </summary>
         public void Init(double defaultTransitionTime)
         {
@@ -63,9 +55,8 @@ namespace LightController.Config
                 Inputs = new List<InputBase>();
             foreach(InputBase input in Inputs)
                 input.Init();
-            if(!TransitionTime.HasValue)
-                TransitionTime = defaultTransitionTime;
-            TransitionAnimation.Length = TransitionTime.Value;
+            double transitionTime = TransitionTime ?? defaultTransitionTime;
+            TransitionAnimation = new TransitionAnimation(transitionTime, new AnimationOrder(AnimationValue));
         }
 
         /// <summary>

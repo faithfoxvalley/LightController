@@ -1,5 +1,6 @@
 ﻿using LightController.Bacnet;
 using LightController.Config;
+using LightController.Config.Animation;
 using LightController.Dmx;
 using LightController.Midi;
 using System;
@@ -167,7 +168,7 @@ namespace LightController
 
         private void UpdateDmx(Scene scene, bool useAnimation = true)
         {
-            dmx.SetInputs(scene.Inputs, useAnimation ? scene.TransitionAnimation : new Animation());
+            dmx.SetInputs(scene.Inputs, useAnimation ? scene.TransitionAnimation : new TransitionAnimation());
         }
 
         private bool TryFindScene(Func<Scene, bool> func, out Scene scene)
