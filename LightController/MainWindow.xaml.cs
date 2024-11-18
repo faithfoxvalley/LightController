@@ -112,6 +112,9 @@ namespace LightController
             uiTimer.Interval = new TimeSpan(0, 0, 1);
             uiTimer.Tick += UiTimer_Tick;
             uiTimer.Start();
+
+            if (args.HasFlag("preview"))
+                OpenPreview_Click(null, null);
         }
 
         private static bool IsOnlyInstance()
@@ -228,6 +231,13 @@ namespace LightController
                     sb.Append('"').Append(customConfig).Append('"');
                 else
                     sb.Append(customConfig);
+            }
+
+            if (preview != null)
+            {
+                if (sb.Length > 0)
+                    sb.Append(' ');
+                sb.Append("-preview");
             }
 
             if(sb.Length > 0)
