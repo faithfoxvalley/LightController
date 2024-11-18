@@ -8,6 +8,17 @@ namespace LightController.Config.Input
         private Percent location = new Percent(0);
         private readonly SerializableColorHSV color = new SerializableColorHSV(new ColorHSV(0, 1, 1));
 
+        public GradientInputFrame()
+        {
+
+        }
+
+        public GradientInputFrame(GradientInputFrame frame)
+        {
+            location = new Percent(frame.location);
+            color = new SerializableColorHSV(frame.Color);
+        }
+
         [YamlIgnore]
         public double Location
         {

@@ -16,6 +16,9 @@ namespace LightController.Config.Input
         [YamlMember(Alias = "SpaceEvenly")]
         public bool SpaceEvenly { get; set; }
 
+        [YamlMember]
+        public int Scale { get; set; } = 1;
+
         public override void Init()
         {
             if (Colors == null || Colors.Count == 0)
@@ -29,7 +32,9 @@ namespace LightController.Config.Input
                 return;
             }
 
-            List<GradientInputFrame> frames = GetInputFrames();
+
+
+            List<GradientInputFrame> frames = ApplyScale(GetInputFrames());
             GradientInputFrame currentFrame = frames[0];
             GradientInputFrame nextFrame = frames[1];
             int frameIndex = 1;
@@ -66,6 +71,27 @@ namespace LightController.Config.Input
                         colors[fixtureId] = ColorHSV.Lerp(currentFrame.Color, nextFrame.Color, framePercent);
                 }
             }
+        }
+
+        private List<GradientInputFrame> ApplyScale(List<GradientInputFrame> frames)
+        {
+            if (Scale <= 1)
+                return frames;
+
+            List<GradientInputFrame> result = new List<GradientInputFrame>(frames.Count * Scale);
+            double gradientLength = 1.0 / Scale;
+
+            for (int s = 0; s < Scale; s++)
+            {
+                for(int i = 0; i < frames.Count; i++)
+                {
+                    GradientInputFrame frame = frames[i];
+                    GradientInputFrame clone = new GradientInputFrame(frame);
+                    clone.Location = (double)((frame.Location * gradientLength) + (s * gradientLength));
+                    result.Add(clone);
+                }
+            }
+            return result;
         }
 
         private List<GradientInputFrame> GetInputFrames()

@@ -7,6 +7,12 @@ namespace LightController.Config
         public double Value { get; private set; }
         private string stringValue;
 
+        public Percent(Percent percent)
+        {
+            this.Value = percent.Value;
+            this.stringValue = percent.stringValue;
+        }
+
         public Percent(double value)
         {
             Value = Math.Clamp(value, 0, 1);

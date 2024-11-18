@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "LightController": {
+      "commandName": "Project",
+      "commandLineArgs": "-preview"
+    }
+  }
+}

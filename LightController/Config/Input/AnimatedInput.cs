@@ -35,7 +35,7 @@ namespace LightController.Config.Input
         [YamlMember(Alias = "DelayLength")]
         public double DelayLength { get; set; }
         [YamlMember]
-        public double DelayCount { get; set; }
+        public double DelayScale { get; set; }
 
         private AnimationOrder animation = new AnimationOrder();
         private readonly List<AnimationLoop> loops = new List<AnimationLoop>();
@@ -52,8 +52,8 @@ namespace LightController.Config.Input
             if(animation.Count > 1)
             {
                 double delayLength = DelayLength;
-                if(delayLength <= 0 && DelayCount > 0)
-                    delayLength = Colors.Sum(x => x.Length) * DelayCount;
+                if(delayLength <= 0 && DelayScale > 0)
+                    delayLength = Colors.Sum(x => x.Length) * DelayScale;
                 if(delayLength > 0)
                     perFixtureDelay = delayLength / (animation.Count - 1);
             }

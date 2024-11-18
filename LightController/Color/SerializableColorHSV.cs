@@ -49,7 +49,7 @@ namespace LightController.Color
 
         public SerializableColorHSV(ColorHSV color)
         {
-            this.color = color;
+            this.color = new ColorHSV(color);
             sat = new Percent(color.Saturation);
             val = new Percent(color.Value);
         }
