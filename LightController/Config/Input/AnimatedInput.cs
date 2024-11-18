@@ -7,6 +7,7 @@ using YamlDotNet.Serialization;
 using LightController.ColorAnimation;
 using System.Threading;
 using LightController.Config.Animation;
+using System.Linq;
 
 namespace LightController.Config.Input
 {
@@ -33,6 +34,8 @@ namespace LightController.Config.Input
         }
         [YamlMember(Alias = "DelayLength")]
         public double DelayLength { get; set; }
+        [YamlMember]
+        public double DelayCount { get; set; }
 
         private AnimationOrder animation = new AnimationOrder();
         private readonly List<AnimationLoop> loops = new List<AnimationLoop>();
@@ -45,16 +48,22 @@ namespace LightController.Config.Input
             if (Colors == null)
                 Colors = new List<AnimatedInputFrame>();
 
-            double stepDelay = 0;
+            double perFixtureDelay = 0;
             if(animation.Count > 1)
-                stepDelay = DelayLength / (animation.Count - 1);
+            {
+                double delayLength = DelayLength;
+                if(delayLength <= 0 && DelayCount > 0)
+                    delayLength = Colors.Sum(x => x.Length) * DelayCount;
+                if(delayLength > 0)
+                    perFixtureDelay = delayLength / (animation.Count - 1);
+            }
 
             int i = 0;
             foreach(ValueSet set in animation.Values)
             {
                 if (set.GetOverlap(FixtureIds, out ValueSet overlap))
                 {
-                    TimeSpan delay = TimeSpan.FromSeconds(stepDelay * i);
+                    TimeSpan delay = TimeSpan.FromSeconds(perFixtureDelay * i);
                     AnimationLoop loop = new AnimationLoop(Loop, Colors, delay);
                     foreach (int id in overlap.EnumerateValues())
                         loopsByFixture[id] = loops.Count;
