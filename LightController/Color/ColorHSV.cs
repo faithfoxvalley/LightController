@@ -158,5 +158,6 @@ namespace LightController.Color
         {
             return HashCode.Combine(Hue, Saturation, Value);
         }
+
     }
 }

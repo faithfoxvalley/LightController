@@ -6,7 +6,7 @@ namespace LightController.Config.Input
     public class GradientInputFrame
     {
         private Percent location = new Percent(0);
-        private readonly SerializableColorHSV color = new SerializableColorHSV(new ColorHSV(0, 1, 1));
+        private SerializableColorHSV color = new SerializableColorHSV(new ColorHSV(0, 1, 1));
 
         public GradientInputFrame()
         {
@@ -49,7 +49,11 @@ namespace LightController.Config.Input
         }
 
         [YamlIgnore]
-        public ColorHSV Color => color.Color;
+        public ColorHSV Color
+        {
+            get => color.Color;
+            set => color = new SerializableColorHSV(value);
+        }
 
         [YamlMember(Alias = "Intensity")]
         public string IntensityMode

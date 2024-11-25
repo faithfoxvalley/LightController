@@ -10,12 +10,18 @@
     <Compile Update="Controls\LightFixtureControl.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="GradientEditor.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="PreviewWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
     <Page Update="Controls\LightFixtureControl.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="GradientEditor.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="MainWindow.xaml">

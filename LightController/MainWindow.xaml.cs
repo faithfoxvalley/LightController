@@ -44,6 +44,7 @@ namespace LightController
 
         private System.Windows.Threading.DispatcherTimer uiTimer;
         private PreviewWindow preview;
+        private GradientEditor gradientEditor;
 
         public static MainWindow Instance { get; private set; }
 
@@ -360,6 +361,13 @@ namespace LightController
             dmx.TurnOff();
             if(mutexActive)
                 mutex.ReleaseMutex();
+        }
+
+        private void GradientEditor_Click(object sender, RoutedEventArgs e)
+        {
+            if (gradientEditor == null)
+                gradientEditor = new GradientEditor(new Config.Input.GradientInput());
+            gradientEditor.Show();
         }
     }
 }

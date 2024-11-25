@@ -1,0 +1,35 @@
+﻿<Window x:Class="LightController.GradientEditor"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:colorpicker="clr-namespace:ColorPicker;assembly=ColorPicker"
+        xmlns:local="clr-namespace:LightController"
+        mc:Ignorable="d"
+        Title="GradientEditor" Height="450" Width="450">
+    <Grid Margin="0,0,0,0">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1*"/>
+            <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="89*"/>
+            <RowDefinition Height="68*"/>
+            <RowDefinition Height="12*"/>
+            <RowDefinition Height="48*"/>
+        </Grid.RowDefinitions>
+        <ListBox x:Name="frameList" Grid.Column="0" Grid.Row="0" SelectionChanged="FrameSelectionChanged" Margin="0,0,0,3"/>
+        
+        <Button Content="Add" Grid.Column="1" Grid.Row="0" Margin="56,10,56,142" Click="AddButton_Click"/>
+        <Button Content="Remove" Grid.Column="1" Grid.Row="0" Margin="56,41,56,111" Click="RemoveButton_Click"/>
+        <TextBox x:Name="scaleTextBox" Grid.Column="1" HorizontalAlignment="Left" Margin="56,101,0,0" TextWrapping="Wrap" Text="1" VerticalAlignment="Top" Width="120" PreviewTextInput="FilterNumericTextbox" DataObject.Pasting="FilterNumericTextbox" TextChanged="ScaleTextChanged" Height="18"/>
+
+        <colorpicker:ColorSliders x:Name="frameColorPicker" Grid.ColumnSpan="2" ColorChanged="ColorChanged" Grid.Row="1" ShowAlpha="False"/>
+        
+        <Slider x:Name="frameLocationSlider" Grid.Row="2" Grid.ColumnSpan="2" ValueChanged="FrameLocationChanged" Minimum="0" Maximum="100"/>
+
+        <Rectangle Grid.Row="3" Grid.ColumnSpan="2" Fill="Black" Margin="0,53,0,0"/>
+        <Image x:Name="previewCanvas" Grid.Row="3" Grid.ColumnSpan="2" />
+        
+    </Grid>
+</Window>
