@@ -39,6 +39,8 @@ namespace LightController.Color
         [ProtoMember(3)]
         public byte Blue { get; set; }
 
+        public double Value => Math.Max(Red, Math.Max(Green, Blue)) / 255.0;
+
 
         public static explicit operator ColorHSV(ColorRGB x)
         {

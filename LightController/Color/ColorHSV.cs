@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ColorPicker.Models;
+using System;
 using System.Collections.Generic;
 
 namespace LightController.Color
@@ -159,5 +160,9 @@ namespace LightController.Color
             return HashCode.Combine(Hue, Saturation, Value);
         }
 
+        internal static ColorHSV FromColor(ColorState colorState)
+        {
+			return new ColorHSV(colorState.HSV_H, colorState.HSV_S, colorState.HSV_V);
+        }
     }
 }

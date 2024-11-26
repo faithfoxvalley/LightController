@@ -13,6 +13,7 @@ using Microsoft.Win32;
 using System.Threading.Tasks;
 using LightController.Bacnet;
 using System.Linq;
+using LightController.Config.Input;
 
 namespace LightController
 {
@@ -366,7 +367,7 @@ namespace LightController
         private void GradientEditor_Click(object sender, RoutedEventArgs e)
         {
             if (gradientEditor == null)
-                gradientEditor = new GradientEditor(new Config.Input.GradientInput());
+                gradientEditor = new GradientEditor((GradientInput)config.Scenes[2].Inputs[2]);
             gradientEditor.Show();
         }
     }

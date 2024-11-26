@@ -28,8 +28,12 @@
         
         <Slider x:Name="frameLocationSlider" Grid.Row="2" Grid.ColumnSpan="2" ValueChanged="FrameLocationChanged" Minimum="0" Maximum="100"/>
 
-        <Rectangle Grid.Row="3" Grid.ColumnSpan="2" Fill="Black" Margin="0,53,0,0"/>
-        <Image x:Name="previewCanvas" Grid.Row="3" Grid.ColumnSpan="2" />
+        <Rectangle Grid.Row="3" Grid.ColumnSpan="2">
+            <Rectangle.Fill>
+                    <ImageBrush ImageSource="bg-tile.png" TileMode="Tile" ViewportUnits="Absolute" Viewport="0,0,32,32"/>
+            </Rectangle.Fill>
+        </Rectangle>
+        <Image x:Name="previewCanvas" Grid.Row="3" Grid.ColumnSpan="2" Stretch="Fill"/>
         
     </Grid>
 </Window>

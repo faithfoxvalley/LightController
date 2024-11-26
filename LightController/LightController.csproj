@@ -11,6 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="bg-tile.png" />
     <None Remove="SplashScreen1.png" />
   </ItemGroup>
 
@@ -46,6 +47,10 @@
     <Reference Include="FTD2XX_NET">
       <HintPath>FTD2XX_NET.dll</HintPath>
     </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="bg-tile.png" />
   </ItemGroup>
 
   <ItemGroup>

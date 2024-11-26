@@ -36,6 +36,8 @@ namespace LightController
             InitializeComponent();
 
             this.gradient = gradient.Colors ?? new List<GradientInputFrame>();
+            foreach(GradientInputFrame frame in gradient.Colors)
+                frameList.Items.Add("-");
             spaceEvenly = gradient.SpaceEvenly;
             scale = gradient.Scale;
 
@@ -64,14 +66,15 @@ namespace LightController
 
             currentFrame = gradient[frameList.SelectedIndex];
 
-            ColorRGB rgb = (ColorRGB)currentFrame.Color;
-            frameColorPicker.SelectedColor = new System.Windows.Media.Color()
+            ColorHSV hsv = currentFrame.Color;
+            var state = new ColorPicker.Models.ColorState()
             {
-                R = rgb.Red,
-                G = rgb.Green,
-                B = rgb.Blue,
-                A = 255,
+                HSV_H = hsv.Hue,
+                HSV_V = hsv.Value,
+                HSV_S = hsv.Saturation,
+                A = 1,
             };
+            frameColorPicker.ColorState = state;
 
             frameLocationSlider.Value = currentFrame.Location * 100;
         }
@@ -130,7 +133,7 @@ namespace LightController
             if (currentFrame == null)
                 return;
 
-            currentFrame.Color = (ColorHSV)ColorRGB.FromColor(frameColorPicker.SelectedColor);
+            currentFrame.Color = ColorHSV.FromColor(frameColorPicker.ColorState);
             UpdateCanvas();
         }
 
@@ -148,7 +151,7 @@ namespace LightController
 
         private void UpdateCanvas()
         {
-            if(gradient == null || gradient.Count == 0)
+            if(gradient == null || gradient.Count == 0 || canvasImage == null)
             {
                 if(previewCanvas != null)
                     previewCanvas.Visibility = Visibility.Hidden;
@@ -158,20 +161,21 @@ namespace LightController
             GradientInput.Iterator iterator = BuildInput().ColorIterator;
             int pixelWidth = canvasImage.PixelWidth;
 
+            ColorRGB[] colors = new ColorRGB[pixelWidth];
+            for (int x = 0; x < pixelWidth; x++)
+                colors[x] = (ColorRGB)iterator.GetColor(x / (double)pixelWidth);
+
             using (canvasImage.GetBitmapContext())
             {
                 canvasImage.ForEach((x, y, c) =>
                 {
-                    ColorHSV hsv = iterator.GetColor(x / pixelWidth);
-                    double intensity = hsv.Value;
-                    hsv.Value = 1;
-                    ColorRGB rgb = (ColorRGB)hsv;
+                    ColorRGB rgb = colors[x];
                     return new System.Windows.Media.Color()
                     {
                         R = rgb.Red,
                         G = rgb.Green,
                         B = rgb.Blue,
-                        ScA = (float)intensity,
+                        ScA = (float)rgb.Value,
                     };
                 });
             }
@@ -202,6 +206,7 @@ namespace LightController
 
             currentFrame.Location = frameLocationSlider.Value / 100.0;
             gradient.Sort(new FrameComparer());
+            UpdateCanvas();
         }
 
         private class FrameComparer : IComparer<GradientInputFrame>
