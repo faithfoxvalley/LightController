@@ -82,14 +82,15 @@ namespace LightController.Dmx
             int column = 0;
             for (int i = 1 + bufferOffset; i < (513 + bufferOffset); i++)
             {
+                int dmxChannel = i - bufferOffset;
                 if (column % columns == 0)
                 {
                     sb.AppendLine();
-                    if (i < 100)
+                    if (dmxChannel < 100)
                         sb.Append(' ');
-                    if (i < 10)
+                    if (dmxChannel < 10)
                         sb.Append(' ');
-                    sb.Append(i).Append("| ");
+                    sb.Append(dmxChannel).Append("| ");
                 }
 
                 byte b = buffer[i];
