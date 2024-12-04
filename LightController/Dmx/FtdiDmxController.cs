@@ -207,8 +207,18 @@ namespace LightController.Dmx
 
         public void Dispose()
         {
+            if (!ftdi.IsOpen)
+                return;
+
+            LogStatusCode(ftdi.CyclePort(), "Failed to cycle DMX device port");
             if (ftdi.IsOpen)
-                ftdi.Close();
+                LogStatusCode(ftdi.Close(), "Failed to close DMX device");
+        }
+
+        private void LogStatusCode(FTDI.FT_STATUS status, string error)
+        {
+            if(status != FTDI.FT_STATUS.FT_OK)
+                LogFile.Error($"{error} (error code {status})");
         }
     }
 }
