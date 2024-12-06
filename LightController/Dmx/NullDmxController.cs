@@ -6,6 +6,10 @@ namespace LightController.Dmx
     {
         public bool IsOpen => false;
 
+        public void Dispose()
+        {
+        }
+
         public void SetChannel(int channel, byte value)
         {
 

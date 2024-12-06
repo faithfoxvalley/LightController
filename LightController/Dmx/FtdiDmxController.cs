@@ -10,8 +10,10 @@ namespace LightController.Dmx
         private readonly byte[] buffer = new byte[513];
         private int bufferOffset = 0;
         private bool usbPro;
+        private object writeLock = new object();
+        private bool ready = true;
 
-        public bool IsOpen => ftdi.IsOpen;
+        public bool IsOpen => ftdi.IsOpen && ready;
 
         private FtdiDmxController(FTDI ftdi, bool usbPro = false)
         {
@@ -53,18 +55,24 @@ namespace LightController.Dmx
 
         public void WriteData()
         {
-            ftdi.Purge(FTDI.FT_PURGE.FT_PURGE_TX);
-            ftdi.Purge(FTDI.FT_PURGE.FT_PURGE_RX);
-            ftdi.SetBreak(true);
-            ftdi.SetBreak(false);
+            lock (writeLock)
+            {
+                if(!IsOpen)
+                    return;
 
-            uint bytesWritten = 0;
-            FTDI.FT_STATUS status = ftdi.Write(buffer, buffer.Length, ref bytesWritten);
-            if(status != FTDI.FT_STATUS.FT_OK)
-                throw new DmxException("Error occurred while writing dmx data: " + status, status);
+                ftdi.Purge(FTDI.FT_PURGE.FT_PURGE_TX);
+                ftdi.Purge(FTDI.FT_PURGE.FT_PURGE_RX);
+                ftdi.SetBreak(true);
+                ftdi.SetBreak(false);
 
-            if (bytesWritten != buffer.Length)
-                LogFile.Warn($"Unable to write {buffer.Length} bytes to DMX device, only wrote {bytesWritten} bytes.");
+                uint bytesWritten = 0;
+                FTDI.FT_STATUS status = ftdi.Write(buffer, buffer.Length, ref bytesWritten);
+                if (status != FTDI.FT_STATUS.FT_OK)
+                    throw new DmxException("Error occurred while writing dmx data: " + status, status);
+
+                if (bytesWritten != buffer.Length)
+                    LogFile.Warn($"Unable to write {buffer.Length} bytes to DMX device, only wrote {bytesWritten} bytes.");
+            }
         }
 
         public void WriteDebugInfo(StringBuilder sb, int columns)
@@ -210,15 +218,54 @@ namespace LightController.Dmx
             if (!ftdi.IsOpen)
                 return;
 
-            LogStatusCode(ftdi.CyclePort(), "Failed to cycle DMX device port");
-            if (ftdi.IsOpen)
-                LogStatusCode(ftdi.Close(), "Failed to close DMX device");
+            CloseDmxPro();
+
+            if (!CheckStatusCode(ftdi.Close(), "Failed finalize close of DMX device"))
+                return;
+
         }
 
-        private void LogStatusCode(FTDI.FT_STATUS status, string error)
+        private void CloseDmxPro()
+        {
+            if (!usbPro)
+                return;
+
+            /* ENTTEC API:
+             * "The periodic DMX packet output will stop and the Widget DMX port direction will change to input when the
+             * Widget receives any request message other than the Output Only Send DMX Packet request, or the Get
+             * Widget Parameters request." 
+             */
+
+            lock (writeLock)
+            {
+                ready = false;
+
+                byte[] buffer = ENTTEC.Devices.Data.DmxUsbProUtils.CreatePacketForDevice(ENTTEC.Devices.Data.DmxUsbProConstants.GET_WIDGET_SERIAL_NUMBER_LABEL);
+
+                if (!CheckStatusCode(ftdi.Purge(FTDI.FT_PURGE.FT_PURGE_TX), "Failed to purge DMX device during close (1)"))
+                    return;
+                if (!CheckStatusCode(ftdi.Purge(FTDI.FT_PURGE.FT_PURGE_RX), "Failed to purge DMX device during close (2)"))
+                    return;
+
+                if (!CheckStatusCode(ftdi.SetBreak(true), "Failed to set break for DMX device during close"))
+                    return;
+                if (!CheckStatusCode(ftdi.SetBreak(false), "Failed to reset break for DMX device during close"))
+                    return;
+
+                uint bytesWritten = 0;
+                if (!CheckStatusCode(ftdi.Write(buffer, buffer.Length, ref bytesWritten), "Failed to write closing data to DMX device"))
+                    return;
+            }
+        }
+
+        private bool CheckStatusCode(FTDI.FT_STATUS status, string error)
         {
             if(status != FTDI.FT_STATUS.FT_OK)
+            {
                 LogFile.Error($"{error} (error code {status})");
+                return false;
+            }
+            return true;
         }
     }
 }

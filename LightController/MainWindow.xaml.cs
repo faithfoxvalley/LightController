@@ -335,13 +335,14 @@ namespace LightController
             if (dmx == null)
                 return;
 
-            LogFile.Info("Closed application.");
 
             inputsTimer.Dispose();
             bacNetTimer?.Dispose();
             sceneManager.Disable();
 
             Shutdown();
+
+            LogFile.Info("Closed application.");
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)

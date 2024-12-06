@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
 namespace LightController.Dmx
 {
@@ -109,9 +110,16 @@ namespace LightController.Dmx
         /// </summary>
         public void TurnOff()
         {
+            LogFile.Info("Turning off DMX device and fixtures");
+
             foreach (DmxFixture fixture in fixtures)
                 fixture.TurnOff();
             Write();
+            Thread.Sleep(500); // Allow the DMX device to transmit the empty frame before shutting down
+            if (controller.IsOpen)
+                controller.Dispose();
+
+            LogFile.Info("Turned off DMX");
         }
 
         public void SetInputs(IEnumerable<Config.Input.InputBase> inputs, TransitionAnimation transition)
