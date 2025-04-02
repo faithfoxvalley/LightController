@@ -10,13 +10,14 @@ namespace LightController.ColorAnimation
         private readonly List<AnimationFrame> frames = new List<AnimationFrame>();
         private DateTime startTime;
         private TimeSpan delay;
+        private readonly ColorHSV beforeLoop;
         private TimeSpan totalLength;
         private AnimationFrame dummyFrame = new AnimationFrame(ColorHSV.Black, ColorHSV.Black, TimeSpan.Zero, TimeSpan.Zero); // Used for comparisons
 
         private ColorHSV color;
         private object colorLock = new object();
 
-        public AnimationLoop(bool loop, List<Config.Input.AnimatedInputFrame> frames, TimeSpan delay)
+        public AnimationLoop(bool loop, List<Config.Input.AnimatedInputFrame> frames, TimeSpan delay, ColorHSV beforeLoop)
         {
             this.loop = loop;
             TimeSpan start = TimeSpan.Zero;
@@ -48,6 +49,7 @@ namespace LightController.ColorAnimation
 
             totalLength = start;
             this.delay = delay;
+            this.beforeLoop = beforeLoop ?? ColorHSV.Black;
             Reset(ClockTime.UtcNow);
         }
 
@@ -114,7 +116,7 @@ namespace LightController.ColorAnimation
             ColorHSV currentColor;
             lock (colorLock)
             {
-                currentColor = color ?? ColorHSV.Black;
+                currentColor = color ?? beforeLoop;
             }
             return currentColor;
         }
@@ -124,7 +126,7 @@ namespace LightController.ColorAnimation
             double currentIntensity;
             lock (colorLock)
             {
-                currentIntensity = color?.Value ?? 0;
+                currentIntensity = color?.Value ?? beforeLoop.Value;
             }
             return currentIntensity;
         }

@@ -318,14 +318,14 @@ namespace LightController
                 preview.Loaded += (o, e) =>
                 {
                     dmx.InitPreview(preview);
-                    dmx.OnColorUpdated += preview.UpdatePreviewColor;
+                    dmx.Preview = preview;
                 };
                 
             }
             preview.Show();
             preview.Closing += (o, e) =>
             {
-                dmx.OnColorUpdated -= preview.UpdatePreviewColor;
+                dmx.Preview = null;
                 preview = null;
             };
         }

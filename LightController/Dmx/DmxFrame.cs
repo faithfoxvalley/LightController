@@ -1,6 +1,7 @@
 ﻿using LightController.Color;
 using System;
 using System.Collections.Generic;
+using YamlDotNet.Serialization.NodeTypeResolvers;
 
 namespace LightController.Dmx
 {
@@ -13,10 +14,11 @@ namespace LightController.Dmx
         private byte[] data; // Data to be sent
         private DateTime mixStart;
         private TimeSpan mixTime;
-
+        private System.Windows.Media.Color previewColorMix;
+        private double previewIntensityMix;
         public byte[] Data => data;
         public int StartAddress { get; }
-
+        
         public System.Windows.Media.Color PreviewColor { get; private set; }
         public double PreviewIntensity { get; private set; }
 
@@ -47,6 +49,8 @@ namespace LightController.Dmx
             {
                 data[i] = baseData[i];
                 rawData[i] = baseData[i];
+                PreviewColor = default;
+                PreviewIntensity = 0;
             }
             maxData = 0;
         }
@@ -67,12 +71,15 @@ namespace LightController.Dmx
             mixStart = DateTime.Now + TimeSpan.FromSeconds(mixDelay);
             mixTime = TimeSpan.FromSeconds(mixLength);
             mixData = data;
+            previewIntensityMix = PreviewIntensity;
+            previewColorMix = PreviewColor;
             data = new byte[mixData.Length];
             Reset();
         }
 
         public void Mix()
         {
+
             if (mixStart.Ticks <= 0 || mixTime.Ticks == 0)
                 return;
 
@@ -86,16 +93,29 @@ namespace LightController.Dmx
                 percentNewData = length.Ticks / (double)mixTime.Ticks;
             }
 
+            PreviewIntensity = MixValue(previewIntensityMix, PreviewIntensity, percentNewData);
+            var previewColor = PreviewColor;
+            var mixPreviewColor = previewColorMix;
+            previewColor.R = MixByteValue(mixPreviewColor.R, previewColor.R, percentNewData);
+            previewColor.G = MixByteValue(mixPreviewColor.G, previewColor.G, percentNewData);
+            previewColor.B = MixByteValue(mixPreviewColor.B, previewColor.B, percentNewData);
+            PreviewColor = previewColor;
+
             for(int i = 0; i < mixData.Length && i < data.Length; i++)
-            {
-                double newData = data[i] * percentNewData;
-                double oldData = mixData[i] * (1 - percentNewData);
-                double newValue = newData + oldData;
-                if (newValue > 254.5)
-                    data[i] = 255;
-                else
-                    data[i] = (byte)newValue;
-            }
+                data[i] = MixByteValue(mixData[i], data[i], percentNewData);
+        }
+
+
+        private double MixValue(double oldData, double newData, double percentNewData)
+        {
+            return (newData * percentNewData) + (oldData * (1 - percentNewData));
+        }
+        private byte MixByteValue(double oldData, double newData, double percentNewData)
+        {
+            double newValue = MixValue(oldData, newData, percentNewData);
+            if (newValue > 254.5)
+                return 255;
+            return (byte)newValue;
         }
 
         /// <summary>

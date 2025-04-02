@@ -18,15 +18,10 @@ namespace LightController
         private const double FixtureItemHeight = 70;
         private const double FixtureItemWidth = 50;
         private readonly Dictionary<int, FixturePreview> fixtures = new Dictionary<int, FixturePreview>();
-        private readonly DispatcherTimer dispatcherTimer;
 
         public PreviewWindow()
         {
             InitializeComponent();
-            dispatcherTimer = new DispatcherTimer();
-            dispatcherTimer.Tick += Update;
-            dispatcherTimer.Interval = TimeSpan.FromSeconds(1);
-            dispatcherTimer.Start();
         }
 
         public void Init(IEnumerable<DmxFixture> fixtures)
@@ -67,22 +62,14 @@ namespace LightController
             }
         }
 
-        private void Update(object sender, EventArgs e)
+        public void SetPreviewColor(int fixtureId, System.Windows.Media.Color rgb, double intensity)
         {
-            foreach(FixturePreview preview in fixtures.Values)
-                preview.Update();
-        }
-
-        public void UpdatePreviewColor(int fixtureId, System.Windows.Media.Color rgb, double intensity)
-        {
-            FixturePreview preview = fixtures[fixtureId];
-            preview.Intensity = intensity;
-            preview.Color = rgb;
+            fixtures[fixtureId].Update(rgb, intensity);
         }
 
         private void OnWindowClosing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            dispatcherTimer.Stop();
+
         }
 
         private class FixturePreview
@@ -142,6 +129,18 @@ namespace LightController
                 newColor.ScA = 1;
 
                 Control.Color = new SolidColorBrush(newColor);
+                Control.Percent = (int)(intensity * 100);
+            }
+
+            public void Update(System.Windows.Media.Color color, double intensity)
+            {
+                float i = (float)intensity;
+                color.ScR *= i;
+                color.ScG *= i;
+                color.ScB *= i;
+                color.ScA = 1;
+
+                Control.Color = new SolidColorBrush(color);
                 Control.Percent = (int)(intensity * 100);
             }
         }

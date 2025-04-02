@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Windows;
+using System.Windows.Controls;
 
 namespace LightController.Dmx
 {
@@ -13,8 +15,7 @@ namespace LightController.Dmx
         private bool debug;
         private List<DmxFixture> fixtures = new List<DmxFixture>();
         private IDmxController controller = new NullDmxController();
-
-        public event Action<int, System.Windows.Media.Color, double> OnColorUpdated;
+        public PreviewWindow Preview { get; set; }
 
         public DmxProcessor(DmxConfig config)
         {
@@ -130,6 +131,7 @@ namespace LightController.Dmx
                 fixture.SetInput(inputs, mixLength, mixDelay);
             }
         }
+
         
         public void Write()
         {
@@ -137,12 +139,29 @@ namespace LightController.Dmx
             if (!controller.IsOpen)
                 return;
 #endif
+            Dictionary<int, DmxFrame> frames = null;
+            if (Preview != null)
+                frames = new Dictionary<int, DmxFrame>();
 
             foreach (DmxFixture fixture in fixtures)
             {
                 DmxFrame frame = fixture.GetFrame();
                 controller.SetChannels(frame.StartAddress, frame.Data);
-                OnColorUpdated?.Invoke(fixture.FixtureId, frame.PreviewColor, frame.PreviewIntensity);
+                if (frames != null)
+                    frames[fixture.FixtureId] = frame;
+            }
+
+            PreviewWindow preview = Preview;
+            if (preview != null)
+            {
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    foreach (DmxFixture fixture in fixtures)
+                    {
+                        DmxFrame frame = frames[fixture.FixtureId];
+                        preview.SetPreviewColor(fixture.FixtureId, frame.PreviewColor, frame.PreviewIntensity);
+                    }
+                });
             }
 
             if (debug)

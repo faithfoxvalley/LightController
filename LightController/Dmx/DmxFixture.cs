@@ -130,7 +130,6 @@ namespace LightController.Dmx
             if(intensityChannel != null)
                 frame.Set(intensityChannel.Index, intensityChannel.GetIntensityByte(intensity));
 
-            // Note: This is before mixing, so that means that any color mixing from the previous scene wont make it to the preview
             frame.SetPreviewData(rgb, intensity);
 
             foreach (DmxChannel channel in colorChannels)

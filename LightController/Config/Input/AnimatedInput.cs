@@ -36,6 +36,8 @@ namespace LightController.Config.Input
         public double DelayLength { get; set; }
         [YamlMember]
         public double DelayScale { get; set; }
+        [YamlMember]
+        public SerializableColorHSV BeforeLoopColor { get; set; }
 
         private AnimationOrder animation = new AnimationOrder();
         private readonly List<AnimationLoop> loops = new List<AnimationLoop>();
@@ -64,7 +66,7 @@ namespace LightController.Config.Input
                 if (set.GetOverlap(FixtureIds, out ValueSet overlap))
                 {
                     TimeSpan delay = TimeSpan.FromSeconds(perFixtureDelay * i);
-                    AnimationLoop loop = new AnimationLoop(Loop, Colors, delay);
+                    AnimationLoop loop = new AnimationLoop(Loop, Colors, delay, BeforeLoopColor?.Color);
                     foreach (int id in overlap.EnumerateValues())
                         loopsByFixture[id] = loops.Count;
                     loops.Add(loop);
@@ -72,7 +74,7 @@ namespace LightController.Config.Input
                 i++;
             }
 
-            AnimationLoop defaultLoop = new AnimationLoop(Loop, Colors, TimeSpan.Zero);
+            AnimationLoop defaultLoop = new AnimationLoop(Loop, Colors, TimeSpan.Zero, BeforeLoopColor?.Color);
             bool defaultLoopRequired = false;
             foreach(int id in FixtureIds.EnumerateValues())
             {
