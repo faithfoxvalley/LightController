@@ -35,7 +35,7 @@ namespace LightController.ColorAnimation
                         if (loop)
                             nextColor = frames[0].Color;
                         else
-                            nextColor = ColorHSV.Black;
+                            nextColor = frames[^1].Color;
                     }
                     else
                     {
