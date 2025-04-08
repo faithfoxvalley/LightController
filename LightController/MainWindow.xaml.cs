@@ -115,6 +115,8 @@ namespace LightController
 
             if (args.HasFlag("preview"))
                 OpenPreview_Click(null, null);
+
+            Activate();
         }
 
         private static bool IsOnlyInstance()
