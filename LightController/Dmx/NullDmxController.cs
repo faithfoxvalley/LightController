@@ -7,7 +7,7 @@ namespace LightController.Dmx
     {
         private readonly byte[] buffer = new byte[513];
 
-        public bool IsOpen => false;
+        public bool IsOpen => true;
 
         public void Dispose()
         {

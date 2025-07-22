@@ -25,7 +25,7 @@ namespace LightController.Dmx
                 return;
             }
 
-            while (!OpenDevice((int)config.DmxDevice))
+            while (!OpenDevice((int)config.DmxDevice) && !config.DeviceOptional)
             {
 #if DEBUG
                 break;
