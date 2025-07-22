@@ -38,14 +38,23 @@ namespace LightController.Pro
             if(!url.EndsWith('/'))
                 url += '/';
 
-            if (config.MediaAssetsPath == null)
+            if (string.IsNullOrWhiteSpace(config.MediaAssetsPath))
             {
                 ErrorBox.Show("No ProPresenter media assets path found, please check your config.");
                 return;
             }
+
             string mediaPath = config.MediaAssetsPath;
-            if (!mediaPath.EndsWith(Path.DirectorySeparatorChar) && !mediaPath.EndsWith(Path.AltDirectorySeparatorChar))
-                mediaPath += Path.DirectorySeparatorChar;
+
+            if (!Path.IsPathRooted(mediaPath))
+                mediaPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), mediaPath);
+
+            if (!Directory.Exists(mediaPath))
+            {
+                ErrorBox.Show("ProPresenter media assets path invalid, please check your config.");
+                 return;
+            }
+
             int mediaProcessors = config.MaxMediaProcessors;
             if (mediaProcessors < 1)
                 mediaProcessors = 1;
@@ -79,8 +88,10 @@ namespace LightController.Pro
             TransportLayerStatus status = await GetTransportStatusAsync(Layer.Presentation, cancelToken);
             if (cancelToken.IsCancellationRequested)
                 throw new TaskCanceledException();
-            if (status.audio_only || string.IsNullOrWhiteSpace(status.name))
-                throw new HttpRequestException("No ProPresenter media available!");
+            if (status.audio_only)
+                throw new HttpRequestException("ProPresenter media is audio only");
+            if (string.IsNullOrWhiteSpace(status.name))
+                throw new HttpRequestException("No ProPresenter media available");
             mediaName = status.name;
 
             MediaLibrary library;
@@ -112,15 +123,8 @@ namespace LightController.Pro
 
         public async Task<TransportLayerStatus> GetTransportStatusAsync(Layer layer, CancellationToken cancelToken)
         {
-            try
-            {
-                string responseBody = await client.GetStringAsync(url + "transport/" + layer.ToString().ToLowerInvariant() + "/current", cancelToken);
-                return await Task.FromResult(JsonConvert.DeserializeObject<TransportLayerStatus>(responseBody));
-            }
-            catch
-            {
-            }
-            return await Task.FromResult(new TransportLayerStatus());
+            string responseBody = await client.GetStringAsync(url + "transport/" + layer.ToString().ToLowerInvariant() + "/current", cancelToken);
+            return await Task.FromResult(JsonConvert.DeserializeObject<TransportLayerStatus>(responseBody));
         }
 
         public async Task<double> AsyncGetTransportLayerTime(Layer layer, CancellationToken cancelToken)

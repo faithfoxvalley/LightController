@@ -1,5 +1,6 @@
 ﻿using LightController.Color;
 using LightController.Pro;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -97,9 +98,13 @@ namespace LightController.Config.Input
                 }
                 LogFile.Info($"{(HasMotion ? "Media" : "Thumbnail")} generation took {sw.ElapsedMilliseconds}ms");
             }
-            catch (HttpRequestException)
+            catch (JsonException e)
             {
-                LogFile.Error("Unable to communicate with ProPresenter");
+                LogFile.Error(e, "Unable to communicate with ProPresenter:");
+            }
+            catch (HttpRequestException e)
+            {
+                LogFile.Error(e, "Unable to communicate with ProPresenter:");
             }
             catch (OperationCanceledException)
             {
