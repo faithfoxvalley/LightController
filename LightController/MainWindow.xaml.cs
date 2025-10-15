@@ -26,10 +26,12 @@ namespace LightController
         private const int BacnetUpdateFps = 10;
         private const string AppGuid = "a013f8c4-0875-49e3-b671-f4e16a1f1fe4";
         private const int AcquireMutexTimeout = 1000;
+        private string DefaultShowFile => Path.Combine(ApplicationData, "default.show");
 
         private ProPresenter pro;
         private IMediaToolkitService ffmpeg;
-        private ConfigFile config;
+        private readonly ConfigFile mainConfig;
+        private readonly ShowConfig showConfig;
         private SceneManager sceneManager;
         private DmxProcessor dmx;
         private BacnetProcessor bacNet;
@@ -37,7 +39,6 @@ namespace LightController
         private TickLoop inputsTimer; // Runs on different thread
         private TickLoop bacNetTimer; // Runs on different thread
         private bool inputActivated = false;
-        private string customConfig;
 
         private static Mutex mutex;
         private static bool mutexActive;
@@ -76,29 +77,41 @@ namespace LightController
 
             try
             {
-                if (ConfigFile.TryGetFilePathFromArgs(args, out string configFile))
-                    customConfig = configFile;
-                else
-                    configFile = Path.Combine(ApplicationData, "config.yml");
-
-                config = ConfigFile.Load(configFile);
+                mainConfig = ConfigFile.Load(Path.Combine(ApplicationData, "config.yml"));
             }
             catch (Exception e)
             {
-                LogFile.Error(e, "An error occurred while reading the config file!");
-                ErrorBox.Show("An error occurred while reading the config file, please check your config.");
+                LogFile.Error(e, "An error occurred while reading the main config file!");
+                ErrorBox.Show("An error occurred while reading the main config file, please check your config.");
             }
 
-            pro = new ProPresenter(config.ProPresenter, mediaList);
-            dmx = new DmxProcessor(config.Dmx);
-            bacNet = new BacnetProcessor(config.Bacnet, bacnetList);
+            try
+            {
+                if (ShowConfig.TryGetFilePathFromArgs(args, out string showFile))
+                {
+                    showLabel.Content = showFile;
+                    showLabel.ToolTip = showFile;
+                }
+                else
+                    showFile = DefaultShowFile;
+                showConfig = ShowConfig.Load(showFile);
+            }
+            catch (Exception e)
+            {
+                LogFile.Error(e, "An error occurred while reading the show file!");
+                ErrorBox.Show("An error occurred while reading the show file, please check your show config.");
+            }
+
+            pro = new ProPresenter(mainConfig.ProPresenter, mediaList);
+            dmx = new DmxProcessor(mainConfig.Dmx);
+            bacNet = new BacnetProcessor(showConfig.Bacnet, bacnetList);
             if (bacNet.Enabled)
                 bacnetContainer.Visibility = Visibility.Visible;
 
-            string defaultScene = config.DefaultScene;
-            if(args.TryGetFlagArg("scene", 0, out string sceneFlag) && config.Scenes.Any(x => x.Name == sceneFlag.Trim()))
+            string defaultScene = showConfig.DefaultScene;
+            if(args.TryGetFlagArg("scene", 0, out string sceneFlag) && showConfig.Scenes.Any(x => x.Name == sceneFlag.Trim()))
                 defaultScene = sceneFlag;
-            sceneManager = new SceneManager(config.Scenes, config.MidiDevice, defaultScene, dmx, config.DefaultTransitionTime, sceneList, bacNet);
+            sceneManager = new SceneManager(showConfig.Scenes, mainConfig.MidiDevice, defaultScene, dmx, showConfig.DefaultTransitionTime, sceneList, bacNet);
 
             // Update fixture list
             dmx.AppendToListbox(fixtureList);
@@ -114,7 +127,7 @@ namespace LightController
             uiTimer.Start();
 
             if (args.HasFlag("preview"))
-                OpenPreview_Click(null, null);
+                OpenPreviewClick(null, null);
 
             Activate();
         }
@@ -208,8 +221,11 @@ namespace LightController
             bacNet.Update();
         }
 
-        private void btnRestart_Click(object sender, RoutedEventArgs e)
+        private void Restart(string showFile = null)
         {
+            if (showFile == null)
+                showFile = showConfig.FileLocation;
+
             LogFile.Info("Restarting application");
             string currentScene = sceneManager?.ActiveSceneName;
             string fileName = Process.GetCurrentProcess().MainModule.FileName;
@@ -224,15 +240,15 @@ namespace LightController
                     sb.Append(currentScene);
             }
 
-            if(customConfig != null)
+            if (showFile != DefaultShowFile)
             {
                 if (sb.Length > 0)
                     sb.Append(' ');
                 sb.Append("-config ");
-                if (customConfig.Contains(' '))
-                    sb.Append('"').Append(customConfig).Append('"');
+                if (showFile.Contains(' '))
+                    sb.Append('"').Append(showFile).Append('"');
                 else
-                    sb.Append(customConfig);
+                    sb.Append(showFile);
             }
 
             if (preview != null)
@@ -242,79 +258,34 @@ namespace LightController
                 sb.Append("-preview");
             }
 
-            if(sb.Length > 0)
+            if (sb.Length > 0)
                 Process.Start(fileName, sb.ToString());
             else
                 Process.Start(fileName);
             Process.GetCurrentProcess().Kill();
         }
 
-        private void btnOpenConfig_Click(object sender, RoutedEventArgs e)
+        #region Application Menu
+        private void RestartClick(object sender, RoutedEventArgs e)
         {
-            config.Open();
+            Restart();
         }
 
-        private void btnLoadConfig_Click(object sender, RoutedEventArgs e)
-        {
-            OpenFileDialog openFileDialog = ConfigFile.CreateOpenDialog();
-            if (openFileDialog.ShowDialog() == true && File.Exists(openFileDialog.FileName))
-            {
-                customConfig = openFileDialog.FileName;
-                btnRestart_Click(null, null);
-            }
-        }
-
-        private void btnSaveDefault_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                config.Save(Path.Combine(ApplicationData, "config.yml"));
-            }
-            catch (Exception ex)
-            {
-                LogFile.Error(ex, "An error occurred while saving the config file!");
-                ErrorBox.Show("An error occurred while saving the config file!", false);
-            }
-        }
-
-        private void btnSaveAsConfig_Click(object sender, RoutedEventArgs e)
-        {
-            SaveFileDialog saveFileDialog = ConfigFile.CreateSaveDialog();
-            if (saveFileDialog.ShowDialog() == true && !string.IsNullOrWhiteSpace(saveFileDialog.FileName))
-            {
-                try
-                {
-                    config.Save(saveFileDialog.FileName);
-                }
-                catch (Exception ex)
-                {
-                    LogFile.Error(ex, "An error occurred while saving the config file!");
-                    ErrorBox.Show("An error occurred while saving the config file!", false);
-                }
-            }
-        }
-
-        private void ListBox_DisableMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            // Disables selection
-            e.Handled = true;
-        }
-
-        private void ShowLogs_Click(object sender, RoutedEventArgs e)
+        private void ShowLogsClick(object sender, RoutedEventArgs e)
         {
             string logs = Path.Combine(ApplicationData, "Logs");
-            if(Directory.Exists(logs))
+            if (Directory.Exists(logs))
                 Process.Start("explorer.exe", "\"" + logs + "\"");
         }
 
-        private void DebugDmx_Click(object sender, RoutedEventArgs e)
+        private void DebugDmxClick(object sender, RoutedEventArgs e)
         {
             dmx.WriteDebug();
         }
 
-        private void OpenPreview_Click(object sender, RoutedEventArgs e)
+        private void OpenPreviewClick(object sender, RoutedEventArgs e)
         {
-            if(preview == null)
+            if (preview == null)
             {
                 preview = new PreviewWindow();
                 preview.Loaded += (o, e) =>
@@ -322,7 +293,7 @@ namespace LightController
                     dmx.InitPreview(preview);
                     dmx.Preview = preview;
                 };
-                
+
             }
             preview.Show();
             preview.Closing += (o, e) =>
@@ -331,6 +302,80 @@ namespace LightController
                 preview = null;
             };
         }
+
+        private void EditConfigClick(object sender, RoutedEventArgs e)
+        {
+            mainConfig.Open();
+        }
+        #endregion
+
+        #region Show Menu
+        private void EditShowClick(object sender, RoutedEventArgs e)
+        {
+            showConfig.Open();
+        }
+
+        private void LoadShowClick(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog openFileDialog = ShowConfig.CreateOpenDialog();
+            if (openFileDialog.ShowDialog() == true && File.Exists(openFileDialog.FileName))
+            {
+                try
+                {
+                    ShowConfig.Load(openFileDialog.FileName);
+                    Restart(openFileDialog.FileName);   
+                }
+                catch (Exception ex)
+                {
+                    LogFile.Error(ex, "Error while test loading show config!");
+                    ErrorBox.Show("An error occurred while reading the show file!", false);
+                }
+            }
+        }
+
+        private void LoadDefaultShowClick(object sender, RoutedEventArgs e)
+        {
+            Restart(DefaultShowFile);   
+        }
+
+        private void SaveDefaultShowClick(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                showConfig.Save(DefaultShowFile);
+            }
+            catch (Exception ex)
+            {
+                LogFile.Error(ex, "An error occurred while saving the show file!");
+                ErrorBox.Show("An error occurred while saving the show file!", false);
+            }
+        }
+
+        private void SaveAsShowClick(object sender, RoutedEventArgs e)
+        {
+            SaveFileDialog saveFileDialog = ShowConfig.CreateSaveDialog();
+            if (saveFileDialog.ShowDialog() == true && !string.IsNullOrWhiteSpace(saveFileDialog.FileName))
+            {
+                try
+                {
+                    showConfig.Save(saveFileDialog.FileName);
+                }
+                catch (Exception ex)
+                {
+                    LogFile.Error(ex, "An error occurred while saving the show file!");
+                    ErrorBox.Show("An error occurred while saving the show file!", false);
+                }
+            }
+        }
+        #endregion
+
+
+        private void ListBox_DisableMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            // Disables selection
+            e.Handled = true;
+        }
+
 
         private void Window_Closed(object sender, EventArgs e)
         {
@@ -364,5 +409,6 @@ namespace LightController
             if(mutexActive)
                 mutex.ReleaseMutex();
         }
+
     }
 }

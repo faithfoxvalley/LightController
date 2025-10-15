@@ -18,18 +18,24 @@
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_Application">
-                <MenuItem Header="Open _Preview" Click="OpenPreview_Click"/>
-                <MenuItem Header="_Restart" Click="btnRestart_Click"/>
-                <MenuItem Header="Show _Logs" Click="ShowLogs_Click"/>
-                <MenuItem Header="Debug DMX" Click="DebugDmx_Click"/>
+                <MenuItem Header="Open _Preview" Click="OpenPreviewClick"/>
+                <MenuItem Header="_Restart" Click="RestartClick"/>
+                <MenuItem Header="Show _Logs" Click="ShowLogsClick"/>
+                <MenuItem Header="Debug DMX" Click="DebugDmxClick"/>
+                <MenuItem Header="_Edit Config" Click="EditConfigClick"/>
             </MenuItem>
-            <MenuItem Header="_Config">
-                <MenuItem Header="_Edit" Click="btnOpenConfig_Click"/>
-                <MenuItem Header="_Load" Click="btnLoadConfig_Click"/>
-                <MenuItem Header="_Save As" Click="btnSaveAsConfig_Click"/>
-                <MenuItem Header="Save As Default" Click="btnSaveDefault_Click"/>
+            <MenuItem Header="_Show">
+                <MenuItem Header="_Edit" Click="EditShowClick"/>
+                <MenuItem Header="_Load" Click="LoadShowClick"/>
+                <MenuItem Header="Load Default" Click="LoadDefaultShowClick"/>
+                <MenuItem Header="_Save As" Click="SaveAsShowClick"/>
+                <MenuItem Header="Save As Default" Click="SaveDefaultShowClick"/>
             </MenuItem>
         </Menu>
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
+            <Button VerticalAlignment="Center" Click="LoadShowClick">Browse</Button>
+            <Label FontSize="14" x:Name="showLabel">Default Show</Label>
+        </StackPanel>
         <Grid DockPanel.Dock="Right" MaxWidth="200px" Margin="0,10,10,10">
             <Grid.RowDefinitions>
                 <RowDefinition Height="auto"/>
