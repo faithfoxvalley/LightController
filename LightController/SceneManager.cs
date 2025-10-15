@@ -48,20 +48,20 @@ namespace LightController
 
             if (string.IsNullOrWhiteSpace(midiDevice))
             {
-                while (!midiDevices.TryGetFirstDevice(out this.midiDevice))
+                while (!midiDevices.TryGetAnyInput(out this.midiDevice))
                 {
 #if DEBUG
-                    LogFile.Warn("Midi device not found!");
+                    LogFile.Warn("No Midi devices found!");
                     break;
 #else
-                    ErrorBox.ExitOnCancel("Midi device not found. Press OK to try again or Cancel to exit.");
+                    ErrorBox.ExitOnCancel("No Midi devices found. Press OK to try again or Cancel to exit.");
                     midiDevices.UpdateMidiDeviceList();
 #endif
                 }
             }
             else
             {
-                while (!midiDevices.TryGetDevice(midiDevice, out this.midiDevice))
+                while (!midiDevices.TryGetInput(midiDevice, out this.midiDevice))
                 {
                     ErrorBox.ExitOnCancel("No Midi device found with name '" + midiDevice + "', please check your config. Press OK to try again or Cancel to exit.");
                     midiDevices.UpdateMidiDeviceList();
@@ -72,7 +72,7 @@ namespace LightController
             if (this.midiDevice != null)
             {
                 this.midiDevice.NoteEvent += MidiDevice_NoteEvent;
-                this.midiDevice.Input.Start();
+                this.midiDevice.Start();
                 LogFile.Info("Using midi device: " + this.midiDevice.Name);
             }
 

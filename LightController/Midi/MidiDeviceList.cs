@@ -1,5 +1,8 @@
 ﻿using NAudio.Midi;
+using System;
 using System.Collections.Generic;
+using System.IO.BACnet.Serialize;
+using System.Text;
 
 namespace LightController.Midi
 {
@@ -16,42 +19,50 @@ namespace LightController.Midi
         {
             midiDevices.Clear();
             for (int device = 0; device < MidiIn.NumberOfDevices; device++)
-                midiDevices[MidiIn.DeviceInfo(device).ProductName.Trim()] = device;
+                midiDevices[MidiIn.DeviceInfo(device).ProductName.Trim().ToLower()] = device;
         }
 
-        public bool TryGetDevice(string name, out MidiInput device)
+        public bool TryGetInput(string deviceNames, out MidiInput input)
         {
-            name = name.Trim();
-            if(midiDevices.TryGetValue(name, out int index))
+            string[] names = deviceNames.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+            List<MidiIn> devices = new List<MidiIn>();
+            foreach(string name in names)
             {
-                if(TryGetDevice(index, out MidiIn input))
-                {
-                    device = new MidiInput(input, name);
-                    return true;
-                }
-
+                if (midiDevices.TryGetValue(name.ToLower(), out int index) && TryGetDevice(index, out MidiIn device))
+                    devices.Add(device);
             }
 
-            device = null;
-            return false;
-        }
-
-        public bool TryGetFirstDevice(out MidiInput device)
-        {
-            if (MidiIn.NumberOfDevices > 0 && TryGetDevice(0, out MidiIn result))
+            if (devices.Count > 0)
             {
-                device = new MidiInput(result, MidiIn.DeviceInfo(0).ProductName.Trim());
+                input = new MidiInput(devices, deviceNames);
                 return true;
             }
-            device = null;
+            input = null;
             return false;
         }
 
-        public MidiInput FirstOrDefault()
+        public bool TryGetAnyInput(out MidiInput input)
         {
-            if(MidiIn.NumberOfDevices > 0 && TryGetDevice(0, out MidiIn result))
-                return new MidiInput(result, MidiIn.DeviceInfo(0).ProductName.Trim());
-            return null;
+            StringBuilder name = new StringBuilder();
+            List<MidiIn> devices = new List<MidiIn>();
+            for(int i = 0; i < MidiIn.NumberOfDevices; i++)
+            {
+                if(TryGetDevice(i, out MidiIn device))
+                {
+                    if (name.Length > 0)
+                        name.Append(", ");
+                    name.Append(MidiIn.DeviceInfo(i).ProductName.Trim());
+                    devices.Add(device);
+                }
+            }
+
+            if (devices.Count > 0)
+            {
+                input = new MidiInput(devices, name.ToString());
+                return true;
+            }
+            input = null;
+            return false;
         }
 
         private bool TryGetDevice(int index, out MidiIn input)
