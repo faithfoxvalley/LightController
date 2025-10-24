@@ -1,15 +1,5 @@
-﻿using LightController.Config.Bacnet;
-using LightController.Config.Dmx;
-using Microsoft.Win32;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.IO;
-using System.Reflection;
-using YamlDotNet.Core;
+﻿using LightController.Config.Dmx;
 using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
 
 namespace LightController.Config;
 

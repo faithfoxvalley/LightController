@@ -28,22 +28,21 @@ namespace LightController.Pro
 
         public MediaFrame() { }
 
-        public MediaFrame(ColorRGB[] data, double time)
+        public MediaFrame(ColorRGB[] data, TimeSpan time)
         {
             this.data = data;
-            this.time = time;
+            this.time = time.TotalSeconds;
         }
 
-        public static MediaFrame CreateFrame(byte[] data, double time, CancellationToken cancelToken)
+        public static MediaFrame CreateFrame(Stream data, TimeSpan time, CancellationToken cancelToken)
         {
             return new MediaFrame(ReadImage(data, cancelToken), time);
         }
 
-        private static ColorRGB[] ReadImage(byte[] data, CancellationToken cancelToken)
+        private static ColorRGB[] ReadImage(Stream data, CancellationToken cancelToken)
         {
             ColorRGB[] result;
-            using (var ms = new MemoryStream(data))
-            using (Bitmap orig = new Bitmap(ms))
+            using (Bitmap orig = new Bitmap(data))
             {
                 if (orig.PixelFormat == PixelFormat.Format24bppRgb)
                 {

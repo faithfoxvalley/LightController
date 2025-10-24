@@ -103,7 +103,7 @@ namespace LightController.Pro
             ProMediaItem mediaItem;
             if (!library.TryGetExistingItem(id, status.name, out mediaItem))
             {
-                mediaItem = await library.LoadMediaAsync(id, mediaName, status.duration, progress, cancelToken);
+                mediaItem = await library.LoadMediaAsync(id, mediaName, progress, cancelToken);
                 allMedia.Add(mediaItem);
             }
 

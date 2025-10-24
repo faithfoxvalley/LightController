@@ -44,7 +44,7 @@ namespace LightController.Pro
             return false;
         }
 
-        public async Task<ProMediaItem> LoadMediaAsync (int? id, string fileName, double duration, IProgress<double> progress, CancellationToken cancelToken)
+        public async Task<ProMediaItem> LoadMediaAsync(int? id, string fileName, IProgress<double> progress, CancellationToken cancelToken)
         {
             if(motion)
                 LogFile.Info("Starting motion generation for " + fileName);
@@ -73,7 +73,7 @@ namespace LightController.Pro
             ProMediaItem mediaItem = await ProMediaItem.GetItemAsync(
                 cacheFolder,
                 fullPath,
-                motion ? duration : 0,
+                motion,
                 mediaProcessors, progress, cancelToken);
             mediaItem.SetDetails(fileName, id, motion);
             if (mediaItem.Id.HasValue)

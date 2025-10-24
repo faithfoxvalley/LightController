@@ -1,7 +1,6 @@
 ﻿using LightController.Color;
 using System;
 using System.Collections.Generic;
-using YamlDotNet.Serialization.NodeTypeResolvers;
 
 namespace LightController.Dmx
 {

@@ -1,13 +1,9 @@
-﻿using Microsoft.Win32;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using YamlDotNet.Core;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -15,7 +11,9 @@ using YamlDotNet.Serialization.NamingConventions;
 namespace LightController.Config;
 public class ConfigBase
 {
+    [YamlIgnore]
     public string FileLocation => fileLocation;
+    [YamlIgnore]
     protected string fileLocation;
 
     public void Save(string fileLocation = null)

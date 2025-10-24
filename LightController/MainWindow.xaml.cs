@@ -1,7 +1,6 @@
 ﻿using LightController.Config;
 using LightController.Dmx;
 using LightController.Pro;
-using MediaToolkit.Services;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -29,7 +28,6 @@ namespace LightController
         private string DefaultShowFile => Path.Combine(ApplicationData, "default.show");
 
         private ProPresenter pro;
-        private IMediaToolkitService ffmpeg;
         private readonly ConfigFile mainConfig;
         private readonly ShowConfig showConfig;
         private SceneManager sceneManager;
@@ -50,7 +48,6 @@ namespace LightController
 
         public string ApplicationData { get; private set; }
         public ProPresenter Pro => pro;
-        public IMediaToolkitService Ffmpeg => ffmpeg;
 
         public MainWindow()
         {
@@ -66,7 +63,6 @@ namespace LightController
                 return;
             }
 
-            InitFfmpeg();
 
             ClockTime.Init();
 
@@ -165,17 +161,6 @@ namespace LightController
                 bacNetTimer.AppendPerformanceInfo(sb);
             }
             performanceInfo.Text = sb.ToString();
-        }
-
-        private void InitFfmpeg()
-        {
-            string appLocation = typeof(MainWindow).Assembly.Location;
-            if (string.IsNullOrEmpty(appLocation))
-                throw new Exception("Unable to find ffmpeg location");
-            string ffmpegPath = Path.Combine(Path.GetDirectoryName(appLocation), "ffmpeg.exe");
-            if (!File.Exists(ffmpegPath))
-                throw new Exception("Unable to find ffmpeg.exe");
-            ffmpeg = MediaToolkitService.CreateInstance(ffmpegPath);
         }
 
         private void InitAppData()
