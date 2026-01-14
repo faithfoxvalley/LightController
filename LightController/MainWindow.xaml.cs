@@ -1,17 +1,17 @@
-﻿using LightController.Config;
+﻿using LightController.Bacnet;
+using LightController.Config;
 using LightController.Dmx;
 using LightController.Pro;
+using Microsoft.Win32;
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
-using System.Threading;
-using System.Windows;
-using System.Text;
-using Microsoft.Win32;
-using System.Threading.Tasks;
-using LightController.Bacnet;
 using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows;
 
 namespace LightController
 {
@@ -180,6 +180,7 @@ namespace LightController
                 LogFile.Info("Started application - v" + mainAssemblyName.Version.ToString(3));
             else
                 LogFile.Info("Started application");
+            Title = "Light Controller - v" + mainAssemblyName.Version.ToString(3);
         }
 
         // This runs on a different thread
