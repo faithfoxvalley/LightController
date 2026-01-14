@@ -204,7 +204,10 @@ namespace LightController.Pro
 
             cancelToken.ThrowIfCancellationRequested();
             if (ms.Length == 0)
-                throw new Exception("Media analysis failed");
+            {
+                LogFile.Warn($"Failed to get color information from '{input}' at time {time:g}");
+                return null;
+            }
 
             return await Task.Run(() => MediaFrame.CreateFrame(ms, time, cancelToken));
         }
