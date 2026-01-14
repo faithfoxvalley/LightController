@@ -26,6 +26,7 @@ namespace LightController.Dmx
             while (!OpenDevice((int)config.DmxDevice) && !config.DeviceOptional)
             {
 #if DEBUG
+                LogFile.Error("DMX Device not found");
                 break;
 #else
                 ErrorBox.ExitOnCancel("DMX Device not found. Press OK to try again or Cancel to exit."); 

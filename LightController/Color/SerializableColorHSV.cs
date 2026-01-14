@@ -1,5 +1,6 @@
 ﻿using LightController.Config;
 using System;
+using YamlDotNet.Serialization;
 
 namespace LightController.Color
 {
@@ -39,6 +40,7 @@ namespace LightController.Color
             }
         }
 
+        [YamlIgnore]
         public ColorHSV Color => color;
 
         private Percent sat = new Percent(1);
