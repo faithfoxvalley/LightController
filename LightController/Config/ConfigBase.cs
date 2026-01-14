@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Reflection;
 using YamlDotNet.Core;
 using YamlDotNet.Serialization;
@@ -14,16 +15,28 @@ public class ConfigBase
     [YamlIgnore]
     public string FileLocation => fileLocation;
     [YamlIgnore]
-    protected string fileLocation;
+    private string fileLocation;
+    [YamlIgnore]
+    private MemoryStream fileContents;
 
     public void Save(string fileLocation = null)
     {
         if (fileLocation == null)
             fileLocation = this.fileLocation;
+        if(fileContents != null)
+        {
+            fileContents.Position = 0;
+            using FileStream fs = File.Create(fileLocation);
+            using GZipStream gzip = new GZipStream(fileContents, CompressionMode.Decompress, true);
+            gzip.CopyTo(fs);
+            return;
+        }
+
         using (StreamWriter writer = File.CreateText(fileLocation))
         {
             SerializerBuilder serializer = new SerializerBuilder()
                 .IgnoreFields()
+                .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitEmptyCollections | DefaultValuesHandling.OmitNull)
                 .WithNamingConvention(UnderscoredNamingConvention.Instance);
             foreach (var tag in GetYamlTags())
                 serializer.WithTagMapping(tag.Item1, tag.Item2);
@@ -32,12 +45,16 @@ public class ConfigBase
         }
     }
 
-    protected static T Load<T>(string fileLocation) where T : ConfigBase, new()
+    protected static T Load<T>(string fileLocation, bool immutable=true) where T : ConfigBase, new()
     {
         if (File.Exists(fileLocation))
         {
             T existingFile;
-            using (StreamReader reader = File.OpenText(fileLocation))
+            using MemoryStream mem = new MemoryStream();
+            using (FileStream fs = File.OpenRead(fileLocation))
+                fs.CopyTo(mem);
+            mem.Position = 0;
+            using (StreamReader reader = new StreamReader(mem, leaveOpen: true))
             {
                 DeserializerBuilder deserializer = new DeserializerBuilder()
                     .IgnoreFields()
@@ -51,6 +68,14 @@ public class ConfigBase
             if (existingFile != null)
             {
                 existingFile.fileLocation = fileLocation;
+                if(immutable)
+                {
+                    mem.Position = 0;
+                    MemoryStream compressedContents = new MemoryStream();
+                    using (GZipStream gzip = new GZipStream(compressedContents, CompressionLevel.SmallestSize, true))
+                        mem.CopyTo(gzip);
+                    existingFile.fileContents = compressedContents;
+                }
                 return existingFile;
             }
         }
