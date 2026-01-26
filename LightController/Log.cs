@@ -12,9 +12,6 @@ public static class Log
 
     public static void Init(string file)
     {
-        AppDomain.CurrentDomain.UnhandledException += UnhandledException;
-
-
         ExpressionTemplate format = new ExpressionTemplate("{@t:HH:mm:ss} [{@l:u3}] [{ThreadID}]{CustomPrefix} {@m} {@x}\n");
         log = new LoggerConfiguration()
             .Enrich.With(new ThreadIDEnricher())
@@ -25,6 +22,7 @@ public static class Log
             .WriteTo.File(format, file, rollingInterval: RollingInterval.Day)
             .CreateLogger();
 
+        AppDomain.CurrentDomain.UnhandledException += UnhandledException;
 
         Logger commonLog = new LoggerConfiguration()
             .Enrich.With(new PrefixEnricher("[Bacnet]"))
@@ -36,10 +34,14 @@ public static class Log
 
     private static void UnhandledException(object sender, UnhandledExceptionEventArgs e)
     {
-        if (e.ExceptionObject is Exception ex)
-            log.Fatal(ex, "An exception was thrown:");
-        else
-            log.Fatal("An unhandled exception occurred.");
+        try
+        {
+            if (e.ExceptionObject is Exception ex)
+                log.Fatal(ex, "An exception was thrown:");
+            else
+                log.Fatal("An unhandled exception occurred.");
+        }
+        catch { } // Unhandled exceptions in the unhandled exception hander are very bad
     }
 
     public static void Info(string msg)
