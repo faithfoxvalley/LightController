@@ -96,23 +96,23 @@ public class ProPresenterInput : InputBase
                 colors = media.GetData(pixelWidth, transportLayerTime);
                 media.GetColorValueBounds(pixelWidth, out maxColorValue, out minColorValue);
             }
-            LogFile.Info($"{(HasMotion ? "Media" : "Thumbnail")} generation took {sw.ElapsedMilliseconds}ms");
+            Log.Info($"{(HasMotion ? "Media" : "Thumbnail")} generation took {sw.ElapsedMilliseconds}ms");
         }
         catch (JsonException e)
         {
-            LogFile.Error(e, "Unable to communicate with ProPresenter:");
+            Log.Error(e, "Unable to communicate with ProPresenter:");
         }
         catch (HttpRequestException e)
         {
-            LogFile.Error(e, "Unable to communicate with ProPresenter:");
+            Log.Error(e, "Unable to communicate with ProPresenter:");
         }
         catch (OperationCanceledException)
         {
-            LogFile.Info($"Canceled {(HasMotion ? "media" : "thumbnail")} generation");
+            Log.Info($"Canceled {(HasMotion ? "media" : "thumbnail")} generation");
         }
         catch (Exception e)
         {
-            LogFile.Error(e);
+            Log.Error(e);
         }
 
         ReportMediaProgress(null, 0);

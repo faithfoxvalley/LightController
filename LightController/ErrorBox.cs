@@ -10,7 +10,7 @@ public static class ErrorBox
         MessageBox.Show(msg, "Light Controller", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.None, MessageBoxOptions.DefaultDesktopOnly);
         if(kill)
         {
-            LogFile.Error("Application closed: '" + msg + "'");
+            Log.Error("Application closed: '" + msg + "'");
             Process.GetCurrentProcess().Kill();
         }
     }
@@ -23,7 +23,7 @@ public static class ErrorBox
         var result = MessageBox.Show(msg, "Light Controller", MessageBoxButton.OKCancel, MessageBoxImage.Error, MessageBoxResult.None, MessageBoxOptions.DefaultDesktopOnly);
         if(result != MessageBoxResult.OK)
         {
-            LogFile.Error("Application closed after user prompt: '" + msg + "'");
+            Log.Error("Application closed after user prompt: '" + msg + "'");
             Process.GetCurrentProcess().Kill();
         }
     }

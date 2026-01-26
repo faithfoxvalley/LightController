@@ -26,7 +26,7 @@ public class DmxProcessor
         while (!OpenDevice((int)config.DmxDevice) && !config.DeviceOptional)
         {
 #if DEBUG
-            LogFile.Error("DMX Device not found");
+            Log.Error("DMX Device not found");
             break;
 #else
             ErrorBox.ExitOnCancel("DMX Device not found. Press OK to try again or Cancel to exit."); 
@@ -35,7 +35,7 @@ public class DmxProcessor
 
         if (config.Addresses == null || config.Addresses.Count == 0)
         {
-            LogFile.Warn("No DMX fixture addresses found.");
+            Log.Warn("No DMX fixture addresses found.");
             return;
         }
 
@@ -50,25 +50,25 @@ public class DmxProcessor
         {
             if(fixtureAddress.Name == null)
             {
-                LogFile.Error("DMX fixture with address " + fixtureAddress.StartAddress + " does not contain a fixture profile name.");
+                Log.Error("DMX fixture with address " + fixtureAddress.StartAddress + " does not contain a fixture profile name.");
             }
             else if(fixtureAddress.Count < 1)
             {
-                LogFile.Error("DMX address for fixture '" + fixtureAddress.Name + "' must have a count that is at least 1.");
+                Log.Error("DMX address for fixture '" + fixtureAddress.Name + "' must have a count that is at least 1.");
             }
             else if(fixtureAddress.StartAddress < 1)
             {
-                LogFile.Error("DMX address for fixture '" + fixtureAddress.Name + "' must have a start address that is at least 1.");
+                Log.Error("DMX address for fixture '" + fixtureAddress.Name + "' must have a start address that is at least 1.");
             }
             else if(profiles.TryGetValue(fixtureAddress.Name, out DmxDeviceProfile profile))
             {
                 if(profile.DmxLength < 1)
                 {
-                    LogFile.Error("DMX profile for fixture '" + profile.Name + "' must have a dmx length of at least one.");
+                    Log.Error("DMX profile for fixture '" + profile.Name + "' must have a dmx length of at least one.");
                 }
                 else if(profile.DmxLength < profile.AddressMap.Count)
                 {
-                    LogFile.Error("DMX profile for fixture '" + profile.Name + "' has more defined channels than its dmx length.");
+                    Log.Error("DMX profile for fixture '" + profile.Name + "' has more defined channels than its dmx length.");
                 }
                 else
                 {
@@ -82,7 +82,7 @@ public class DmxProcessor
             }
             else
             {
-                LogFile.Error("No DMX fixture profile with name '" + fixtureAddress.Name + "' found.");
+                Log.Error("No DMX fixture profile with name '" + fixtureAddress.Name + "' found.");
             }
         }
     }
@@ -110,7 +110,7 @@ public class DmxProcessor
     /// </summary>
     public void TurnOff()
     {
-        LogFile.Info("Turning off DMX device and fixtures");
+        Log.Info("Turning off DMX device and fixtures");
 
         foreach (DmxFixture fixture in fixtures)
             fixture.TurnOff();
@@ -119,7 +119,7 @@ public class DmxProcessor
         if (controller.IsOpen)
             controller.Dispose();
 
-        LogFile.Info("Turned off DMX");
+        Log.Info("Turned off DMX");
     }
 
     public void SetInputs(IEnumerable<Config.Input.InputBase> inputs, TransitionAnimation transition)
@@ -169,7 +169,7 @@ public class DmxProcessor
             sb.AppendLine("DMX data:");
             controller.WriteDebugInfo(sb, 8);
             debug = false;
-            LogFile.Info(sb.ToString());
+            Log.Info(sb.ToString());
         }
 
         if(controller.IsOpen)

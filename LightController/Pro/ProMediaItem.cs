@@ -205,7 +205,7 @@ public class ProMediaItem
         cancelToken.ThrowIfCancellationRequested();
         if (ms.Length == 0)
         {
-            LogFile.Warn($"Failed to get color information from '{input}' at time {time:g}");
+            Log.Warn($"Failed to get color information from '{input}' at time {time:g}");
             return null;
         }
 

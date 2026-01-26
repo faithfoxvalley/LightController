@@ -75,7 +75,7 @@ public class DmxChannel
                 RGBColor colourfulColor = colourfulConverter.Convert(chromacity).NormalizeIntensity();
                 return new DmxChannel(ColorRGB.FromColor(colourfulColor), originalString, index);
             }
-            LogFile.Warn("'" + originalString + "' is not a supported color temperature.");
+            Log.Warn("'" + originalString + "' is not a supported color temperature.");
             return null;
         }
 
@@ -90,7 +90,7 @@ public class DmxChannel
             }
             catch
             {
-                LogFile.Warn("'" + originalString + "' is not a supported hex color value.");
+                Log.Warn("'" + originalString + "' is not a supported hex color value.");
                 return null;
             }
         }
@@ -126,7 +126,7 @@ public class DmxChannel
                         constantValue = b
                     };
                 }
-                LogFile.Warn("'" + originalString + "' is not a supported color value.");
+                Log.Warn("'" + originalString + "' is not a supported color value.");
                 return null;
         }
         return new DmxChannel(mask, originalString, index);

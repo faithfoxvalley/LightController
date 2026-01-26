@@ -71,7 +71,7 @@ public class InputIntensity
             if(TryParseIntensity(arg, out double defaultIntensity))
                 result.intensity = defaultIntensity;
             else
-                LogFile.Warn("'" + arg + "' is not a valid intensity.");
+                Log.Warn("'" + arg + "' is not a valid intensity.");
         }
 
         result.intensityString = value;

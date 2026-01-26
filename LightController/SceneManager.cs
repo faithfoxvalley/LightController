@@ -51,7 +51,7 @@ public class SceneManager
             while (!midiDevices.TryGetAnyInput(out this.midiDevice))
             {
 #if DEBUG
-                LogFile.Warn("No Midi devices found!");
+                Log.Warn("No Midi devices found!");
                 break;
 #else
                 ErrorBox.ExitOnCancel("No Midi devices found. Press OK to try again or Cancel to exit.");
@@ -73,7 +73,7 @@ public class SceneManager
         {
             this.midiDevice.NoteEvent += MidiDevice_NoteEvent;
             this.midiDevice.Start();
-            LogFile.Info("Using midi device: " + this.midiDevice.Name);
+            Log.Info("Using midi device: " + this.midiDevice.Name);
         }
 
         foreach (Scene s in scenes)
@@ -83,7 +83,7 @@ public class SceneManager
         {
             if (TryFindScene(x => x.Name == defaultScene.Trim(), out Scene scene))
             {
-                LogFile.Info("Activating scene " + scene.Name);
+                Log.Info("Activating scene " + scene.Name);
                 activeScene = scene;
                 UpdateSceneUI(scene.Index);
                 UpdateDmx(scene, false);
@@ -152,7 +152,7 @@ public class SceneManager
         while(TryGetIncomingScene(out Scene newScene, out MidiNote note))
         {
             int newSceneIndex = newScene.Index;
-            LogFile.Info("Activating scene " + newScene.Name);
+            Log.Info("Activating scene " + newScene.Name);
 
             foreach (Scene s in scenes)
                 await s.DeactivateAsync(cancelTokenSource.Token);

@@ -71,7 +71,7 @@ public class FtdiDmxController : IDmxController, IDisposable
                 throw new DmxException("Error occurred while writing dmx data: " + status, status);
 
             if (bytesWritten != buffer.Length)
-                LogFile.Warn($"Unable to write {buffer.Length} bytes to DMX device, only wrote {bytesWritten} bytes.");
+                Log.Warn($"Unable to write {buffer.Length} bytes to DMX device, only wrote {bytesWritten} bytes.");
         }
     }
 
@@ -126,11 +126,11 @@ public class FtdiDmxController : IDmxController, IDisposable
 
             if (status != FTDI.FT_STATUS.FT_OK)
             {
-                LogFile.Error("Failed to get number of dmx devices (error " + status.ToString() + ")");
+                Log.Error("Failed to get number of dmx devices (error " + status.ToString() + ")");
                 return false;
             }
 
-            LogFile.Info("Number of FTDI devices: " + deviceCount.ToString());
+            Log.Info("Number of FTDI devices: " + deviceCount.ToString());
 
             if (deviceCount == 0)
                 return false;
@@ -142,7 +142,7 @@ public class FtdiDmxController : IDmxController, IDisposable
 
             if (status != FTDI.FT_STATUS.FT_OK)
             {
-                LogFile.Error("Failed to get dmx device list (error " + status.ToString() + ")");
+                Log.Error("Failed to get dmx device list (error " + status.ToString() + ")");
                 return false;
             }
 
@@ -159,47 +159,47 @@ public class FtdiDmxController : IDmxController, IDisposable
             sb.AppendLine("Location ID: " + string.Format("{0:x}", deviceInfo.LocId));
             sb.AppendLine("Serial Number: " + deviceInfo.SerialNumber.ToString());
             sb.AppendLine("Description: " + deviceInfo.Description.ToString());
-            LogFile.Info(sb.ToString());
+            Log.Info(sb.ToString());
 
             status = ftdi.OpenBySerialNumber(deviceInfo.SerialNumber);
             if (status != FTDI.FT_STATUS.FT_OK)
             {
-                LogFile.Error("Failed to open device (error " + status.ToString() + ")");
+                Log.Error("Failed to open device (error " + status.ToString() + ")");
                 return false;
             }
 
             status = ftdi.ResetDevice();
             if (status != FTDI.FT_STATUS.FT_OK)
             {
-                LogFile.Error("Failed to reset device (error " + status.ToString() + ")");
+                Log.Error("Failed to reset device (error " + status.ToString() + ")");
                 return false;
             }
 
             status = ftdi.SetBaudRate(250000);
             if (status != FTDI.FT_STATUS.FT_OK)
             {
-                LogFile.Error("Failed to set device baud rate (error " + status.ToString() + ")");
+                Log.Error("Failed to set device baud rate (error " + status.ToString() + ")");
                 return false;
             }
 
             status = ftdi.SetDataCharacteristics(FTDI.FT_DATA_BITS.FT_BITS_8, FTDI.FT_STOP_BITS.FT_STOP_BITS_2, FTDI.FT_PARITY.FT_PARITY_NONE);
             if (status != FTDI.FT_STATUS.FT_OK)
             {
-                LogFile.Error("Failed to set device data characteristics (error " + status.ToString() + ")");
+                Log.Error("Failed to set device data characteristics (error " + status.ToString() + ")");
                 return false;
             }
 
             status = ftdi.SetFlowControl(FTDI.FT_FLOW_CONTROL.FT_FLOW_NONE, 0, 0);
             if (status != FTDI.FT_STATUS.FT_OK)
             {
-                LogFile.Error("Failed to set device flow control (error " + status.ToString() + ")");
+                Log.Error("Failed to set device flow control (error " + status.ToString() + ")");
                 return false;
             }
 
             status = ftdi.SetRTS(false);
             if (status != FTDI.FT_STATUS.FT_OK)
             {
-                LogFile.Error("Failed to set device rts (error " + status.ToString() + ")");
+                Log.Error("Failed to set device rts (error " + status.ToString() + ")");
                 return false;
             }
 
@@ -208,7 +208,7 @@ public class FtdiDmxController : IDmxController, IDisposable
         }
         catch (Exception e)
         {
-            LogFile.Error(e, "Error occurred while accessing dmx device: ");
+            Log.Error(e, "Error occurred while accessing dmx device: ");
             return false;
         }
     }
@@ -262,7 +262,7 @@ public class FtdiDmxController : IDmxController, IDisposable
     {
         if(status != FTDI.FT_STATUS.FT_OK)
         {
-            LogFile.Error($"{error} (error code {status})");
+            Log.Error($"{error} (error code {status})");
             return false;
         }
         return true;

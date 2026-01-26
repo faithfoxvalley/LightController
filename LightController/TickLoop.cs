@@ -53,7 +53,7 @@ public class TickLoop : IDisposable
                 }
                 catch (Exception ex)
                 {
-                    LogFile.Error(ex, "An error occurred while updating!");
+                    Log.Error(ex, "An error occurred while updating!");
                     Thread.Sleep(ErrorTimeout);
                 }
 
@@ -67,7 +67,7 @@ public class TickLoop : IDisposable
         }
         catch (Exception ex)
         {
-            LogFile.Error(ex, "An error occurred while updating, updates will not continue!");
+            Log.Error(ex, "An error occurred while updating, updates will not continue!");
         }
     }
 

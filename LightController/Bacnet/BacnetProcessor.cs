@@ -48,12 +48,12 @@ public partial class BacnetProcessor
         if (string.IsNullOrWhiteSpace(config.BindIp) || !IPAddress.TryParse(config.BindIp, out _))
         {
             transport = new BacnetIpUdpProtocolTransport(port);
-            LogFile.Info($"[Bacnet] Starting Bacnet client at {IPAddress.Any}:{port}");
+            Log.Info($"[Bacnet] Starting Bacnet client at {IPAddress.Any}:{port}");
         }
         else
         {
             transport = new BacnetIpUdpProtocolTransport(port, localEndpointIp: config.BindIp);
-            LogFile.Info($"[Bacnet] Starting Bacnet client at {config.BindIp}:{port}");
+            Log.Info($"[Bacnet] Starting Bacnet client at {config.BindIp}:{port}");
         }
         bacnetClient = new BacnetClient(transport);
         bacnetClient.Start();
@@ -71,7 +71,7 @@ public partial class BacnetProcessor
         if (note == null || !midiEvents.TryGetValue(note, out BacnetEvent e))
             return;
 
-        LogFile.Info("[Bacnet] Event: " + e);
+        Log.Info("[Bacnet] Event: " + e);
 
         lock (writeRequestsLock)
         {
@@ -102,7 +102,7 @@ public partial class BacnetProcessor
             return;
 
         foreach (BacnetEvent e in events)
-            LogFile.Info("[Bacnet] Event: " + e);
+            Log.Info("[Bacnet] Event: " + e);
 
         lock (writeRequestsLock)
         {
@@ -133,7 +133,7 @@ public partial class BacnetProcessor
             return;
 
         foreach (BacnetEvent e in events)
-            LogFile.Info("[Bacnet] Event: " + e);
+            Log.Info("[Bacnet] Event: " + e);
 
         lock (writeRequestsLock)
         {
@@ -147,7 +147,7 @@ public partial class BacnetProcessor
 
     private void OnIamReceived(BacnetClient sender, BacnetAddress adr, uint deviceId, uint maxApdu, BacnetSegmentations segmentation, ushort vendorId)
     {
-        LogFile.Info($"[Bacnet] Found Bacnet device: {adr} - {deviceId}");
+        Log.Info($"[Bacnet] Found Bacnet device: {adr} - {deviceId}");
         nodes.TryAdd(deviceId, new BacNode(adr, deviceId));
     }
 
@@ -196,7 +196,7 @@ public partial class BacnetProcessor
         {
             if (WhoIsTick % WhoIsInterval == 0)
             {
-                LogFile.Info("[Bacnet] Failed to contact one or more Bacnet devices. Sending Bacnet WhoIs request");
+                Log.Info("[Bacnet] Failed to contact one or more Bacnet devices. Sending Bacnet WhoIs request");
                 bacnetClient.WhoIs();
             }
             WhoIsTick++;

@@ -69,7 +69,7 @@ public partial class MainWindow : Window
         CommandLineOptions args = new CommandLineOptions(Environment.GetCommandLineArgs());
         string command = args.ToString();
         if (!string.IsNullOrWhiteSpace(command))
-            LogFile.Info("Command: " + command);
+            Log.Info("Command: " + command);
 
         try
         {
@@ -77,7 +77,7 @@ public partial class MainWindow : Window
         }
         catch (Exception e)
         {
-            LogFile.Error(e, "An error occurred while reading the main config file!");
+            Log.Error(e, "An error occurred while reading the main config file!");
             ErrorBox.Show("An error occurred while reading the main config file, please check your config.");
         }
 
@@ -94,7 +94,7 @@ public partial class MainWindow : Window
         }
         catch (Exception e)
         {
-            LogFile.Error(e, "An error occurred while reading the show file!");
+            Log.Error(e, "An error occurred while reading the show file!");
             ErrorBox.Show("An error occurred while reading the show file, please check your show config.");
         }
 
@@ -175,11 +175,11 @@ public partial class MainWindow : Window
             Directory.CreateDirectory(path);
         ApplicationData = path;
 
-        LogFile.Init(Path.Combine(ApplicationData, "Logs", appname + ".log"));
+        Log.Init(Path.Combine(ApplicationData, "Logs", appname + ".log"));
         if(mainAssemblyName.Version != null)
-            LogFile.Info("Started application - v" + mainAssemblyName.Version.ToString(3));
+            Log.Info("Started application - v" + mainAssemblyName.Version.ToString(3));
         else
-            LogFile.Info("Started application");
+            Log.Info("Started application");
         Title = "Light Controller - v" + mainAssemblyName.Version.ToString(3);
     }
 
@@ -212,7 +212,7 @@ public partial class MainWindow : Window
         if (showFile == null)
             showFile = showConfig.FileLocation;
 
-        LogFile.Info("Restarting application");
+        Log.Info("Restarting application");
         string currentScene = sceneManager?.ActiveSceneName;
         string fileName = Process.GetCurrentProcess().MainModule.FileName;
         StringBuilder sb = new StringBuilder();
@@ -313,7 +313,7 @@ public partial class MainWindow : Window
             }
             catch (Exception ex)
             {
-                LogFile.Error(ex, "Error while test loading show config!");
+                Log.Error(ex, "Error while test loading show config!");
                 ErrorBox.Show("An error occurred while reading the show file!", false);
             }
         }
@@ -332,7 +332,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            LogFile.Error(ex, "An error occurred while saving the show file!");
+            Log.Error(ex, "An error occurred while saving the show file!");
             ErrorBox.Show("An error occurred while saving the show file!", false);
         }
     }
@@ -348,7 +348,7 @@ public partial class MainWindow : Window
             }
             catch (Exception ex)
             {
-                LogFile.Error(ex, "An error occurred while saving the show file!");
+                Log.Error(ex, "An error occurred while saving the show file!");
                 ErrorBox.Show("An error occurred while saving the show file!", false);
             }
         }
@@ -375,7 +375,7 @@ public partial class MainWindow : Window
 
         Shutdown();
 
-        LogFile.Info("Closed application.");
+        Log.Info("Closed application.");
     }
 
     private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)

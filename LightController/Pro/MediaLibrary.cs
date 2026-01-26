@@ -47,9 +47,9 @@ public class MediaLibrary
     public async Task<ProMediaItem> LoadMediaAsync(int? id, string fileName, IProgress<double> progress, CancellationToken cancelToken)
     {
         if(motion)
-            LogFile.Info("Starting motion generation for " + fileName);
+            Log.Info("Starting motion generation for " + fileName);
         else
-            LogFile.Info("Starting thumbnail generation for " + fileName);
+            Log.Info("Starting thumbnail generation for " + fileName);
 
         string fullPath = Path.Combine(mediaFolder, fileName);
         if(!File.Exists(fullPath))
@@ -81,9 +81,9 @@ public class MediaLibrary
         mediaNames[mediaItem.Name] = mediaItem;
 
         if (motion)
-            LogFile.Info("Finished motion generation for " + fileName);
+            Log.Info("Finished motion generation for " + fileName);
         else
-            LogFile.Info("Finished thumbnail generation for " + fileName);
+            Log.Info("Finished thumbnail generation for " + fileName);
 
         return mediaItem;
     }

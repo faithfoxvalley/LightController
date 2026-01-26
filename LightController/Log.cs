@@ -6,7 +6,7 @@ using System;
 
 namespace LightController;
 
-public static class LogFile
+public static class Log
 {
     private static Logger log;
 
