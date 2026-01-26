@@ -1,53 +1,52 @@
 ﻿using System;
 
-namespace LightController.Config
+namespace LightController.Config;
+
+public class Percent
 {
-    public class Percent
+    public double Value { get; private set; }
+    private string stringValue;
+
+    public Percent(Percent percent)
     {
-        public double Value { get; private set; }
-        private string stringValue;
+        this.Value = percent.Value;
+        this.stringValue = percent.stringValue;
+    }
 
-        public Percent(Percent percent)
+    public Percent(double value)
+    {
+        Value = Math.Clamp(value, 0, 1);
+        stringValue = $"{Value * 100:0.#}%";
+    }
+
+    private Percent(string valueString, double value)
+    {
+        Value = Math.Clamp(value, 0, 1);
+        stringValue = valueString;
+    }
+
+    public static Percent Parse(string value, double defaultValue)
+    {
+
+        if (!string.IsNullOrWhiteSpace(value))
         {
-            this.Value = percent.Value;
-            this.stringValue = percent.stringValue;
-        }
-
-        public Percent(double value)
-        {
-            Value = Math.Clamp(value, 0, 1);
-            stringValue = $"{Value * 100:0.#}%";
-        }
-
-        private Percent(string valueString, double value)
-        {
-            Value = Math.Clamp(value, 0, 1);
-            stringValue = valueString;
-        }
-
-        public static Percent Parse(string value, double defaultValue)
-        {
-
-            if (!string.IsNullOrWhiteSpace(value))
+            if (value[value.Length - 1] == '%' && value.Length > 1)
             {
-                if (value[value.Length - 1] == '%' && value.Length > 1)
-                {
-                    if(double.TryParse(value.Substring(0, value.Length - 1), out double percent))
-                        return new Percent(value, percent / 100);
-                }
-                else
-                {
-                    if (double.TryParse(value, out double rawValue))
-                        return new Percent(value, rawValue);
-                }
+                if(double.TryParse(value.Substring(0, value.Length - 1), out double percent))
+                    return new Percent(value, percent / 100);
             }
-
-            return new Percent(defaultValue);
+            else
+            {
+                if (double.TryParse(value, out double rawValue))
+                    return new Percent(value, rawValue);
+            }
         }
 
-        public override string ToString()
-        {
-            return stringValue;
-        }
+        return new Percent(defaultValue);
+    }
+
+    public override string ToString()
+    {
+        return stringValue;
     }
 }

@@ -13,322 +13,338 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace LightController
+namespace LightController;
+
+/// <summary>
+/// Interaction logic for MainWindow.xaml
+/// </summary>
+public partial class MainWindow : Window
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
-    public partial class MainWindow : Window
+    private const int DmxUpdateFps = 30;
+    private const int InputsUpdateFps = 20;
+    private const int BacnetUpdateFps = 10;
+    private const string AppGuid = "a013f8c4-0875-49e3-b671-f4e16a1f1fe4";
+    private const int AcquireMutexTimeout = 1000;
+    private string DefaultShowFile => Path.Combine(ApplicationData, "default.show");
+
+    private ProPresenter pro;
+    private readonly ConfigFile mainConfig;
+    private readonly ShowConfig showConfig;
+    private SceneManager sceneManager;
+    private DmxProcessor dmx;
+    private BacnetProcessor bacNet;
+    private TickLoop dmxTimer; // Runs on different thread
+    private TickLoop inputsTimer; // Runs on different thread
+    private TickLoop bacNetTimer; // Runs on different thread
+    private bool inputActivated = false;
+
+    private static Mutex mutex;
+    private static bool mutexActive;
+
+    private System.Windows.Threading.DispatcherTimer uiTimer;
+    private PreviewWindow preview;
+
+    public static MainWindow Instance { get; private set; }
+
+    public string ApplicationData { get; private set; }
+    public ProPresenter Pro => pro;
+
+    public MainWindow()
     {
-        private const int DmxUpdateFps = 30;
-        private const int InputsUpdateFps = 20;
-        private const int BacnetUpdateFps = 10;
-        private const string AppGuid = "a013f8c4-0875-49e3-b671-f4e16a1f1fe4";
-        private const int AcquireMutexTimeout = 1000;
-        private string DefaultShowFile => Path.Combine(ApplicationData, "default.show");
+        Instance = this;
 
-        private ProPresenter pro;
-        private readonly ConfigFile mainConfig;
-        private readonly ShowConfig showConfig;
-        private SceneManager sceneManager;
-        private DmxProcessor dmx;
-        private BacnetProcessor bacNet;
-        private TickLoop dmxTimer; // Runs on different thread
-        private TickLoop inputsTimer; // Runs on different thread
-        private TickLoop bacNetTimer; // Runs on different thread
-        private bool inputActivated = false;
+        InitializeComponent();
 
-        private static Mutex mutex;
-        private static bool mutexActive;
+        InitAppData();
 
-        private System.Windows.Threading.DispatcherTimer uiTimer;
-        private PreviewWindow preview;
-
-        public static MainWindow Instance { get; private set; }
-
-        public string ApplicationData { get; private set; }
-        public ProPresenter Pro => pro;
-
-        public MainWindow()
+        if (!IsOnlyInstance())
         {
-            Instance = this;
-
-            InitializeComponent();
-
-            InitAppData();
-
-            if (!IsOnlyInstance())
-            {
-                ErrorBox.Show("Error: The lighting controller is already running!");
-                return;
-            }
-
-
-            ClockTime.Init();
-
-            CommandLineOptions args = new CommandLineOptions(Environment.GetCommandLineArgs());
-            string command = args.ToString();
-            if (!string.IsNullOrWhiteSpace(command))
-                LogFile.Info("Command: " + command);
-
-            try
-            {
-                mainConfig = ConfigFile.Load(Path.Combine(ApplicationData, "config.yml"));
-            }
-            catch (Exception e)
-            {
-                LogFile.Error(e, "An error occurred while reading the main config file!");
-                ErrorBox.Show("An error occurred while reading the main config file, please check your config.");
-            }
-
-            try
-            {
-                if (ShowConfig.TryGetFilePathFromArgs(args, out string showFile))
-                {
-                    showLabel.Content = showFile;
-                    showLabel.ToolTip = showFile;
-                }
-                else
-                    showFile = DefaultShowFile;
-                showConfig = ShowConfig.Load(showFile);
-            }
-            catch (Exception e)
-            {
-                LogFile.Error(e, "An error occurred while reading the show file!");
-                ErrorBox.Show("An error occurred while reading the show file, please check your show config.");
-            }
-
-            pro = new ProPresenter(mainConfig.ProPresenter, mediaList);
-            dmx = new DmxProcessor(mainConfig.Dmx);
-            bacNet = new BacnetProcessor(showConfig.Bacnet, bacnetList);
-            if (bacNet.Enabled)
-                bacnetContainer.Visibility = Visibility.Visible;
-
-            string defaultScene = showConfig.DefaultScene;
-            if(args.TryGetFlagArg("scene", 0, out string sceneFlag) && showConfig.Scenes.Any(x => x.Name == sceneFlag.Trim()))
-                defaultScene = sceneFlag;
-            sceneManager = new SceneManager(showConfig.Scenes, mainConfig.MidiDevice, defaultScene, dmx, showConfig.DefaultTransitionTime, sceneList, bacNet);
-
-            // Update fixture list
-            dmx.AppendToListbox(fixtureList);
-
-            dmxTimer = new TickLoop(DmxUpdateFps, UpdateDmx);
-            inputsTimer = new TickLoopAsync(InputsUpdateFps, UpdateInputs);
-            if (bacNet.Enabled)
-                bacNetTimer = new TickLoop(BacnetUpdateFps, UpdateBacnet);
-
-            uiTimer = new System.Windows.Threading.DispatcherTimer();
-            uiTimer.Interval = new TimeSpan(0, 0, 1);
-            uiTimer.Tick += UiTimer_Tick;
-            uiTimer.Start();
-
-            if (args.HasFlag("preview"))
-                OpenPreviewClick(null, null);
-
-            Activate();
+            ErrorBox.Show("Error: The lighting controller is already running!");
+            return;
         }
 
-        private static bool IsOnlyInstance()
-        {
-            mutex = new Mutex(true, AppGuid, out mutexActive);
-            if (!mutexActive)
-            {
-                try
-                {
-                    mutexActive = mutex.WaitOne(AcquireMutexTimeout);
-                    if (!mutexActive)
-                        return false;
-                }
-                catch (AbandonedMutexException)
-                { } // Abandoned probably means that the process was killed or crashed
-            }
 
-            return true;
+        ClockTime.Init();
+
+        CommandLineOptions args = new CommandLineOptions(Environment.GetCommandLineArgs());
+        string command = args.ToString();
+        if (!string.IsNullOrWhiteSpace(command))
+            LogFile.Info("Command: " + command);
+
+        try
+        {
+            mainConfig = ConfigFile.Load(Path.Combine(ApplicationData, "config.yml"));
+        }
+        catch (Exception e)
+        {
+            LogFile.Error(e, "An error occurred while reading the main config file!");
+            ErrorBox.Show("An error occurred while reading the main config file, please check your config.");
         }
 
-        private void UiTimer_Tick(object sender, EventArgs e)
+        try
         {
-            StringBuilder sb = new StringBuilder();
-            sb.Append("Dmx").AppendLine();
-            dmxTimer.AppendPerformanceInfo(sb);
+            if (ShowConfig.TryGetFilePathFromArgs(args, out string showFile))
+            {
+                showLabel.Content = showFile;
+                showLabel.ToolTip = showFile;
+            }
+            else
+                showFile = DefaultShowFile;
+            showConfig = ShowConfig.Load(showFile);
+        }
+        catch (Exception e)
+        {
+            LogFile.Error(e, "An error occurred while reading the show file!");
+            ErrorBox.Show("An error occurred while reading the show file, please check your show config.");
+        }
+
+        pro = new ProPresenter(mainConfig.ProPresenter, mediaList);
+        dmx = new DmxProcessor(mainConfig.Dmx);
+        bacNet = new BacnetProcessor(showConfig.Bacnet, bacnetList);
+        if (bacNet.Enabled)
+            bacnetContainer.Visibility = Visibility.Visible;
+
+        string defaultScene = showConfig.DefaultScene;
+        if(args.TryGetFlagArg("scene", 0, out string sceneFlag) && showConfig.Scenes.Any(x => x.Name == sceneFlag.Trim()))
+            defaultScene = sceneFlag;
+        sceneManager = new SceneManager(showConfig.Scenes, mainConfig.MidiDevice, defaultScene, dmx, showConfig.DefaultTransitionTime, sceneList, bacNet);
+
+        // Update fixture list
+        dmx.AppendToListbox(fixtureList);
+
+        dmxTimer = new TickLoop(DmxUpdateFps, UpdateDmx);
+        inputsTimer = new TickLoopAsync(InputsUpdateFps, UpdateInputs);
+        if (bacNet.Enabled)
+            bacNetTimer = new TickLoop(BacnetUpdateFps, UpdateBacnet);
+
+        uiTimer = new System.Windows.Threading.DispatcherTimer();
+        uiTimer.Interval = new TimeSpan(0, 0, 1);
+        uiTimer.Tick += UiTimer_Tick;
+        uiTimer.Start();
+
+        if (args.HasFlag("preview"))
+            OpenPreviewClick(null, null);
+
+        Activate();
+    }
+
+    private static bool IsOnlyInstance()
+    {
+        mutex = new Mutex(true, AppGuid, out mutexActive);
+        if (!mutexActive)
+        {
+            try
+            {
+                mutexActive = mutex.WaitOne(AcquireMutexTimeout);
+                if (!mutexActive)
+                    return false;
+            }
+            catch (AbandonedMutexException)
+            { } // Abandoned probably means that the process was killed or crashed
+        }
+
+        return true;
+    }
+
+    private void UiTimer_Tick(object sender, EventArgs e)
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.Append("Dmx").AppendLine();
+        dmxTimer.AppendPerformanceInfo(sb);
+        sb.AppendLine();
+        sb.Append("Input").AppendLine();
+        inputsTimer.AppendPerformanceInfo(sb);
+        if(bacNetTimer != null)
+        {
             sb.AppendLine();
-            sb.Append("Input").AppendLine();
-            inputsTimer.AppendPerformanceInfo(sb);
-            if(bacNetTimer != null)
-            {
-                sb.AppendLine();
-                sb.Append("Bacnet").AppendLine();
-                bacNetTimer.AppendPerformanceInfo(sb);
-            }
-            performanceInfo.Text = sb.ToString();
+            sb.Append("Bacnet").AppendLine();
+            bacNetTimer.AppendPerformanceInfo(sb);
+        }
+        performanceInfo.Text = sb.ToString();
+    }
+
+    private void InitAppData()
+    {
+        AssemblyName mainAssemblyName = typeof(MainWindow).Assembly.GetName();
+        string appname = mainAssemblyName.Name;
+        string path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        if (!Directory.Exists(path))
+            throw new DirectoryNotFoundException("No /AppData/Local/ folder exists!");
+        path = Path.Combine(path, appname);
+        if (!Directory.Exists(path))
+            Directory.CreateDirectory(path);
+        ApplicationData = path;
+
+        LogFile.Init(Path.Combine(ApplicationData, "Logs", appname + ".log"));
+        if(mainAssemblyName.Version != null)
+            LogFile.Info("Started application - v" + mainAssemblyName.Version.ToString(3));
+        else
+            LogFile.Info("Started application");
+        Title = "Light Controller - v" + mainAssemblyName.Version.ToString(3);
+    }
+
+    // This runs on a different thread
+    private async Task UpdateInputs()
+    {
+        if (!inputActivated)
+        {
+            await sceneManager.ActivateSceneAsync();
+            inputActivated = true;
         }
 
-        private void InitAppData()
-        {
-            AssemblyName mainAssemblyName = typeof(MainWindow).Assembly.GetName();
-            string appname = mainAssemblyName.Name;
-            string path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            if (!Directory.Exists(path))
-                throw new DirectoryNotFoundException("No /AppData/Local/ folder exists!");
-            path = Path.Combine(path, appname);
-            if (!Directory.Exists(path))
-                Directory.CreateDirectory(path);
-            ApplicationData = path;
+        await sceneManager.UpdateAsync();
+    }
 
-            LogFile.Init(Path.Combine(ApplicationData, "Logs", appname + ".log"));
-            if(mainAssemblyName.Version != null)
-                LogFile.Info("Started application - v" + mainAssemblyName.Version.ToString(3));
+    // This runs on a different thread
+    private void UpdateDmx()
+    {
+        dmx.Write();
+    }
+
+    // This runs on a different thread
+    private void UpdateBacnet()
+    {
+        bacNet.Update();
+    }
+
+    private void Restart(string showFile = null)
+    {
+        if (showFile == null)
+            showFile = showConfig.FileLocation;
+
+        LogFile.Info("Restarting application");
+        string currentScene = sceneManager?.ActiveSceneName;
+        string fileName = Process.GetCurrentProcess().MainModule.FileName;
+        StringBuilder sb = new StringBuilder();
+
+        if (currentScene != null && !currentScene.Contains('"'))
+        {
+            sb.Append("-scene ");
+            if (currentScene.Contains(' '))
+                sb.Append('"').Append(currentScene).Append('"');
             else
-                LogFile.Info("Started application");
-            Title = "Light Controller - v" + mainAssemblyName.Version.ToString(3);
+                sb.Append(currentScene);
         }
 
-        // This runs on a different thread
-        private async Task UpdateInputs()
+        if (showFile != DefaultShowFile)
         {
-            if (!inputActivated)
-            {
-                await sceneManager.ActivateSceneAsync();
-                inputActivated = true;
-            }
-
-            await sceneManager.UpdateAsync();
-        }
-
-        // This runs on a different thread
-        private void UpdateDmx()
-        {
-            dmx.Write();
-        }
-
-        // This runs on a different thread
-        private void UpdateBacnet()
-        {
-            bacNet.Update();
-        }
-
-        private void Restart(string showFile = null)
-        {
-            if (showFile == null)
-                showFile = showConfig.FileLocation;
-
-            LogFile.Info("Restarting application");
-            string currentScene = sceneManager?.ActiveSceneName;
-            string fileName = Process.GetCurrentProcess().MainModule.FileName;
-            StringBuilder sb = new StringBuilder();
-
-            if (currentScene != null && !currentScene.Contains('"'))
-            {
-                sb.Append("-scene ");
-                if (currentScene.Contains(' '))
-                    sb.Append('"').Append(currentScene).Append('"');
-                else
-                    sb.Append(currentScene);
-            }
-
-            if (showFile != DefaultShowFile)
-            {
-                if (sb.Length > 0)
-                    sb.Append(' ');
-                sb.Append("-config ");
-                if (showFile.Contains(' '))
-                    sb.Append('"').Append(showFile).Append('"');
-                else
-                    sb.Append(showFile);
-            }
-
-            if (preview != null)
-            {
-                if (sb.Length > 0)
-                    sb.Append(' ');
-                sb.Append("-preview");
-            }
-
             if (sb.Length > 0)
-                Process.Start(fileName, sb.ToString());
+                sb.Append(' ');
+            sb.Append("-config ");
+            if (showFile.Contains(' '))
+                sb.Append('"').Append(showFile).Append('"');
             else
-                Process.Start(fileName);
-            Process.GetCurrentProcess().Kill();
+                sb.Append(showFile);
         }
 
-        #region Application Menu
-        private void RestartClick(object sender, RoutedEventArgs e)
+        if (preview != null)
         {
-            Restart();
+            if (sb.Length > 0)
+                sb.Append(' ');
+            sb.Append("-preview");
         }
 
-        private void ShowLogsClick(object sender, RoutedEventArgs e)
-        {
-            string logs = Path.Combine(ApplicationData, "Logs");
-            if (Directory.Exists(logs))
-                Process.Start("explorer.exe", "\"" + logs + "\"");
-        }
+        if (sb.Length > 0)
+            Process.Start(fileName, sb.ToString());
+        else
+            Process.Start(fileName);
+        Process.GetCurrentProcess().Kill();
+    }
 
-        private void DebugDmxClick(object sender, RoutedEventArgs e)
-        {
-            dmx.WriteDebug();
-        }
+    #region Application Menu
+    private void RestartClick(object sender, RoutedEventArgs e)
+    {
+        Restart();
+    }
 
-        private void OpenPreviewClick(object sender, RoutedEventArgs e)
+    private void ShowLogsClick(object sender, RoutedEventArgs e)
+    {
+        string logs = Path.Combine(ApplicationData, "Logs");
+        if (Directory.Exists(logs))
+            Process.Start("explorer.exe", "\"" + logs + "\"");
+    }
+
+    private void DebugDmxClick(object sender, RoutedEventArgs e)
+    {
+        dmx.WriteDebug();
+    }
+
+    private void OpenPreviewClick(object sender, RoutedEventArgs e)
+    {
+        if (preview == null)
         {
-            if (preview == null)
+            preview = new PreviewWindow();
+            preview.Loaded += (o, e) =>
             {
-                preview = new PreviewWindow();
-                preview.Loaded += (o, e) =>
-                {
-                    dmx.InitPreview(preview);
-                    dmx.Preview = preview;
-                };
-
-            }
-            preview.Show();
-            preview.Closing += (o, e) =>
-            {
-                dmx.Preview = null;
-                preview = null;
+                dmx.InitPreview(preview);
+                dmx.Preview = preview;
             };
-        }
 
-        private void EditConfigClick(object sender, RoutedEventArgs e)
+        }
+        preview.Show();
+        preview.Closing += (o, e) =>
         {
-            mainConfig.Open();
-        }
-        #endregion
+            dmx.Preview = null;
+            preview = null;
+        };
+    }
 
-        #region Show Menu
-        private void EditShowClick(object sender, RoutedEventArgs e)
-        {
-            showConfig.Open();
-        }
+    private void EditConfigClick(object sender, RoutedEventArgs e)
+    {
+        mainConfig.Open();
+    }
+    #endregion
 
-        private void LoadShowClick(object sender, RoutedEventArgs e)
-        {
-            OpenFileDialog openFileDialog = ShowConfig.CreateOpenDialog();
-            if (openFileDialog.ShowDialog() == true && File.Exists(openFileDialog.FileName))
-            {
-                try
-                {
-                    ShowConfig.Load(openFileDialog.FileName);
-                    Restart(openFileDialog.FileName);   
-                }
-                catch (Exception ex)
-                {
-                    LogFile.Error(ex, "Error while test loading show config!");
-                    ErrorBox.Show("An error occurred while reading the show file!", false);
-                }
-            }
-        }
+    #region Show Menu
+    private void EditShowClick(object sender, RoutedEventArgs e)
+    {
+        showConfig.Open();
+    }
 
-        private void LoadDefaultShowClick(object sender, RoutedEventArgs e)
-        {
-            Restart(DefaultShowFile);   
-        }
-
-        private void SaveDefaultShowClick(object sender, RoutedEventArgs e)
+    private void LoadShowClick(object sender, RoutedEventArgs e)
+    {
+        OpenFileDialog openFileDialog = ShowConfig.CreateOpenDialog();
+        if (openFileDialog.ShowDialog() == true && File.Exists(openFileDialog.FileName))
         {
             try
             {
-                showConfig.Save(DefaultShowFile);
+                ShowConfig.Load(openFileDialog.FileName);
+                Restart(openFileDialog.FileName);   
+            }
+            catch (Exception ex)
+            {
+                LogFile.Error(ex, "Error while test loading show config!");
+                ErrorBox.Show("An error occurred while reading the show file!", false);
+            }
+        }
+    }
+
+    private void LoadDefaultShowClick(object sender, RoutedEventArgs e)
+    {
+        Restart(DefaultShowFile);   
+    }
+
+    private void SaveDefaultShowClick(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            showConfig.Save(DefaultShowFile);
+        }
+        catch (Exception ex)
+        {
+            LogFile.Error(ex, "An error occurred while saving the show file!");
+            ErrorBox.Show("An error occurred while saving the show file!", false);
+        }
+    }
+
+    private void SaveAsShowClick(object sender, RoutedEventArgs e)
+    {
+        SaveFileDialog saveFileDialog = ShowConfig.CreateSaveDialog();
+        if (saveFileDialog.ShowDialog() == true && !string.IsNullOrWhiteSpace(saveFileDialog.FileName))
+        {
+            try
+            {
+                showConfig.Save(saveFileDialog.FileName);
             }
             catch (Exception ex)
             {
@@ -336,65 +352,48 @@ namespace LightController
                 ErrorBox.Show("An error occurred while saving the show file!", false);
             }
         }
-
-        private void SaveAsShowClick(object sender, RoutedEventArgs e)
-        {
-            SaveFileDialog saveFileDialog = ShowConfig.CreateSaveDialog();
-            if (saveFileDialog.ShowDialog() == true && !string.IsNullOrWhiteSpace(saveFileDialog.FileName))
-            {
-                try
-                {
-                    showConfig.Save(saveFileDialog.FileName);
-                }
-                catch (Exception ex)
-                {
-                    LogFile.Error(ex, "An error occurred while saving the show file!");
-                    ErrorBox.Show("An error occurred while saving the show file!", false);
-                }
-            }
-        }
-        #endregion
-
-
-        private void ListBox_DisableMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            // Disables selection
-            e.Handled = true;
-        }
-
-
-        private void Window_Closed(object sender, EventArgs e)
-        {
-            if (dmx == null)
-                return;
-
-
-            inputsTimer.Dispose();
-            bacNetTimer?.Dispose();
-            sceneManager.Disable();
-
-            Shutdown();
-
-            LogFile.Info("Closed application.");
-        }
-
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-#if !DEBUG
-            MessageBoxResult messageBoxResult = MessageBox.Show("Are you sure you want to exit?", "Exit Confirmation", MessageBoxButton.YesNo);
-            if (messageBoxResult != MessageBoxResult.Yes)
-                e.Cancel = true;
-#endif
-            if (preview != null)
-                preview.Close();
-        }
-
-        public void Shutdown()
-        {
-            dmx.TurnOff();
-            if(mutexActive)
-                mutex.ReleaseMutex();
-        }
-
     }
+    #endregion
+
+
+    private void ListBox_DisableMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        // Disables selection
+        e.Handled = true;
+    }
+
+
+    private void Window_Closed(object sender, EventArgs e)
+    {
+        if (dmx == null)
+            return;
+
+
+        inputsTimer.Dispose();
+        bacNetTimer?.Dispose();
+        sceneManager.Disable();
+
+        Shutdown();
+
+        LogFile.Info("Closed application.");
+    }
+
+    private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+    {
+#if !DEBUG
+        MessageBoxResult messageBoxResult = MessageBox.Show("Are you sure you want to exit?", "Exit Confirmation", MessageBoxButton.YesNo);
+        if (messageBoxResult != MessageBoxResult.Yes)
+            e.Cancel = true;
+#endif
+        if (preview != null)
+            preview.Close();
+    }
+
+    public void Shutdown()
+    {
+        dmx.TurnOff();
+        if(mutexActive)
+            mutex.ReleaseMutex();
+    }
+
 }

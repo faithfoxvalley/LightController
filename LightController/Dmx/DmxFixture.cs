@@ -2,153 +2,152 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace LightController.Dmx
+namespace LightController.Dmx;
+
+public class DmxFixture
 {
-    public class DmxFixture
+    private DmxFrame frame;
+    private DmxChannel intensityChannel;
+    private List<DmxChannel> colorChannels = new List<DmxChannel>();
+    private Config.Input.InputBase input;
+    private bool disabled;
+    private bool newInput;
+    private object inputLock = new object();
+    private int fixtureId;
+    private double mixLength, mixDelay;
+    private string detailString;
+
+    public int FixtureId => fixtureId;
+
+
+    public DmxFixture(Config.Dmx.DmxDeviceProfile profile, int dmxStartAddress, int fixtureId)
     {
-        private DmxFrame frame;
-        private DmxChannel intensityChannel;
-        private List<DmxChannel> colorChannels = new List<DmxChannel>();
-        private Config.Input.InputBase input;
-        private bool disabled;
-        private bool newInput;
-        private object inputLock = new object();
-        private int fixtureId;
-        private double mixLength, mixDelay;
-        private string detailString;
+        detailString = $"{fixtureId} - {profile.Name} - {dmxStartAddress}-{dmxStartAddress + profile.DmxLength - 1}";
 
-        public int FixtureId => fixtureId;
-
-
-        public DmxFixture(Config.Dmx.DmxDeviceProfile profile, int dmxStartAddress, int fixtureId)
+        // Construct the default frame
+        byte[] data = new byte[profile.DmxLength];
+        
+        foreach(DmxChannel channel in profile.AddressMap)
         {
-            detailString = $"{fixtureId} - {profile.Name} - {dmxStartAddress}-{dmxStartAddress + profile.DmxLength - 1}";
-
-            // Construct the default frame
-            byte[] data = new byte[profile.DmxLength];
-            
-            foreach(DmxChannel channel in profile.AddressMap)
+            if (channel != null)
             {
-                if (channel != null)
-                {
-                    if (channel.Constant.HasValue)
-                        data[channel.Index] = channel.Constant.Value;
-                    else if (channel.IsIntensity)
-                        intensityChannel = channel;
-                    else if(channel.IsColor)
-                        colorChannels.Add(channel);
-                }
+                if (channel.Constant.HasValue)
+                    data[channel.Index] = channel.Constant.Value;
+                else if (channel.IsIntensity)
+                    intensityChannel = channel;
+                else if(channel.IsColor)
+                    colorChannels.Add(channel);
             }
-
-            frame = new DmxFrame(data, dmxStartAddress);
-            colorChannels = colorChannels.OrderByDescending(x => x.MaskSize).ToList();
-
-            this.fixtureId = fixtureId;
         }
 
-        public void TurnOff()
+        frame = new DmxFrame(data, dmxStartAddress);
+        colorChannels = colorChannels.OrderByDescending(x => x.MaskSize).ToList();
+
+        this.fixtureId = fixtureId;
+    }
+
+    public void TurnOff()
+    {
+        lock(inputLock)
         {
-            lock(inputLock)
+            disabled = true;
+            input = null;
+            newInput = true;
+        }
+    }
+
+    public void SetInput(IEnumerable<Config.Input.InputBase> inputs, double mixLength, double mixDelay)
+    {
+        if (double.IsNaN(mixLength) || double.IsInfinity(mixLength) || mixLength < 0)
+            mixLength = 0;
+
+        foreach (var input in inputs)
+        {
+            if (input.FixtureIds.Contains(fixtureId))
             {
-                disabled = true;
-                input = null;
+                lock(inputLock)
+                {
+                    if(!disabled)
+                    {
+                        this.mixLength = mixLength;
+                        this.mixDelay = mixDelay;
+                        this.input = input;
+                        newInput = true;
+                    }
+                }
+                return;
+            }
+        }
+
+        lock(inputLock)
+        {
+            if (!disabled)
+            {
+                this.mixLength = mixLength;
+                this.mixDelay = mixDelay;
+                this.input = null;
                 newInput = true;
             }
         }
 
-        public void SetInput(IEnumerable<Config.Input.InputBase> inputs, double mixLength, double mixDelay)
+    }
+
+    public DmxFrame GetFrame()
+    {
+
+        ColorHSV hsv;
+        double intensity;
+
+        lock (inputLock)
         {
-            if (double.IsNaN(mixLength) || double.IsInfinity(mixLength) || mixLength < 0)
-                mixLength = 0;
-
-            foreach (var input in inputs)
+            if (disabled)
             {
-                if (input.FixtureIds.Contains(fixtureId))
-                {
-                    lock(inputLock)
-                    {
-                        if(!disabled)
-                        {
-                            this.mixLength = mixLength;
-                            this.mixDelay = mixDelay;
-                            this.input = input;
-                            newInput = true;
-                        }
-                    }
-                    return;
-                }
-            }
-
-            lock(inputLock)
-            {
-                if (!disabled)
-                {
-                    this.mixLength = mixLength;
-                    this.mixDelay = mixDelay;
-                    this.input = null;
-                    newInput = true;
-                }
-            }
-
-        }
-
-        public DmxFrame GetFrame()
-        {
-
-            ColorHSV hsv;
-            double intensity;
-
-            lock (inputLock)
-            {
-                if (disabled)
-                {
-                    frame.Reset();
-                    return frame;
-                }
-
-                if (newInput)
-                {
-                    frame.StartMix(mixLength, mixDelay);
-                    newInput = false;
-                }
-
                 frame.Reset();
-
-                if (input == null)
-                {
-                    frame.Mix();
-                    return frame;
-                }
-
-                hsv = input.GetColor(fixtureId);
-                intensity = input.GetIntensity(fixtureId, hsv);
+                return frame;
             }
 
-            // Make a copy with maximum intensity
-            ColorRGB rgb = (ColorRGB)new ColorHSV(hsv.Hue, hsv.Saturation, 1);
-
-            if(intensityChannel != null)
-                frame.Set(intensityChannel.Index, intensityChannel.GetIntensityByte(intensity));
-
-            frame.SetPreviewData(rgb, intensity);
-
-            foreach (DmxChannel channel in colorChannels)
+            if (newInput)
             {
-                double value = channel.GetColorValue(ref rgb) * 255;
-                if (intensityChannel == null)
-                    value *= intensity;
-                frame.Set(channel.Index, value);
+                frame.StartMix(mixLength, mixDelay);
+                newInput = false;
             }
 
-            frame.Clamp(colorChannels.Select(x => x.Index));
-            frame.Mix();
+            frame.Reset();
 
-            return frame;
+            if (input == null)
+            {
+                frame.Mix();
+                return frame;
+            }
+
+            hsv = input.GetColor(fixtureId);
+            intensity = input.GetIntensity(fixtureId, hsv);
         }
 
-        public override string ToString()
+        // Make a copy with maximum intensity
+        ColorRGB rgb = (ColorRGB)new ColorHSV(hsv.Hue, hsv.Saturation, 1);
+
+        if(intensityChannel != null)
+            frame.Set(intensityChannel.Index, intensityChannel.GetIntensityByte(intensity));
+
+        frame.SetPreviewData(rgb, intensity);
+
+        foreach (DmxChannel channel in colorChannels)
         {
-            return detailString;
+            double value = channel.GetColorValue(ref rgb) * 255;
+            if (intensityChannel == null)
+                value *= intensity;
+            frame.Set(channel.Index, value);
         }
+
+        frame.Clamp(colorChannels.Select(x => x.Index));
+        frame.Mix();
+
+        return frame;
+    }
+
+    public override string ToString()
+    {
+        return detailString;
     }
 }

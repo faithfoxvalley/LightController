@@ -3,73 +3,72 @@ using System.Threading;
 using System.Threading.Tasks;
 using YamlDotNet.Serialization;
 
-namespace LightController.Config.Input
+namespace LightController.Config.Input;
+
+public abstract class InputBase
 {
-    public abstract class InputBase
+    [YamlIgnore]
+    public ValueSet FixtureIds { get; set; }
+
+    [YamlMember(Alias = "FixtureIds")]
+    public string FixtureRange
     {
-        [YamlIgnore]
-        public ValueSet FixtureIds { get; set; }
-
-        [YamlMember(Alias = "FixtureIds")]
-        public string FixtureRange
+        get
         {
-            get
-            {
-                return FixtureIds.ToString();
-            }
-            set
-            {
-                if (value == null)
-                    FixtureIds = new ValueSet();
-                else
-                    FixtureIds = new ValueSet(value);
-            }
+            return FixtureIds.ToString();
         }
-
-        [YamlMember(Alias = "Intensity")]
-        public string IntensityMode
+        set
         {
-            get
-            {
-                return intensity.ToString();
-            }
-            set
-            {
-                intensity = InputIntensity.Parse(value, 1);
-            }
+            if (value == null)
+                FixtureIds = new ValueSet();
+            else
+                FixtureIds = new ValueSet(value);
         }
-
-        protected InputIntensity intensity = new InputIntensity(1);
-
-        protected InputBase() { }
-
-        public InputBase(ValueSet fixtureIds)
-        {
-            FixtureIds = fixtureIds;
-        }
-
-        public virtual void Init()
-        {
-
-        }
-
-        public virtual Task StartAsync(Midi.MidiNote note, CancellationToken cancelToken)
-        {
-            return Task.CompletedTask;
-        }
-
-        public virtual Task UpdateAsync(CancellationToken cancelToken)
-        {
-            return Task.CompletedTask;
-        }
-
-        public virtual Task StopAsync(CancellationToken cancelToken)
-        {
-            return Task.CompletedTask;
-        }
-
-        public abstract ColorHSV GetColor(int fixtureId);
-
-        public abstract double GetIntensity(int fixtureid, ColorHSV target);
     }
+
+    [YamlMember(Alias = "Intensity")]
+    public string IntensityMode
+    {
+        get
+        {
+            return intensity.ToString();
+        }
+        set
+        {
+            intensity = InputIntensity.Parse(value, 1);
+        }
+    }
+
+    protected InputIntensity intensity = new InputIntensity(1);
+
+    protected InputBase() { }
+
+    public InputBase(ValueSet fixtureIds)
+    {
+        FixtureIds = fixtureIds;
+    }
+
+    public virtual void Init()
+    {
+
+    }
+
+    public virtual Task StartAsync(Midi.MidiNote note, CancellationToken cancelToken)
+    {
+        return Task.CompletedTask;
+    }
+
+    public virtual Task UpdateAsync(CancellationToken cancelToken)
+    {
+        return Task.CompletedTask;
+    }
+
+    public virtual Task StopAsync(CancellationToken cancelToken)
+    {
+        return Task.CompletedTask;
+    }
+
+    public abstract ColorHSV GetColor(int fixtureId);
+
+    public abstract double GetIntensity(int fixtureid, ColorHSV target);
 }

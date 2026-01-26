@@ -1,7 +1,6 @@
-﻿namespace LightController.Pro.Packet
+﻿namespace LightController.Pro.Packet;
+
+public struct LibraryListItem
 {
-    public struct LibraryListItem
-    {
-        public ItemId id;
-    }
+    public ItemId id;
 }

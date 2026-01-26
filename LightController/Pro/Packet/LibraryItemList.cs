@@ -1,8 +1,7 @@
-﻿namespace LightController.Pro.Packet
+﻿namespace LightController.Pro.Packet;
+
+public struct LibraryItemList
 {
-    public struct LibraryItemList
-    {
-        public ItemId[] items;
-        public string update_type;
-    }
+    public ItemId[] items;
+    public string update_type;
 }

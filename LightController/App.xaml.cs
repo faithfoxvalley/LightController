@@ -1,15 +1,14 @@
 ﻿using System.Windows;
 
-namespace LightController
+namespace LightController;
+
+/// <summary>
+/// Interaction logic for App.xaml
+/// </summary>
+public partial class App : Application
 {
-    /// <summary>
-    /// Interaction logic for App.xaml
-    /// </summary>
-    public partial class App : Application
+    void App_SessionEnding(object sender, SessionEndingCancelEventArgs e)
     {
-        void App_SessionEnding(object sender, SessionEndingCancelEventArgs e)
-        {
-            LightController.MainWindow.Instance?.Shutdown();
-        }
+        LightController.MainWindow.Instance?.Shutdown();
     }
 }

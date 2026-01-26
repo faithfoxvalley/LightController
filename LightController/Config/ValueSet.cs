@@ -4,248 +4,247 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace LightController.Config
+namespace LightController.Config;
+
+// Range of positive values
+public class ValueSet
 {
-    // Range of positive values
-    public class ValueSet
+    private List<Range> ranges;
+
+    public bool Empty => ranges.Count == 0;
+
+    public ValueSet() 
     {
-        private List<Range> ranges;
+        ranges = new List<Range>();
+    }
 
-        public bool Empty => ranges.Count == 0;
-
-        public ValueSet() 
+    public ValueSet(string values)
+    {
+        if(values == null)
         {
             ranges = new List<Range>();
+            return;
         }
 
-        public ValueSet(string values)
+        string[] strings = values.Split(',');
+        ranges = new List<Range>(strings.Length);
+        foreach (string s in strings)
         {
-            if(values == null)
+            string value = s.Trim();
+            if (!string.IsNullOrWhiteSpace(s))
+                ranges.Add(new Range(value));
+        }
+    }
+
+    public ValueSet(int start, int end)
+    {
+        ranges = new List<Range>();
+        AddRange(start, end);
+    }
+
+    public void AddValue(int value)
+    {
+        if (ranges.Count == 0 || !ranges[ranges.Count - 1].TryExpand(value))
+            ranges.Add(new Range(value, value));
+    }
+
+    public void AddRange(int start, int end)
+    {
+        ranges.Add(new Range(start, end));
+    }
+
+    public bool GetOverlap(ValueSet other, out ValueSet result)
+    {
+        result = new ValueSet();
+
+        foreach(Range myRange in ranges)
+        {
+            foreach(Range otherRange in other.ranges)
             {
-                ranges = new List<Range>();
-                return;
+                if (myRange.GetOverlap(otherRange, out Range newRange))
+                    result.ranges.Add(newRange);
             }
+        }
 
-            string[] strings = values.Split(',');
-            ranges = new List<Range>(strings.Length);
-            foreach (string s in strings)
+        return !result.Empty;
+    }
+
+    public bool Contains(int value)
+    {
+        foreach (Range range in ranges)
+        {
+            if (range.Contains(value))
+                return true;
+        }
+        return false;
+    }
+
+    public override string ToString()
+    {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < ranges.Count; i++)
+        {
+            Range range = ranges[i];
+            range.AppendString(sb);
+            if (i < ranges.Count - 1)
+                sb.Append(',');
+        }    
+        return sb.ToString();
+    }
+
+    public IEnumerable<int> EnumerateValues()
+    {
+        foreach(Range range in ranges)
+        {
+            foreach (int i in range)
+                yield return i;
+        }
+    }
+
+    public int Min()
+    {
+        int min = int.MaxValue;
+        foreach (Range range in ranges)
+        {
+            if (range.Min < min)
+                min = range.Min;
+        }
+        return min;
+    }
+
+    public int Max()
+    {
+        int max = int.MinValue;
+        foreach (Range range in ranges)
+        {
+            if (range.Max > max)
+                max = range.Max;
+        }
+        return max;
+    }
+
+
+    private class Range : IEnumerable<int>
+    {
+        private int start;
+        private int end;
+        private bool reversed = false;
+
+        public int Min => start;
+        public int Max => end;
+
+        public Range(string range)
+        {
+            if(range.Contains('-'))
             {
-                string value = s.Trim();
-                if (!string.IsNullOrWhiteSpace(s))
-                    ranges.Add(new Range(value));
-            }
-        }
-
-        public ValueSet(int start, int end)
-        {
-            ranges = new List<Range>();
-            AddRange(start, end);
-        }
-
-        public void AddValue(int value)
-        {
-            if (ranges.Count == 0 || !ranges[ranges.Count - 1].TryExpand(value))
-                ranges.Add(new Range(value, value));
-        }
-
-        public void AddRange(int start, int end)
-        {
-            ranges.Add(new Range(start, end));
-        }
-
-        public bool GetOverlap(ValueSet other, out ValueSet result)
-        {
-            result = new ValueSet();
-
-            foreach(Range myRange in ranges)
-            {
-                foreach(Range otherRange in other.ranges)
+                string[] split = range.Split(new[] { '-' }, 2);
+                start = int.Parse(split[0].Trim());
+                end = int.Parse(split[1].Trim());
+                if(start > end)
                 {
-                    if (myRange.GetOverlap(otherRange, out Range newRange))
-                        result.ranges.Add(newRange);
+                    int temp = start;
+                    start = end;
+                    end = temp;
+                    reversed = true;
                 }
             }
+            else
+            {
+                start = int.Parse(range);
+                end = start;
+            }
+        }
 
-            return !result.Empty;
+        public Range(int start, int end, bool reversed = false)
+        {
+            this.start = start;
+            this.end = end;
+            this.reversed = reversed;
         }
 
         public bool Contains(int value)
         {
-            foreach (Range range in ranges)
+            return value >= start && value <= end;
+        }
+
+        public bool GetOverlap(Range other, out Range result)
+        {
+            result = null;
+            if (other.end < this.start)
+                return false;
+            if (other.start > this.end)
+                return false;
+            int start = Math.Max(this.start, other.start);
+            int end = Math.Min(this.end, other.end);
+            result = new Range(start, end);
+            return true;
+        }
+
+        public bool TryExpand(int value)
+        {
+            if(start == end)
             {
-                if (range.Contains(value))
+                if(value == end + 1)
+                {
+                    end = value;
                     return true;
+                }
+                else if (value == start - 1)
+                {
+                    start = value;
+                    reversed = true;
+                    return true;
+                }
+            }
+            else if(reversed)
+            {
+                if(start == value - 1)
+                {
+                    start = value;
+                    return true;
+                }
+            }
+            else
+            {
+                if(end == value - 1)
+                {
+                    end = value;
+                    return true;
+                }
             }
             return false;
         }
 
+        public void AppendString(StringBuilder sb)
+        {
+            if (start == end)
+                sb.Append(start);
+            else
+                sb.Append(start).Append('-').Append(end);
+        }
+
         public override string ToString()
         {
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < ranges.Count; i++)
-            {
-                Range range = ranges[i];
-                range.AppendString(sb);
-                if (i < ranges.Count - 1)
-                    sb.Append(',');
-            }    
-            return sb.ToString();
+            if (start == end)
+                return start.ToString();
+            else
+                return $"{start}-{end}";
         }
 
-        public IEnumerable<int> EnumerateValues()
+        public IEnumerator<int> GetEnumerator()
         {
-            foreach(Range range in ranges)
-            {
-                foreach (int i in range)
-                    yield return i;
-            }
+            var enumerable = Enumerable.Range(start, (end - start) + 1);
+            if (reversed)
+                enumerable = enumerable.Reverse();
+            return enumerable.GetEnumerator();
         }
 
-        public int Min()
+        IEnumerator IEnumerable.GetEnumerator()
         {
-            int min = int.MaxValue;
-            foreach (Range range in ranges)
-            {
-                if (range.Min < min)
-                    min = range.Min;
-            }
-            return min;
-        }
-
-        public int Max()
-        {
-            int max = int.MinValue;
-            foreach (Range range in ranges)
-            {
-                if (range.Max > max)
-                    max = range.Max;
-            }
-            return max;
-        }
-
-
-        private class Range : IEnumerable<int>
-        {
-            private int start;
-            private int end;
-            private bool reversed = false;
-
-            public int Min => start;
-            public int Max => end;
-
-            public Range(string range)
-            {
-                if(range.Contains('-'))
-                {
-                    string[] split = range.Split(new[] { '-' }, 2);
-                    start = int.Parse(split[0].Trim());
-                    end = int.Parse(split[1].Trim());
-                    if(start > end)
-                    {
-                        int temp = start;
-                        start = end;
-                        end = temp;
-                        reversed = true;
-                    }
-                }
-                else
-                {
-                    start = int.Parse(range);
-                    end = start;
-                }
-            }
-
-            public Range(int start, int end, bool reversed = false)
-            {
-                this.start = start;
-                this.end = end;
-                this.reversed = reversed;
-            }
-
-            public bool Contains(int value)
-            {
-                return value >= start && value <= end;
-            }
-
-            public bool GetOverlap(Range other, out Range result)
-            {
-                result = null;
-                if (other.end < this.start)
-                    return false;
-                if (other.start > this.end)
-                    return false;
-                int start = Math.Max(this.start, other.start);
-                int end = Math.Min(this.end, other.end);
-                result = new Range(start, end);
-                return true;
-            }
-
-            public bool TryExpand(int value)
-            {
-                if(start == end)
-                {
-                    if(value == end + 1)
-                    {
-                        end = value;
-                        return true;
-                    }
-                    else if (value == start - 1)
-                    {
-                        start = value;
-                        reversed = true;
-                        return true;
-                    }
-                }
-                else if(reversed)
-                {
-                    if(start == value - 1)
-                    {
-                        start = value;
-                        return true;
-                    }
-                }
-                else
-                {
-                    if(end == value - 1)
-                    {
-                        end = value;
-                        return true;
-                    }
-                }
-                return false;
-            }
-
-            public void AppendString(StringBuilder sb)
-            {
-                if (start == end)
-                    sb.Append(start);
-                else
-                    sb.Append(start).Append('-').Append(end);
-            }
-
-            public override string ToString()
-            {
-                if (start == end)
-                    return start.ToString();
-                else
-                    return $"{start}-{end}";
-            }
-
-            public IEnumerator<int> GetEnumerator()
-            {
-                var enumerable = Enumerable.Range(start, (end - start) + 1);
-                if (reversed)
-                    enumerable = enumerable.Reverse();
-                return enumerable.GetEnumerator();
-            }
-
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                var enumerable = Enumerable.Range(start, (end - start) + 1);
-                if (reversed)
-                    enumerable = enumerable.Reverse();
-                return enumerable.GetEnumerator();
-            }
+            var enumerable = Enumerable.Range(start, (end - start) + 1);
+            if (reversed)
+                enumerable = enumerable.Reverse();
+            return enumerable.GetEnumerator();
         }
     }
 }

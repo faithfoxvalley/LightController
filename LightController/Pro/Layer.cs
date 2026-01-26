@@ -1,7 +1,6 @@
-﻿namespace LightController.Pro
+﻿namespace LightController.Pro;
+
+public enum Layer
 {
-    public enum Layer
-    {
-        Presentation, Announcement, Audio
-    }
+    Presentation, Announcement, Audio
 }

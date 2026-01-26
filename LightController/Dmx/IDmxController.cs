@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Text;
 
-namespace LightController.Dmx
+namespace LightController.Dmx;
+
+public interface IDmxController : IDisposable
 {
-    public interface IDmxController : IDisposable
-    {
-        bool IsOpen { get; }
+    bool IsOpen { get; }
 
-        void SetChannel(int channel, byte value);
-        void SetChannels(int startAddress, byte[] data);
-        void WriteData();
-        void WriteDebugInfo(StringBuilder sb, int columns);
+    void SetChannel(int channel, byte value);
+    void SetChannels(int startAddress, byte[] data);
+    void WriteData();
+    void WriteDebugInfo(StringBuilder sb, int columns);
 
-    }
 }
