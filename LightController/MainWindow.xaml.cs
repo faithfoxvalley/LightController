@@ -290,16 +290,20 @@ public partial class MainWindow : Window
         };
     }
 
-    private void ReadDmxClick(object sender, RoutedEventArgs e)
+    private async void ReadDmxClick(object sender, RoutedEventArgs e)
     {
-        if(!dmx.TryReadDmx(out byte[] data))
+        byte[] data = await dmx.ReadDmx();
+        Dispatcher.Invoke(() =>
         {
-            ErrorBox.Show("Failed to read DMX data", false);
-            return;
-        }
+            if (data == null)
+            {
+                ErrorBox.Show("Failed to read DMX data", false);
+                return;
+            }
 
-        Clipboard.SetText(Convert.ToBase64String(data));
-        MessageBox.Show("DMX data copied to clipboard", "Light Controller");
+            Clipboard.SetText(Convert.ToBase64String(data));
+            MessageBox.Show("DMX data copied to clipboard", "Light Controller");
+        });
     }
 
     private void EditConfigClick(object sender, RoutedEventArgs e)

@@ -64,7 +64,7 @@ internal class DmxUsbProController : IDmxController
 
             uint bytesWritten = 0;
             FTDI.FT_STATUS status = ftdi.Write(buffer, buffer.Length, ref bytesWritten);
-            if (status != FTDI.FT_STATUS.FT_OK)
+            if (status != FTDI.FT_STATUS.FT_OK || bytesWritten == 0)
                 throw new DmxException("Error occurred while writing dmx data: " + status, status);
 
             if (bytesWritten != buffer.Length)
@@ -133,7 +133,7 @@ internal class DmxUsbProController : IDmxController
         {
             ready = false;
 
-            byte[] buffer = DmxUsbProUtils.CreatePacketForDevice(ENTTEC.Devices.Data.DmxUsbProConstants.GET_WIDGET_SERIAL_NUMBER_LABEL);
+            byte[] buffer = DmxUsbProUtils.CreatePacketForDevice(DmxUsbProConstants.GET_WIDGET_SERIAL_NUMBER_LABEL);
 
             if (!CheckStatusCode(ftdi.Purge(FTDI.FT_PURGE.FT_PURGE_TX), "Failed to purge DMX device during close (1)"))
                 return;
@@ -146,14 +146,24 @@ internal class DmxUsbProController : IDmxController
                 return;
 
             uint bytesWritten = 0;
-            if (!CheckStatusCode(ftdi.Write(buffer, buffer.Length, ref bytesWritten), "Failed to write closing data to DMX device"))
+            if (!CheckStatusCode(ftdi.Write(buffer, buffer.Length, ref bytesWritten), bytesWritten, "Failed to write closing data to DMX device"))
                 return;
         }
     }
 
-    private bool CheckStatusCode(FTDI.FT_STATUS status, string error)
+    private static bool CheckStatusCode(FTDI.FT_STATUS status, string error)
     {
         if (status != FTDI.FT_STATUS.FT_OK)
+        {
+            Log.Error($"{error} (error code {status})");
+            return false;
+        }
+        return true;
+    }
+
+    private static bool CheckStatusCode(FTDI.FT_STATUS status, uint bytesWritten, string error)
+    {
+        if (status != FTDI.FT_STATUS.FT_OK || bytesWritten == 0)
         {
             Log.Error($"{error} (error code {status})");
             return false;
@@ -175,7 +185,7 @@ internal class DmxUsbProController : IDmxController
             byte[] setReceivePacket = DmxUsbProUtils.CreatePacketForDevice(DmxUsbProConstants.SET_RECEIVE_DMX_ON_CHANGE_LABEL, [0]);
 
             uint bytesWritten = 0;
-            if (!CheckStatusCode(ftdi.Write(setReceivePacket, setReceivePacket.Length, ref bytesWritten), "Failed to write DMX receive mode to device"))
+            if (!CheckStatusCode(ftdi.Write(setReceivePacket, setReceivePacket.Length, ref bytesWritten), bytesWritten, "Failed to write DMX receive mode to device"))
                 return false;
 
             //Purge();
@@ -183,10 +193,8 @@ internal class DmxUsbProController : IDmxController
             bytesWritten = 0;
             byte[] buffer = new byte[1024];
 
-            FTDI.FT_STATUS status = ftdi.Read(buffer, (uint)buffer.Length, ref bytesWritten);
-
-            if (status != FTDI.FT_STATUS.FT_OK)
-                throw new DmxException("Error occurred while writing dmx data: " + status, status);
+            if (!CheckStatusCode(ftdi.Read(buffer, (uint)buffer.Length, ref bytesWritten), bytesWritten, "Failed to read dmx data"))
+                return false;
 
             if (!TryGetDmxData(buffer, out data))
                 return false;
@@ -211,8 +219,8 @@ internal class DmxUsbProController : IDmxController
         {
             using BinaryReader reader = new BinaryReader(new MemoryStream(buffer));
 
-            if (reader.ReadByte() != DmxUsbProConstants.DMX_START_CODE)
-                return false;
+            while (reader.ReadByte() != DmxUsbProConstants.DMX_START_CODE)
+                ;
 
             if (reader.ReadByte() != DmxUsbProConstants.RECEIVED_DMX_PACKET_LABEL)
                 return false;

@@ -58,7 +58,7 @@ public class FtdiDmxController : IDmxController, IDisposable
 
             uint bytesWritten = 0;
             FTDI.FT_STATUS status = ftdi.Write(buffer, buffer.Length, ref bytesWritten);
-            if (status != FTDI.FT_STATUS.FT_OK)
+            if (status != FTDI.FT_STATUS.FT_OK || bytesWritten == 0)
                 throw new DmxException("Error occurred while writing dmx data: " + status, status);
 
             if (bytesWritten != buffer.Length)
@@ -113,13 +113,8 @@ public class FtdiDmxController : IDmxController, IDisposable
             uint deviceCount = 0;
 
             // Look for devices
-            FTDI.FT_STATUS status = ftdi.GetNumberOfDevices(ref deviceCount);
-
-            if (status != FTDI.FT_STATUS.FT_OK)
-            {
-                Log.Error("Failed to get number of dmx devices (error " + status.ToString() + ")");
+            if (!CheckStatusCode(ftdi.GetNumberOfDevices(ref deviceCount), "Failed to get number of dmx devices"))
                 return false;
-            }
 
             Log.Info("Number of FTDI devices: " + deviceCount.ToString());
 
@@ -129,13 +124,8 @@ public class FtdiDmxController : IDmxController, IDisposable
             FTDI.FT_DEVICE_INFO_NODE[] ftdiDeviceList = new FTDI.FT_DEVICE_INFO_NODE[deviceCount];
 
             // Populate our device list
-            status = ftdi.GetDeviceList(ftdiDeviceList);
-
-            if (status != FTDI.FT_STATUS.FT_OK)
-            {
-                Log.Error("Failed to get dmx device list (error " + status.ToString() + ")");
+            if (!CheckStatusCode(ftdi.GetDeviceList(ftdiDeviceList), "Failed to get dmx device list"))
                 return false;
-            }
 
 
             if (device < 0 || device >= ftdiDeviceList.Length)
@@ -152,47 +142,26 @@ public class FtdiDmxController : IDmxController, IDisposable
             sb.AppendLine("Description: " + deviceInfo.Description.ToString());
             Log.Info(sb.ToString());
 
-            status = ftdi.OpenBySerialNumber(deviceInfo.SerialNumber);
-            if (status != FTDI.FT_STATUS.FT_OK)
-            {
-                Log.Error("Failed to open device (error " + status.ToString() + ")");
+            if (!CheckStatusCode(ftdi.OpenBySerialNumber(deviceInfo.SerialNumber), "Failed to open device"))
                 return false;
-            }
 
-            status = ftdi.ResetDevice();
-            if (status != FTDI.FT_STATUS.FT_OK)
-            {
-                Log.Error("Failed to reset device (error " + status.ToString() + ")");
+            if (!CheckStatusCode(ftdi.ResetDevice(), "Failed to reset device"))
                 return false;
-            }
 
-            status = ftdi.SetBaudRate(250000);
-            if (status != FTDI.FT_STATUS.FT_OK)
-            {
-                Log.Error("Failed to set device baud rate (error " + status.ToString() + ")");
+            if(!CheckStatusCode(ftdi.SetBaudRate(250000), "Failed to set device baud rate"))
                 return false;
-            }
 
-            status = ftdi.SetDataCharacteristics(FTDI.FT_DATA_BITS.FT_BITS_8, FTDI.FT_STOP_BITS.FT_STOP_BITS_2, FTDI.FT_PARITY.FT_PARITY_NONE);
-            if (status != FTDI.FT_STATUS.FT_OK)
-            {
-                Log.Error("Failed to set device data characteristics (error " + status.ToString() + ")");
+            if (!CheckStatusCode(ftdi.SetDataCharacteristics(FTDI.FT_DATA_BITS.FT_BITS_8, FTDI.FT_STOP_BITS.FT_STOP_BITS_2, FTDI.FT_PARITY.FT_PARITY_NONE), "Failed to set device data characteristics"))
                 return false;
-            }
 
-            status = ftdi.SetFlowControl(FTDI.FT_FLOW_CONTROL.FT_FLOW_NONE, 0, 0);
-            if (status != FTDI.FT_STATUS.FT_OK)
-            {
-                Log.Error("Failed to set device flow control (error " + status.ToString() + ")");
+            if (!CheckStatusCode(ftdi.SetFlowControl(FTDI.FT_FLOW_CONTROL.FT_FLOW_NONE, 0, 0), "Failed to set device flow control"))
                 return false;
-            }
 
-            status = ftdi.SetRTS(false);
-            if (status != FTDI.FT_STATUS.FT_OK)
-            {
-                Log.Error("Failed to set device rts (error " + status.ToString() + ")");
+            if (!CheckStatusCode(ftdi.SetRTS(false), "Failed to set device rts"))
                 return false;
-            }
+
+            if (!CheckStatusCode(ftdi.SetTimeouts(5000, 1000), "Failed to set device timeouts"))
+                return false;
 
             if (deviceInfo.Description == "DMX USB PRO")
                 controller = new DmxUsbProController(ftdi);
@@ -217,7 +186,7 @@ public class FtdiDmxController : IDmxController, IDisposable
 
     }
 
-    private bool CheckStatusCode(FTDI.FT_STATUS status, string error)
+    private static bool CheckStatusCode(FTDI.FT_STATUS status, string error)
     {
         if(status != FTDI.FT_STATUS.FT_OK)
         {

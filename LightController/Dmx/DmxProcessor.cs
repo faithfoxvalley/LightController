@@ -5,7 +5,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
+using static LightController.Pro.Packet.Presentation;
 
 namespace LightController.Dmx;
 
@@ -188,7 +190,7 @@ public class DmxProcessor
 
     }
 
-    internal bool TryReadDmx(out byte[] data)
+    public bool TryReadDmx(out byte[] data)
     {
         data = null;
 
@@ -196,5 +198,15 @@ public class DmxProcessor
             return controller.TryReadDmxFrame(out data);
 
         return false;
+    }
+
+    public async Task<byte[]> ReadDmx()
+    {
+        return await Task.Run(() =>
+        {
+            if (TryReadDmx(out byte[] data))
+                return data;
+            return null;
+        });
     }
 }
