@@ -1,5 +1,6 @@
 ﻿using LightController.Config.Animation;
 using LightController.Config.Dmx;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -96,7 +97,7 @@ public class DmxProcessor
 
     private bool OpenDevice(int device)
     {
-        if(FtdiDmxController.TryOpenDevice(device, out FtdiDmxController controller))
+        if(FtdiDmxController.TryOpenDevice(device, out IDmxController controller))
         {
             this.controller = controller;
             return true;
@@ -185,5 +186,15 @@ public class DmxProcessor
     {
         preview.Init(fixtures);
 
+    }
+
+    internal bool TryReadDmx(out byte[] data)
+    {
+        data = null;
+
+        if(controller.IsOpen)
+            return controller.TryReadDmxFrame(out data);
+
+        return false;
     }
 }

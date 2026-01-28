@@ -31,6 +31,12 @@ internal class NullDmxController : IDmxController
         Buffer.BlockCopy(values, 0, buffer, startChannel, values.Length);
     }
 
+    public bool TryReadDmxFrame(out byte[] data)
+    {
+        data = null;
+        return false;
+    }
+
     public void WriteData()
     {
 

@@ -12,6 +12,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Interop;
 
 namespace LightController;
 
@@ -287,6 +288,18 @@ public partial class MainWindow : Window
             dmx.Preview = null;
             preview = null;
         };
+    }
+
+    private void ReadDmxClick(object sender, RoutedEventArgs e)
+    {
+        if(!dmx.TryReadDmx(out byte[] data))
+        {
+            ErrorBox.Show("Failed to read DMX data", false);
+            return;
+        }
+
+        Clipboard.SetText(Convert.ToBase64String(data));
+        MessageBox.Show("DMX data copied to clipboard", "Light Controller");
     }
 
     private void EditConfigClick(object sender, RoutedEventArgs e)

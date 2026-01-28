@@ -11,5 +11,6 @@ public interface IDmxController : IDisposable
     void SetChannels(int startAddress, byte[] data);
     void WriteData();
     void WriteDebugInfo(StringBuilder sb, int columns);
+    bool TryReadDmxFrame(out byte[] data);
 
 }

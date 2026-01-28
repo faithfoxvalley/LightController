@@ -9,24 +9,15 @@ public class FtdiDmxController : IDmxController, IDisposable
     private readonly FTDI ftdi;
     private readonly byte[] buffer = new byte[513];
     private int bufferOffset = 0;
-    private bool usbPro;
     private object writeLock = new object();
-    private bool ready = true;
 
-    public bool IsOpen => ftdi.IsOpen && ready;
+    public bool IsOpen => ftdi.IsOpen;
 
-    private FtdiDmxController(FTDI ftdi, bool usbPro = false)
+    private FtdiDmxController(FTDI ftdi)
     {
         this.ftdi = ftdi;
-        this.usbPro = usbPro;
 
         Array.Clear(buffer, 0, buffer.Length);
-
-        if(usbPro)
-        {
-            buffer = ENTTEC.Devices.Data.DmxUsbProUtils.CreatePacketForDevice(ENTTEC.Devices.Data.DmxUsbProConstants.SEND_DMX_PACKET_REQUEST_LABEL, buffer);
-            bufferOffset = 4;
-        }
 
         WriteData();
     }
@@ -112,7 +103,7 @@ public class FtdiDmxController : IDmxController, IDisposable
         }
     }
 
-    public static bool TryOpenDevice(int device, out FtdiDmxController controller)
+    public static bool TryOpenDevice(int device, out IDmxController controller)
     {
         controller = null;
 
@@ -203,7 +194,10 @@ public class FtdiDmxController : IDmxController, IDisposable
                 return false;
             }
 
-            controller = new FtdiDmxController(ftdi, deviceInfo.Description == "DMX USB PRO");
+            if (deviceInfo.Description == "DMX USB PRO")
+                controller = new DmxUsbProController(ftdi);
+            else
+                controller = new FtdiDmxController(ftdi);
             return true;
         }
         catch (Exception e)
@@ -218,44 +212,9 @@ public class FtdiDmxController : IDmxController, IDisposable
         if (!ftdi.IsOpen)
             return;
 
-        CloseDmxPro();
-
         if (!CheckStatusCode(ftdi.Close(), "Failed finalize close of DMX device"))
             return;
 
-    }
-
-    private void CloseDmxPro()
-    {
-        if (!usbPro)
-            return;
-
-        /* ENTTEC API:
-         * "The periodic DMX packet output will stop and the Widget DMX port direction will change to input when the
-         * Widget receives any request message other than the Output Only Send DMX Packet request, or the Get
-         * Widget Parameters request." 
-         */
-
-        lock (writeLock)
-        {
-            ready = false;
-
-            byte[] buffer = ENTTEC.Devices.Data.DmxUsbProUtils.CreatePacketForDevice(ENTTEC.Devices.Data.DmxUsbProConstants.GET_WIDGET_SERIAL_NUMBER_LABEL);
-
-            if (!CheckStatusCode(ftdi.Purge(FTDI.FT_PURGE.FT_PURGE_TX), "Failed to purge DMX device during close (1)"))
-                return;
-            if (!CheckStatusCode(ftdi.Purge(FTDI.FT_PURGE.FT_PURGE_RX), "Failed to purge DMX device during close (2)"))
-                return;
-
-            if (!CheckStatusCode(ftdi.SetBreak(true), "Failed to set break for DMX device during close"))
-                return;
-            if (!CheckStatusCode(ftdi.SetBreak(false), "Failed to reset break for DMX device during close"))
-                return;
-
-            uint bytesWritten = 0;
-            if (!CheckStatusCode(ftdi.Write(buffer, buffer.Length, ref bytesWritten), "Failed to write closing data to DMX device"))
-                return;
-        }
     }
 
     private bool CheckStatusCode(FTDI.FT_STATUS status, string error)
@@ -266,5 +225,11 @@ public class FtdiDmxController : IDmxController, IDisposable
             return false;
         }
         return true;
+    }
+
+    public bool TryReadDmxFrame(out byte[] data)
+    {
+        data = null;
+        return false;
     }
 }
