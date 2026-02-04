@@ -20,9 +20,11 @@ public class DmxFixture
     public int FixtureId => fixtureId;
 
 
-    public DmxFixture(Config.Dmx.DmxDeviceProfile profile, int dmxStartAddress, int fixtureId)
+    public DmxFixture(Config.Dmx.DmxDeviceProfile profile, int dmxStartAddress, int fixtureId, int universe)
     {
         detailString = $"{fixtureId} - {profile.Name} - {dmxStartAddress}-{dmxStartAddress + profile.DmxLength - 1}";
+        if (universe > 1)
+            detailString += $"[{universe}]";
 
         // Construct the default frame
         byte[] data = new byte[profile.DmxLength];

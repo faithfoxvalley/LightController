@@ -8,6 +8,7 @@ internal class NullDmxController : IDmxController
     private readonly byte[] buffer = new byte[513];
 
     public bool IsOpen => true;
+    public string Name => "null";
 
     public void Dispose()
     {

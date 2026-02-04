@@ -16,11 +16,12 @@ internal class DmxUsbProController : IDmxController
     private bool ready = true;
 
     public bool IsOpen => ftdi.IsOpen && ready;
+    public string Name { get; }
 
-    internal DmxUsbProController(FTDI ftdi)
+    internal DmxUsbProController(FTDI ftdi, string name)
     {
         this.ftdi = ftdi;
-
+        Name = name;
         Array.Clear(buffer, 0, buffer.Length);
         buffer = DmxUsbProUtils.CreatePacketForDevice(DmxUsbProConstants.SEND_DMX_PACKET_REQUEST_LABEL, buffer);
         bufferOffset = DmxUsbProConstants.PacketDataStartPosition;

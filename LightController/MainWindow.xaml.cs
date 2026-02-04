@@ -34,7 +34,6 @@ public partial class MainWindow : Window
     private SceneManager sceneManager;
     private DmxProcessor dmx;
     private BacnetProcessor bacNet;
-    private TickLoop dmxTimer; // Runs on different thread
     private TickLoop inputsTimer; // Runs on different thread
     private TickLoop bacNetTimer; // Runs on different thread
     private bool inputActivated = false;
@@ -100,7 +99,7 @@ public partial class MainWindow : Window
         }
 
         pro = new ProPresenter(mainConfig.ProPresenter, mediaList);
-        dmx = new DmxProcessor(mainConfig.Dmx);
+        dmx = new DmxProcessor(mainConfig.Dmx, DmxUpdateFps);
         bacNet = new BacnetProcessor(showConfig.Bacnet, bacnetList);
         if (bacNet.Enabled)
             bacnetContainer.Visibility = Visibility.Visible;
@@ -113,7 +112,6 @@ public partial class MainWindow : Window
         // Update fixture list
         dmx.AppendToListbox(fixtureList);
 
-        dmxTimer = new TickLoop(DmxUpdateFps, UpdateDmx);
         inputsTimer = new TickLoopAsync(InputsUpdateFps, UpdateInputs);
         if (bacNet.Enabled)
             bacNetTimer = new TickLoop(BacnetUpdateFps, UpdateBacnet);
@@ -150,15 +148,14 @@ public partial class MainWindow : Window
     private void UiTimer_Tick(object sender, EventArgs e)
     {
         StringBuilder sb = new StringBuilder();
-        sb.Append("Dmx").AppendLine();
-        dmxTimer.AppendPerformanceInfo(sb);
-        sb.AppendLine();
-        sb.Append("Input").AppendLine();
+        sb.Append("[Dmx]").AppendLine();
+        dmx.AppendPerformanceInfo(sb);
+        sb.Append("[Input]").AppendLine();
         inputsTimer.AppendPerformanceInfo(sb);
         if(bacNetTimer != null)
         {
             sb.AppendLine();
-            sb.Append("Bacnet").AppendLine();
+            sb.Append("[Bacnet]").AppendLine();
             bacNetTimer.AppendPerformanceInfo(sb);
         }
         performanceInfo.Text = sb.ToString();
@@ -194,12 +191,6 @@ public partial class MainWindow : Window
         }
 
         await sceneManager.UpdateAsync();
-    }
-
-    // This runs on a different thread
-    private void UpdateDmx()
-    {
-        dmx.Write();
     }
 
     // This runs on a different thread
@@ -278,32 +269,15 @@ public partial class MainWindow : Window
             preview.Loaded += (o, e) =>
             {
                 dmx.InitPreview(preview);
-                dmx.Preview = preview;
             };
 
         }
         preview.Show();
         preview.Closing += (o, e) =>
         {
-            dmx.Preview = null;
+            dmx.ClosePreview();
             preview = null;
         };
-    }
-
-    private async void ReadDmxClick(object sender, RoutedEventArgs e)
-    {
-        byte[] data = await dmx.ReadDmx();
-        Dispatcher.Invoke(() =>
-        {
-            if (data == null)
-            {
-                ErrorBox.Show("Failed to read DMX data", false);
-                return;
-            }
-
-            Clipboard.SetText(Convert.ToBase64String(data));
-            MessageBox.Show("DMX data copied to clipboard", "Light Controller");
-        });
     }
 
     private void EditConfigClick(object sender, RoutedEventArgs e)

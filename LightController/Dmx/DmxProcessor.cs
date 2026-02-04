@@ -1,24 +1,18 @@
 ﻿using LightController.Config.Animation;
 using LightController.Config.Dmx;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-using System.Windows;
-using static LightController.Pro.Packet.Presentation;
 
 namespace LightController.Dmx;
 
 public class DmxProcessor
 {
-    private bool debug;
     private List<DmxFixture> fixtures = new List<DmxFixture>();
-    private IDmxController controller = new NullDmxController();
-    public PreviewWindow Preview { get; set; }
+    private List<DmxUniverse> universes = new List<DmxUniverse>();
 
-    public DmxProcessor(DmxConfig config)
+    public DmxProcessor(DmxConfig config, int dmxFps)
     {
         if(config == null)
         {
@@ -26,14 +20,25 @@ public class DmxProcessor
             return;
         }
 
-        while (!OpenDevice((int)config.DmxDevice) && !config.DeviceOptional)
+        FtdiDmxController.LogCurrentDevices();
+
+        if (config.Interfaces == null || config.Interfaces.Count == 0)
         {
-#if DEBUG
-            Log.Error("DMX Device not found");
-            break;
-#else
-            ErrorBox.ExitOnCancel("DMX Device not found. Press OK to try again or Cancel to exit."); 
-#endif
+            universes.Add(new DmxUniverse(null, dmxFps, config.DeviceOptional));
+        }
+        else
+        {
+            foreach(string dmxInterface in config.Interfaces)
+            {
+                if (string.IsNullOrWhiteSpace(dmxInterface))
+                    continue;
+                universes.Add(new DmxUniverse(dmxInterface, dmxFps, config.DeviceOptional));
+            }
+            if(universes.Count == 0)
+            {
+                ErrorBox.Show("No DMX devices configured");
+                return;
+            }    
         }
 
         if (config.Addresses == null || config.Addresses.Count == 0)
@@ -53,39 +58,53 @@ public class DmxProcessor
         {
             if(fixtureAddress.Name == null)
             {
-                Log.Error("DMX fixture with address " + fixtureAddress.StartAddress + " does not contain a fixture profile name.");
+                ErrorBox.Show("DMX fixture with address " + fixtureAddress.StartAddress + " does not contain a fixture profile name.");
+                return;
             }
-            else if(fixtureAddress.Count < 1)
+
+            if(fixtureAddress.Count < 1)
             {
-                Log.Error("DMX address for fixture '" + fixtureAddress.Name + "' must have a count that is at least 1.");
+                ErrorBox.Show("DMX address for fixture '" + fixtureAddress.Name + "' must have a count that is at least 1.");
+                return;
             }
-            else if(fixtureAddress.StartAddress < 1)
+
+            if(fixtureAddress.StartAddress < 1)
             {
-                Log.Error("DMX address for fixture '" + fixtureAddress.Name + "' must have a start address that is at least 1.");
+                ErrorBox.Show("DMX address for fixture '" + fixtureAddress.Name + "' must have a start address that is at least 1.");
+                return;
             }
-            else if(profiles.TryGetValue(fixtureAddress.Name, out DmxDeviceProfile profile))
+
+            if(profiles.TryGetValue(fixtureAddress.Name, out DmxDeviceProfile profile))
             {
                 if(profile.DmxLength < 1)
                 {
-                    Log.Error("DMX profile for fixture '" + profile.Name + "' must have a dmx length of at least one.");
+                    ErrorBox.Show("DMX profile for fixture '" + profile.Name + "' must have a dmx length of at least one.");
+                    return;
                 }
-                else if(profile.DmxLength < profile.AddressMap.Count)
+
+                if(profile.DmxLength < profile.AddressMap.Count)
                 {
-                    Log.Error("DMX profile for fixture '" + profile.Name + "' has more defined channels than its dmx length.");
+                    ErrorBox.Show("DMX profile for fixture '" + profile.Name + "' has more defined channels than its dmx length.");
+                    return;
                 }
-                else
+
+                int address = fixtureAddress.StartAddress;
+                for (int i = 0; i < fixtureAddress.Count; i++)
                 {
-                    int address = fixtureAddress.StartAddress;
-                    for (int i = 0; i < fixtureAddress.Count; i++)
+                    DmxFixture fixture = new DmxFixture(profile, address, fixtures.Count + 1, fixtureAddress.Universe);
+                    if(!TryAddFixture(fixture, fixtureAddress.Universe))
                     {
-                        fixtures.Add(new DmxFixture(profile, address, fixtures.Count + 1));
-                        address += profile.DmxLength;
+                        ErrorBox.Show($"DMX profile for fixture '{profile.Name}' is configured with a DMX universe that does not exist");
+                        return;
                     }
+                    fixtures.Add(fixture);
+                    address += profile.DmxLength;
                 }
             }
             else
             {
-                Log.Error("No DMX fixture profile with name '" + fixtureAddress.Name + "' found.");
+                ErrorBox.Show("No DMX fixture profile with name '" + fixtureAddress.Name + "' found.");
+                return;
             }
         }
     }
@@ -97,15 +116,13 @@ public class DmxProcessor
             list.Items.Add(fixture);
     }
 
-    private bool OpenDevice(int device)
+    private bool TryAddFixture(DmxFixture fixture, int universe)
     {
-        if(FtdiDmxController.TryOpenDevice(device, out IDmxController controller))
-        {
-            this.controller = controller;
-            return true;
-        }
-        this.controller = new NullDmxController();
-        return false;
+        if (universe <= 0 || universe > universes.Count)
+            return false;
+
+        universes[universe - 1].AddFixture(fixture);
+        return true;
     }
 
     /// <summary>
@@ -117,10 +134,14 @@ public class DmxProcessor
 
         foreach (DmxFixture fixture in fixtures)
             fixture.TurnOff();
-        Write();
+
+        foreach (DmxUniverse universe in universes)
+            universe.Write();
+
         Thread.Sleep(500); // Allow the DMX device to transmit the empty frame before shutting down
-        if (controller.IsOpen)
-            controller.Dispose();
+
+        foreach (DmxUniverse universe in universes)
+            universe.TurnOff();
 
         Log.Info("Turned off DMX");
     }
@@ -134,79 +155,28 @@ public class DmxProcessor
         }
     }
 
-    
-    public void Write()
+    internal void AppendPerformanceInfo(StringBuilder sb)
     {
-#if !DEBUG
-        if (!controller.IsOpen)
-            return;
-#endif
-        Dictionary<int, DmxFrame> frames = null;
-        if (Preview != null)
-            frames = new Dictionary<int, DmxFrame>();
-
-        foreach (DmxFixture fixture in fixtures)
-        {
-            DmxFrame frame = fixture.GetFrame();
-            controller.SetChannels(frame.StartAddress, frame.Data);
-            if (frames != null)
-                frames[fixture.FixtureId] = frame;
-        }
-
-        PreviewWindow preview = Preview;
-        if (preview != null)
-        {
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                foreach (DmxFixture fixture in fixtures)
-                {
-                    DmxFrame frame = frames[fixture.FixtureId];
-                    preview.SetPreviewColor(fixture.FixtureId, frame.PreviewColor, frame.PreviewIntensity);
-                }
-            });
-        }
-
-        if (debug)
-        {
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine("DMX data:");
-            controller.WriteDebugInfo(sb, 8);
-            debug = false;
-            Log.Info(sb.ToString());
-        }
-
-        if(controller.IsOpen)
-            controller.WriteData();
+        foreach (DmxUniverse universe in universes)
+            universe.AppendPerformanceInfo(sb);
     }
 
-    public void WriteDebug()
+    internal void WriteDebug()
     {
-        debug = true;
+        foreach (DmxUniverse universe in universes)
+            universe.WriteDebug();
     }
 
-    public void InitPreview(PreviewWindow preview)
+    internal void InitPreview(PreviewWindow preview)
     {
         preview.Init(fixtures);
-
+        foreach (DmxUniverse universe in universes)
+            universe.InitPreview(preview);
     }
 
-    public bool TryReadDmx(out byte[] data)
+    internal void ClosePreview()
     {
-        data = null;
-
-        if(controller.IsOpen)
-            return controller.TryReadDmxFrame(out data);
-
-        return false;
-    }
-
-    public async Task<byte[]> ReadDmx()
-    {
-        return await Task.Run(() =>
-        {
-            if (TryReadDmx(out byte[] data))
-                return data;
-            return null;
-        });
+        foreach (DmxUniverse universe in universes)
+            universe.ClosePreview();
     }
 }

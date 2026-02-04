@@ -13,13 +13,16 @@ public class FtdiDmxController : IDmxController, IDisposable
 
     public bool IsOpen => ftdi.IsOpen;
 
-    private FtdiDmxController(FTDI ftdi)
+    public string Name { get; private set; }
+
+    private FtdiDmxController(FTDI ftdi, string name)
     {
         this.ftdi = ftdi;
 
         Array.Clear(buffer, 0, buffer.Length);
 
         WriteData();
+        Name = name;
     }
 
     public void SetChannel(int channel, byte value)
@@ -103,7 +106,40 @@ public class FtdiDmxController : IDmxController, IDisposable
         }
     }
 
-    public static bool TryOpenDevice(int device, out IDmxController controller)
+    public static void LogCurrentDevices()
+    {
+        FTDI ftdi = new FTDI();
+        uint deviceCount = 0;
+
+        // Look for devices
+        if (!CheckStatusCode(ftdi.GetNumberOfDevices(ref deviceCount), "Failed to get number of dmx devices"))
+            return;
+
+        Log.Info("Number of FTDI devices: " + deviceCount.ToString());
+
+        if (deviceCount == 0)
+            return;
+
+        FTDI.FT_DEVICE_INFO_NODE[] ftdiDeviceList = new FTDI.FT_DEVICE_INFO_NODE[deviceCount];
+
+        // Populate our device list
+        if (!CheckStatusCode(ftdi.GetDeviceList(ftdiDeviceList), "Failed to get dmx device list"))
+            return;
+        foreach (var deviceInfo in ftdiDeviceList)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("DMX device:");
+            sb.AppendLine("Flags: " + string.Format("{0:x}", deviceInfo.Flags));
+            sb.AppendLine("Type: " + deviceInfo.Type.ToString());
+            sb.AppendLine("ID: " + string.Format("{0:x}", deviceInfo.ID));
+            sb.AppendLine("Location ID: " + string.Format("{0:x}", deviceInfo.LocId));
+            sb.AppendLine("Serial Number: " + deviceInfo.SerialNumber.ToString());
+            sb.AppendLine("Description: " + deviceInfo.Description.ToString());
+            Log.Info(sb.ToString());
+        }
+    }
+
+    public static bool TryOpenDevice(string serialNumber, out IDmxController controller)
     {
         controller = null;
 
@@ -116,8 +152,6 @@ public class FtdiDmxController : IDmxController, IDisposable
             if (!CheckStatusCode(ftdi.GetNumberOfDevices(ref deviceCount), "Failed to get number of dmx devices"))
                 return false;
 
-            Log.Info("Number of FTDI devices: " + deviceCount.ToString());
-
             if (deviceCount == 0)
                 return false;
 
@@ -127,20 +161,26 @@ public class FtdiDmxController : IDmxController, IDisposable
             if (!CheckStatusCode(ftdi.GetDeviceList(ftdiDeviceList), "Failed to get dmx device list"))
                 return false;
 
+            FTDI.FT_DEVICE_INFO_NODE deviceInfo = null;
+            if (!string.IsNullOrWhiteSpace(serialNumber))
+            {
+                deviceInfo = ftdiDeviceList[0];
+            }
+            else
+            {
+                foreach(var ftdiDevice in ftdiDeviceList)
+                {
+                    if (ftdiDevice.SerialNumber == serialNumber)
+                    {
+                        deviceInfo = ftdiDevice;
+                        break;
+                    }
+                }
+                if(deviceInfo == null)
+                    return false;
+            }
 
-            if (device < 0 || device >= ftdiDeviceList.Length)
-                device = 0;
-
-            FTDI.FT_DEVICE_INFO_NODE deviceInfo = ftdiDeviceList[device];
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine("Opening device with index " + device);
-            sb.AppendLine("Flags: " + string.Format("{0:x}", deviceInfo.Flags));
-            sb.AppendLine("Type: " + deviceInfo.Type.ToString());
-            sb.AppendLine("ID: " + string.Format("{0:x}", deviceInfo.ID));
-            sb.AppendLine("Location ID: " + string.Format("{0:x}", deviceInfo.LocId));
-            sb.AppendLine("Serial Number: " + deviceInfo.SerialNumber.ToString());
-            sb.AppendLine("Description: " + deviceInfo.Description.ToString());
-            Log.Info(sb.ToString());
+            Log.Info("Opening DMX device:" + deviceInfo.SerialNumber.ToString());
 
             if (!CheckStatusCode(ftdi.OpenBySerialNumber(deviceInfo.SerialNumber), "Failed to open device"))
                 return false;
@@ -148,7 +188,7 @@ public class FtdiDmxController : IDmxController, IDisposable
             if (!CheckStatusCode(ftdi.ResetDevice(), "Failed to reset device"))
                 return false;
 
-            if(!CheckStatusCode(ftdi.SetBaudRate(250000), "Failed to set device baud rate"))
+            if (!CheckStatusCode(ftdi.SetBaudRate(250000), "Failed to set device baud rate"))
                 return false;
 
             if (!CheckStatusCode(ftdi.SetDataCharacteristics(FTDI.FT_DATA_BITS.FT_BITS_8, FTDI.FT_STOP_BITS.FT_STOP_BITS_2, FTDI.FT_PARITY.FT_PARITY_NONE), "Failed to set device data characteristics"))
@@ -164,9 +204,9 @@ public class FtdiDmxController : IDmxController, IDisposable
                 return false;
 
             if (deviceInfo.Description == "DMX USB PRO")
-                controller = new DmxUsbProController(ftdi);
+                controller = new DmxUsbProController(ftdi, deviceInfo.SerialNumber);
             else
-                controller = new FtdiDmxController(ftdi);
+                controller = new FtdiDmxController(ftdi, deviceInfo.SerialNumber);
             return true;
         }
         catch (Exception e)
