@@ -162,7 +162,7 @@ public class FtdiDmxController : IDmxController, IDisposable
                 return false;
 
             FTDI.FT_DEVICE_INFO_NODE deviceInfo = null;
-            if (!string.IsNullOrWhiteSpace(serialNumber))
+            if (string.IsNullOrWhiteSpace(serialNumber))
             {
                 deviceInfo = ftdiDeviceList[0];
             }
