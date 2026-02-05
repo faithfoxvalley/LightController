@@ -22,29 +22,39 @@ public class DmxProcessor
 
         FtdiDmxController.LogCurrentDevices();
 
+        if (config.Addresses == null || config.Addresses.Count == 0)
+        {
+            Log.Warn("No DMX fixture addresses found.");
+            return;
+        }
+
         if (config.Interfaces == null || config.Interfaces.Count == 0)
         {
             universes.Add(new DmxUniverse(null, dmxFps, config.DeviceOptional));
         }
         else
         {
-            foreach(string dmxInterface in config.Interfaces)
+            List<int> universeIds = config.Addresses.Select(x => x.Universe).ToList();
+            for (int i = 0; i < config.Interfaces.Count; i++)
             {
+                string dmxInterface = config.Interfaces[i];
                 if (string.IsNullOrWhiteSpace(dmxInterface))
                     continue;
-                universes.Add(new DmxUniverse(dmxInterface, dmxFps, config.DeviceOptional));
+                if (universeIds.Contains(i + 1))
+                {
+                    universes.Add(new DmxUniverse(dmxInterface, dmxFps, config.DeviceOptional));
+                }
+                else
+                {
+                    universes.Add(new DmxUniverse());
+                    Log.Warn($"DMX device {dmxInterface} was specified as an interface but is not being used by any fixtures");
+                }
             }
             if(universes.Count == 0)
             {
                 ErrorBox.Show("No DMX devices configured");
                 return;
             }    
-        }
-
-        if (config.Addresses == null || config.Addresses.Count == 0)
-        {
-            Log.Warn("No DMX fixture addresses found.");
-            return;
         }
 
         Dictionary<string, DmxDeviceProfile> profiles;

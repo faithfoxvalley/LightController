@@ -13,6 +13,11 @@ internal class DmxUniverse
     private string name;
     private PreviewWindow preview;
 
+    public DmxUniverse()
+    {
+
+    }
+
     public DmxUniverse(string serialNumber, int fps, bool optional)
     {
         while (!OpenDevice(serialNumber) && !optional)
@@ -117,6 +122,8 @@ internal class DmxUniverse
 
     internal void AppendPerformanceInfo(StringBuilder sb)
     {
+        if (dmxTimer == null)
+            return;
         if(name != null)
             sb.Append(name).AppendLine();
         dmxTimer.AppendPerformanceInfo(sb);
