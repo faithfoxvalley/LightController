@@ -146,7 +146,10 @@ public class DmxProcessor
             fixture.TurnOff();
 
         foreach (DmxUniverse universe in universes)
+        {
+            universe.WriteDebug(false);
             universe.Write();
+        }
 
         Thread.Sleep(500); // Allow the DMX device to transmit the empty frame before shutting down
 

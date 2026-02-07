@@ -110,9 +110,9 @@ internal class DmxUniverse
     }
 
 
-    public void WriteDebug()
+    public void WriteDebug(bool debug = true)
     {
-        debug = true;
+        this.debug = debug;
     }
 
     internal void AddFixture(DmxFixture fixture)
