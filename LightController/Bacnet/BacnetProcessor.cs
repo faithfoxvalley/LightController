@@ -1,10 +1,13 @@
-﻿using System.Collections.Generic;
-using System.IO.BACnet;
-using LightController.Config.Bacnet;
-using System.Net;
-using System.Collections.Concurrent;
+﻿using LightController.Config.Bacnet;
 using LightController.Midi;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.IO.BACnet;
 using System.Linq;
+using System.Net;
+using System.Threading.Tasks;
+using System.Windows.Controls;
 
 namespace LightController.Bacnet;
 
@@ -14,9 +17,11 @@ public partial class BacnetProcessor
     private readonly ConcurrentDictionary<uint, BacNode> nodes = new ConcurrentDictionary<uint, BacNode>();
     private readonly Dictionary<string, BacnetEvent> namedEvents = new Dictionary<string, BacnetEvent>();
     private readonly Dictionary<MidiNote, BacnetEvent> midiEvents = new Dictionary<MidiNote, BacnetEvent>();
+    private readonly List<BacnetEvent> allEvents = new List<BacnetEvent>();
 
     private readonly object writeRequestsLock = new object();
     private readonly Dictionary<BacnetEndpoint, BacnetRequest> writeRequests = new Dictionary<BacnetEndpoint, BacnetRequest>();
+    private readonly ListBox bacnetList;
 
     // used to send whois packets every 10ish seconds
     private int WhoIsTick = 0; 
@@ -38,7 +43,10 @@ public partial class BacnetProcessor
             if (e.MidiNote != null)
                 midiEvents[e.MidiNote] = e;
             bacnetList.Items.Add(e.ToString());
+            allEvents.Add(e);
         }
+
+        bacnetList.SelectionChanged += ListboxChanged;
 
         ushort port = 0xBAC0;
         if(config.Port > 0)
@@ -58,10 +66,43 @@ public partial class BacnetProcessor
         bacnetClient = new BacnetClient(transport);
         bacnetClient.Start();
         bacnetClient.OnIam += OnIamReceived;
+        bacnetClient.OnError += BacnetClient_OnError;
+        bacnetClient.Retries = 1;
+
         bacnetClient.WhoIs();
 
         Enabled = true;
+        this.bacnetList = bacnetList;
     }
+
+    private void BacnetClient_OnError(BacnetClient sender, BacnetAddress adr, BacnetPduTypes type, BacnetConfirmedServices service, byte invokeId, BacnetErrorClasses errorClass, BacnetErrorCodes errorCode, byte[] buffer, int offset, int length)
+    {
+        Log.Error($"[Bacnet] Pdu:{type} Service:{service} Error:{errorClass} {errorCode}");
+    }
+
+    private void ListboxChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        int prevSelection = -1;
+        if (e.RemovedItems.Count > 0)
+            prevSelection = bacnetList.Items.IndexOf(e.RemovedItems[0]);
+
+        int currSelection = -1;
+        if (e.AddedItems.Count > 0)
+            currSelection = bacnetList.Items.IndexOf(e.AddedItems[0]);
+        if (currSelection < 0 || currSelection >= bacnetList.Items.Count || currSelection == prevSelection)
+            return;
+
+        QueueEvent(allEvents[currSelection]);
+        if (prevSelection < bacnetList.Items.Count)
+            SetListSelection(prevSelection);
+    }
+    private void SetListSelection(int index)
+    {
+        bacnetList.SelectionChanged -= ListboxChanged;
+        bacnetList.SelectedIndex = index;
+        bacnetList.SelectionChanged += ListboxChanged;
+    }
+
 
     public void TriggerEvents(MidiNote note)
     {
@@ -71,13 +112,7 @@ public partial class BacnetProcessor
         if (note == null || !midiEvents.TryGetValue(note, out BacnetEvent e))
             return;
 
-        Log.Info("[Bacnet] Event: " + e);
-
-        lock (writeRequestsLock)
-        {
-            foreach (BacnetProperty prop in e.Properties)
-                writeRequests[prop.Endpoint] = prop.ValueRequest;
-        }
+        QueueEvent(e);
     }
 
     public void TriggerEvents(MidiNote note, IEnumerable<string> names)
@@ -101,16 +136,31 @@ public partial class BacnetProcessor
         if (events.Count == 0)
             return;
 
+
+        QueueEvents(events);
+    }
+
+    private void QueueEvents(IEnumerable<BacnetEvent> events)
+    {
         foreach (BacnetEvent e in events)
             Log.Info("[Bacnet] Event: " + e);
-
         lock (writeRequestsLock)
         {
-            foreach(BacnetEvent e in events)
+            foreach (BacnetEvent e in events)
             {
                 foreach (BacnetProperty prop in e.Properties)
                     writeRequests[prop.Endpoint] = prop.ValueRequest;
             }
+        }
+    }
+
+    private void QueueEvent(BacnetEvent e)
+    {
+        Log.Info("[Bacnet] Event: " + e);
+        lock (writeRequestsLock)
+        {
+            foreach (BacnetProperty prop in e.Properties)
+                writeRequests[prop.Endpoint] = prop.ValueRequest;
         }
     }
 
@@ -132,17 +182,7 @@ public partial class BacnetProcessor
         if (events.Count == 0)
             return;
 
-        foreach (BacnetEvent e in events)
-            Log.Info("[Bacnet] Event: " + e);
-
-        lock (writeRequestsLock)
-        {
-            foreach(BacnetEvent e in events)
-            {
-                foreach (BacnetProperty prop in e.Properties)
-                    writeRequests[prop.Endpoint] = prop.ValueRequest;
-            }
-        }
+        QueueEvents(events);
     }
 
     private void OnIamReceived(BacnetClient sender, BacnetAddress adr, uint deviceId, uint maxApdu, BacnetSegmentations segmentation, ushort vendorId)
@@ -154,9 +194,14 @@ public partial class BacnetProcessor
     public bool WriteValue(uint deviceId, BacnetObjectId objectId, BacnetValue value)
     {
         if (nodes.TryGetValue(deviceId, out BacNode node))
-            return bacnetClient.WritePropertyRequest(node.Address, objectId, BacnetPropertyIds.PROP_PRESENT_VALUE, new[] { value });
+        {
+            if (!bacnetClient.WritePropertyRequest(node.Address, objectId, BacnetPropertyIds.PROP_PRESENT_VALUE, new[] { value }))
+                Log.Warn($"[Bacnet] Unable to verify property write succeeded");
+            return true;
+        }
         return false;
     }
+
 
     public bool ReadValue(uint deviceId, BacnetObjectId objectId, out IList<BacnetValue> value)
     {

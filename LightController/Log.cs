@@ -14,6 +14,9 @@ public static class Log
     {
         ExpressionTemplate format = new ExpressionTemplate("{@t:HH:mm:ss} [{@l:u3}] [{ThreadID}]{CustomPrefix} {@m} {@x}\n");
         log = new LoggerConfiguration()
+#if DEBUG
+            .MinimumLevel.Debug()
+#endif
             .Enrich.With(new ThreadIDEnricher())
 #if DEBUG
             .WriteTo.Debug(format)
@@ -25,8 +28,11 @@ public static class Log
         AppDomain.CurrentDomain.UnhandledException += UnhandledException;
 
         Logger commonLog = new LoggerConfiguration()
+#if DEBUG
+            .MinimumLevel.Debug()
+#endif
             .Enrich.With(new PrefixEnricher("[Bacnet]"))
-            .WriteTo.Logger(log) 
+            .WriteTo.Logger(log)
             .CreateLogger();
 
         Common.Logging.LogManager.Adapter = new Common.Logging.Serilog.SerilogFactoryAdapter(commonLog);

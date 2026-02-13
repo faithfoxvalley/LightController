@@ -1,5 +1,6 @@
 ﻿using LightController.Bacnet;
 using System.IO.BACnet;
+using System.Threading.Tasks;
 using YamlDotNet.Serialization;
 
 namespace LightController.Config.Bacnet;
@@ -31,23 +32,25 @@ public class BacnetProperty
     {
         BacnetObjectTypes type;
         BacnetValue val;
-        if(OutputType)
+
+        if(AnalogType)
         {
-            if (AnalogType)
+            if (OutputType)
                 type = BacnetObjectTypes.OBJECT_ANALOG_OUTPUT;
             else
-                type = BacnetObjectTypes.OBJECT_BINARY_OUTPUT;
-            val = new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_REAL, (float)Value);
+                type = BacnetObjectTypes.OBJECT_ANALOG_VALUE;
+            val = new BacnetValue((float)Value);
         }
         else
         {
-            if (AnalogType)
-                type = BacnetObjectTypes.OBJECT_ANALOG_VALUE;
+            if (OutputType)
+                type = BacnetObjectTypes.OBJECT_BINARY_OUTPUT;
             else
                 type = BacnetObjectTypes.OBJECT_BINARY_VALUE;
-            val = new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED, (uint)Value);
+            val = new BacnetValue(Value == 1);
         }
         Endpoint = new BacnetEndpoint(DeviceId, type, PropertyId);
         ValueRequest = new BacnetRequest(Endpoint, val);
     }
+
 }

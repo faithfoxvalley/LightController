@@ -6,7 +6,7 @@
     <UseWPF>true</UseWPF>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <Platforms>AnyCPU;x64</Platforms>
-    <Version>1.11.0</Version>
+    <Version>1.11.1</Version>
     <FileVersion>$(Version)</FileVersion>
   </PropertyGroup>
 
@@ -26,7 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="BACnet" Version="3.0.1" />
+    <PackageReference Include="BACnet" Version="3.0.2" />
     <PackageReference Include="Colourful" Version="3.2.0" />
     <PackageReference Include="Common.Logging.Serilog" Version="5.1.0" />
     <PackageReference Include="FFMpegCore" Version="5.4.0" />
