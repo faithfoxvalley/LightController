@@ -185,10 +185,17 @@ public partial class BacnetProcessor
         QueueEvents(events);
     }
 
-    private void OnIamReceived(BacnetClient sender, BacnetAddress adr, uint deviceId, uint maxApdu, BacnetSegmentations segmentation, ushort vendorId)
+    private async void OnIamReceived(BacnetClient sender, BacnetAddress adr, uint deviceId, uint maxApdu, BacnetSegmentations segmentation, ushort vendorId)
     {
         Log.Info($"[Bacnet] Found Bacnet device: {adr} - {deviceId}");
         nodes.TryAdd(deviceId, new BacNode(adr, deviceId));
+        await FixEventTypes(adr, deviceId);
+    }
+
+    private async Task FixEventTypes(BacnetAddress address, uint deviceId)
+    {
+        foreach (BacnetEvent e in allEvents)
+            await e.FixValueType(bacnetClient, address, deviceId);
     }
 
     public bool WriteValue(uint deviceId, BacnetObjectId objectId, BacnetValue value)

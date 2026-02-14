@@ -1,4 +1,5 @@
 ﻿using LightController.Bacnet;
+using System;
 using System.IO.BACnet;
 using System.Threading.Tasks;
 using YamlDotNet.Serialization;
@@ -7,6 +8,8 @@ namespace LightController.Config.Bacnet;
 
 public class BacnetProperty
 {
+    private bool verified = false;
+
     [YamlMember(Alias = "Device")]
     public uint DeviceId { get; set; }
 
@@ -53,4 +56,49 @@ public class BacnetProperty
         ValueRequest = new BacnetRequest(Endpoint, val);
     }
 
+    public async Task FixValueType(BacnetClient bacnet, BacnetAddress deviceAddress)
+    {
+        if (verified)
+            return;
+        verified = true;
+
+        try
+        {
+            var queryResult = await bacnet.ReadPropertyAsync(deviceAddress, Endpoint.ObjectId, BacnetPropertyIds.PROP_PRESENT_VALUE);
+            if(queryResult.Count == 0)
+            {
+                Log.Warn("[Bacnet] Unable to verify property value " + Endpoint);
+                return;
+            }
+            BacnetValue currentValue = queryResult[0];
+            object desiredValueData;
+            switch (currentValue.Tag)
+            {
+                case BacnetApplicationTags.BACNET_APPLICATION_TAG_BOOLEAN:
+                    desiredValueData = Value == 1;
+                    break;
+                case BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED:
+                case BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT:
+                    desiredValueData = (uint)Value;
+                    break;
+                case BacnetApplicationTags.BACNET_APPLICATION_TAG_SIGNED_INT:
+                    desiredValueData = (int)Value;
+                    break;
+                case BacnetApplicationTags.BACNET_APPLICATION_TAG_REAL:
+                    desiredValueData = (float)Value;
+                    break;
+                case BacnetApplicationTags.BACNET_APPLICATION_TAG_DOUBLE:
+                    desiredValueData = (double)Value;
+                    break;
+                default:
+                    Log.Warn($"[Bacnet] Unable to verify property value {Endpoint}, property has unsupported type of {currentValue.Tag}");
+                    return;
+            }
+            ValueRequest = new BacnetRequest(Endpoint, new BacnetValue(currentValue.Tag, desiredValueData));
+        }
+        catch (Exception e)
+        {
+            Log.Warn($"[Bacnet] Exception while attempting to verify property value {Endpoint}: {e}");
+        }
+    }
 }

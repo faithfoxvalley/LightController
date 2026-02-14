@@ -1,5 +1,7 @@
 ﻿using LightController.Midi;
 using System.Collections.Generic;
+using System.IO.BACnet;
+using System.Threading.Tasks;
 using YamlDotNet.Serialization;
 
 namespace LightController.Config.Bacnet;
@@ -22,6 +24,15 @@ public class BacnetEvent
 
         foreach (BacnetProperty prop in Properties)
             prop.Init();
+    }
+
+    public async Task FixValueType(BacnetClient bacnet, BacnetAddress deviceAddress, uint deviceId)
+    {
+        foreach(BacnetProperty prop in Properties)
+        {
+            if (prop.DeviceId == deviceId)
+                await prop.FixValueType(bacnet, deviceAddress);
+        }
     }
 
     public override string ToString()

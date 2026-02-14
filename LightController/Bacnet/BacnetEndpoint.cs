@@ -47,4 +47,9 @@ public class BacnetEndpoint : IEquatable<BacnetEndpoint>
     {
         return !(left == right);
     }
+
+    public override string ToString()
+    {
+        return $"{DeviceId}:{ObjectId}";
+    }
 }
