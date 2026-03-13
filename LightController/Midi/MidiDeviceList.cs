@@ -75,4 +75,15 @@ public class MidiDeviceList
         input = new MidiIn(index);
         return true;
     }
+
+    internal void LogMidiDeviceList()
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.Append("Midi Devices: (").Append(MidiIn.NumberOfDevices).Append(')').AppendLine();
+
+        for (int i = 0; i < MidiIn.NumberOfDevices; i++)
+            sb.Append(MidiIn.DeviceInfo(i).ProductName.Trim()).AppendLine();
+
+        Log.Info(sb.ToString());
+    }
 }

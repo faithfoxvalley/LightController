@@ -50,6 +50,7 @@ public class SceneManager
         {
             while (!midiDevices.TryGetAnyInput(out this.midiDevice))
             {
+                midiDevices.LogMidiDeviceList();
 #if DEBUG
                 Log.Warn("No Midi devices found!");
                 break;
@@ -63,6 +64,7 @@ public class SceneManager
         {
             while (!midiDevices.TryGetInput(midiDevice, out this.midiDevice))
             {
+                midiDevices.LogMidiDeviceList();
                 ErrorBox.ExitOnCancel("No Midi device found with name '" + midiDevice + "', please check your config. Press OK to try again or Cancel to exit.");
                 midiDevices.UpdateMidiDeviceList();
             }
