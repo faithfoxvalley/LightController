@@ -56,7 +56,6 @@ public class SceneManager
                 break;
 #else
                 ErrorBox.ExitOnCancel("No Midi devices found. Press OK to try again or Cancel to exit.");
-                midiDevices.UpdateMidiDeviceList();
 #endif
             }
         }
