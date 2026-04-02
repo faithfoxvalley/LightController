@@ -5,7 +5,7 @@ namespace LightController.Config;
 
 public class ConfigFile : ConfigBase
 {
-    [YamlMember(Description = "Name of the MIDI device, or blank to pick the first one")]
+    [YamlMember(Description = "Name of the MIDI device, or blank to pick all devices")]
     public string MidiDevice { get; set; }
 
     [YamlMember(Alias = "Pro", Description = "ProPresenter settings")]
