@@ -5,6 +5,7 @@ using LightController.Midi;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using YamlDotNet.Serialization;
@@ -41,10 +42,14 @@ internal class MidiWaveInput : InputBase
     private AnimationOrder animation = new AnimationOrder();
     private readonly ConcurrentQueue<Wave> waves = new ConcurrentQueue<Wave>();
     private readonly ConcurrentDictionary<int, double> fixtureIntensity = new ConcurrentDictionary<int, double>();
+
     private MidiInput midi;
 
     public override void Init()
     {
+        if (WaveLength == 0)
+            return;
+
         if (string.IsNullOrEmpty(MidiDevice) || !MainWindow.Instance.Midi.TryGetInput(MidiDevice, out midi))
             Log.Error($"Unable to find midi device for drum wave input!");
 
@@ -53,10 +58,10 @@ internal class MidiWaveInput : InputBase
         else
             rising = TimeSpan.Zero;
 
-        if(double.IsFinite(OnTime) && OnTime > 0)
+        if (double.IsFinite(OnTime) && OnTime > 0)
             on = TimeSpan.FromSeconds(OnTime);
         else
-            on = TimeSpan.FromSeconds(1);
+            on = TimeSpan.Zero;
 
         if(double.IsFinite(FallingTime) && FallingTime > 0)
             falling = TimeSpan.FromSeconds(FallingTime);
@@ -96,20 +101,28 @@ internal class MidiWaveInput : InputBase
     {
         DateTime now = ClockTime.UtcNow;
 
-        foreach (ValueSet set in animation.Values)
+        if(waves.IsEmpty)
         {
-            foreach (Wave wave in waves)
-            {
-                double intensity = wave.GetIntensity(now);
-                foreach (int id in set.EnumerateValues())
-                    fixtureIntensity[id] = intensity;
-            }
-            now += perSegmentDelay;
+            fixtureIntensity.Clear();
+            return Task.CompletedTask;
         }
 
-        while (waves.TryPeek(out Wave firstWave) && firstWave.IsOver(now))
-            waves.TryDequeue(out _);
+        foreach (ValueSet set in animation.Values)
+        {
+            foreach (int id in set.EnumerateValues())
+            {
+                double intensity = 0;
+                foreach (Wave wave in waves)
+                    intensity = Math.Max(wave.GetIntensity(now), intensity);
+                fixtureIntensity[id] = intensity;
+            }
+                
+            now -= perSegmentDelay;
+        }
 
+        if (waves.TryPeek(out Wave firstWave) && firstWave.IsOver(now))
+            waves.TryDequeue(out _);
+        
         return Task.CompletedTask;
     }
 
@@ -164,7 +177,7 @@ internal class MidiWaveInput : InputBase
             if (utcNow > ending)
             {
                 TimeSpan length = utcNow - ending;
-                return length / falling;
+                return 1-(length / falling);
             }
             
             // on state
