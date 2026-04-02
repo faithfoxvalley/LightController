@@ -90,6 +90,8 @@ public class DmxFixture
         ColorRGB rgb = new ColorRGB();
         double intensity = 0;
 
+        bool hasIntensity = intensityChannel != null;
+
         lock (inputLock)
         {
             if (disabled)
@@ -114,24 +116,30 @@ public class DmxFixture
 
             foreach (var input in inputs)
             {
-                ColorHSV hsv = input.GetColor(fixtureId);
-                intensity += input.GetIntensity(fixtureId, hsv);
-                rgb += hsv.ToRgbBright();
+                ColorHSV inputHsv = input.GetColor(fixtureId);
+                double inputIntensity = input.GetIntensity(fixtureId, inputHsv);
+                if (inputIntensity <= 0)
+                    continue;
+                intensity += inputIntensity;
+                rgb += inputHsv.ToRgbBright(inputIntensity);
             }
         }
 
         if (intensity > 1)
             intensity = 1;
 
-        if(intensityChannel != null)
+        if (hasIntensity)
+        {
+            rgb.Normalize();
             frame.Set(intensityChannel.Index, intensityChannel.GetIntensityByte(intensity));
+        }
 
         frame.SetPreviewData(rgb, intensity);
 
         foreach (DmxChannel channel in colorChannels)
         {
             double value = channel.GetColorValue(ref rgb) * 255;
-            if (intensityChannel == null)
+            if (!hasIntensity)
                 value *= intensity;
             frame.Set(channel.Index, value);
         }

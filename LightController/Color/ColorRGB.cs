@@ -130,6 +130,26 @@ public class ColorRGB : IEquatable<ColorRGB>
         return Math.Min(Math.Min(Red, Green), Blue);
     }
 
+    public void Normalize()
+    {
+        byte value = Math.Max(Red, Math.Max(Green, Blue));
+        if (value == 255)
+            return;
+
+        if(value == 0)
+        {
+            Red = 255;
+            Green = 255;
+            Blue = 255;
+            return;
+        }
+
+        double scalingFactor = 255.0 / value;
+        Red = (byte)(Red * scalingFactor);
+        Green = (byte)(Green * scalingFactor);
+        Blue = (byte)(Blue * scalingFactor);
+    }
+
     /*public static explicit operator ColorHSI(ColorRGB x)
     {
         if (x == null)
