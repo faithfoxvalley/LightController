@@ -44,7 +44,7 @@ public class SceneManager
         }
         sceneList.SelectionChanged += SceneListChanged;
 
-        MidiDeviceList midiDevices = new MidiDeviceList();
+        MidiDeviceList midiDevices = MainWindow.Instance.Midi;
 
         if (string.IsNullOrWhiteSpace(midiDevice))
         {
@@ -66,7 +66,6 @@ public class SceneManager
             {
                 midiDevices.LogMidiDeviceList();
                 ErrorBox.ExitOnCancel("No Midi device found with name '" + midiDevice + "', please check your config. Press OK to try again or Cancel to exit.");
-                midiDevices.UpdateMidiDeviceList();
             }
         }
 
@@ -74,7 +73,6 @@ public class SceneManager
         if (this.midiDevice != null)
         {
             this.midiDevice.NoteEvent += MidiDevice_NoteEvent;
-            this.midiDevice.Start();
             Log.Info("Using midi device: " + this.midiDevice.Name);
         }
 

@@ -1,6 +1,7 @@
 ﻿using LightController.Bacnet;
 using LightController.Config;
 using LightController.Dmx;
+using LightController.Midi;
 using LightController.Pro;
 using Microsoft.Win32;
 using System;
@@ -12,7 +13,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Interop;
 
 namespace LightController;
 
@@ -29,6 +29,7 @@ public partial class MainWindow : Window
     private string DefaultShowFile => Path.Combine(ApplicationData, "default.show");
 
     private ProPresenter pro;
+    private readonly MidiDeviceList midi = new MidiDeviceList();
     private readonly ConfigFile mainConfig;
     private readonly ShowConfig showConfig;
     private SceneManager sceneManager;
@@ -48,6 +49,7 @@ public partial class MainWindow : Window
 
     public string ApplicationData { get; private set; }
     public ProPresenter Pro => pro;
+    public MidiDeviceList Midi => midi;
 
     public MainWindow()
     {
@@ -103,6 +105,8 @@ public partial class MainWindow : Window
         bacNet = new BacnetProcessor(showConfig.Bacnet, bacnetList);
         if (bacNet.Enabled)
             bacnetContainer.Visibility = Visibility.Visible;
+
+        midi.LogMidiDeviceList();
 
         string defaultScene = showConfig.DefaultScene;
         if(args.TryGetFlagArg("scene", 0, out string sceneFlag) && showConfig.Scenes.Any(x => x.Name == sceneFlag.Trim()))
