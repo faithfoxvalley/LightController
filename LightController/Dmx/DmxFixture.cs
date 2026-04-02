@@ -9,7 +9,8 @@ public class DmxFixture
     private DmxFrame frame;
     private DmxChannel intensityChannel;
     private List<DmxChannel> colorChannels = new List<DmxChannel>();
-    private Config.Input.InputBase input;
+    private readonly List<Config.Input.InputBase> inputs = new List<Config.Input.InputBase>();
+    private readonly List<ColorHSV> inputProcessingCache = new List<ColorHSV>();
     private bool disabled;
     private bool newInput;
     private object inputLock = new object();
@@ -53,7 +54,7 @@ public class DmxFixture
         lock(inputLock)
         {
             disabled = true;
-            input = null;
+            inputs.Clear();
             newInput = true;
         }
     }
@@ -63,42 +64,31 @@ public class DmxFixture
         if (double.IsNaN(mixLength) || double.IsInfinity(mixLength) || mixLength < 0)
             mixLength = 0;
 
-        foreach (var input in inputs)
+        lock (inputLock)
         {
-            if (input.FixtureIds.Contains(fixtureId))
-            {
-                lock(inputLock)
-                {
-                    if(!disabled)
-                    {
-                        this.mixLength = mixLength;
-                        this.mixDelay = mixDelay;
-                        this.input = input;
-                        newInput = true;
-                    }
-                }
+            if (disabled)
                 return;
-            }
-        }
 
-        lock(inputLock)
-        {
-            if (!disabled)
+            this.inputs.Clear();
+
+            this.mixLength = mixLength;
+            this.mixDelay = mixDelay;
+            newInput = true;
+
+            foreach (var input in inputs)
             {
-                this.mixLength = mixLength;
-                this.mixDelay = mixDelay;
-                this.input = null;
-                newInput = true;
+                if (input.FixtureIds.Contains(fixtureId))
+                    this.inputs.Add(input);
             }
+
         }
 
     }
 
     public DmxFrame GetFrame()
     {
-
-        ColorHSV hsv;
-        double intensity;
+        ColorRGB rgb = new ColorRGB();
+        double intensity = 0;
 
         lock (inputLock)
         {
@@ -116,18 +106,22 @@ public class DmxFixture
 
             frame.Reset();
 
-            if (input == null)
+            if (inputs.Count == 0)
             {
                 frame.Mix();
                 return frame;
             }
 
-            hsv = input.GetColor(fixtureId);
-            intensity = input.GetIntensity(fixtureId, hsv);
+            foreach (var input in inputs)
+            {
+                ColorHSV hsv = input.GetColor(fixtureId);
+                intensity += input.GetIntensity(fixtureId, hsv);
+                rgb += hsv.ToRgbBright();
+            }
         }
 
-        // Make a copy with maximum intensity
-        ColorRGB rgb = (ColorRGB)new ColorHSV(hsv.Hue, hsv.Saturation, 1);
+        if (intensity > 1)
+            intensity = 1;
 
         if(intensityChannel != null)
             frame.Set(intensityChannel.Index, intensityChannel.GetIntensityByte(intensity));

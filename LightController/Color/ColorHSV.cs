@@ -27,80 +27,80 @@ public class ColorHSV
 
     public static explicit operator ColorRGB(ColorHSV x)
     {
-			if (x == null)
-				return null;
+		if (x == null)
+			return null;
 
-			double r, g, b;
-			double hue = x.Hue;
-			double saturation = x.Saturation;
-			double value = x.Value;
+		double r, g, b;
+		double hue = x.Hue;
+		double saturation = x.Saturation;
+		double value = x.Value;
 
-			if (saturation == 0)
-			{
-				r = value;
-				g = value;
-				b = value;
-			}
-			else
-			{
-				int i;
-				double f, p, q, t;
-
-				if (hue == 360)
-					hue = 0;
-				else
-					hue = hue / 60;
-
-				i = (int)Math.Truncate(hue);
-				f = hue - i;
-
-				p = value * (1.0 - saturation);
-				q = value * (1.0 - (saturation * f));
-				t = value * (1.0 - (saturation * (1.0 - f)));
-
-				switch (i)
-				{
-					case 0:
-						r = value;
-						g = t;
-						b = p;
-						break;
-
-					case 1:
-						r = q;
-						g = value;
-						b = p;
-						break;
-
-					case 2:
-						r = p;
-						g = value;
-						b = t;
-						break;
-
-					case 3:
-						r = p;
-						g = q;
-						b = value;
-						break;
-
-					case 4:
-						r = t;
-						g = p;
-						b = value;
-						break;
-
-					default:
-						r = value;
-						g = p;
-						b = q;
-						break;
-				}
-
-			}
-
-			return new ColorRGB((byte)Math.Round(r * 255), (byte)Math.Round(g * 255), (byte)Math.Round(b * 255));
+		if (saturation == 0)
+		{
+			r = value;
+			g = value;
+			b = value;
 		}
+		else
+		{
+			int i;
+			double f, p, q, t;
+
+			if (hue == 360)
+				hue = 0;
+			else
+				hue = hue / 60;
+
+			i = (int)Math.Truncate(hue);
+			f = hue - i;
+
+			p = value * (1.0 - saturation);
+			q = value * (1.0 - (saturation * f));
+			t = value * (1.0 - (saturation * (1.0 - f)));
+
+			switch (i)
+			{
+				case 0:
+					r = value;
+					g = t;
+					b = p;
+					break;
+
+				case 1:
+					r = q;
+					g = value;
+					b = p;
+					break;
+
+				case 2:
+					r = p;
+					g = value;
+					b = t;
+					break;
+
+				case 3:
+					r = p;
+					g = q;
+					b = value;
+					break;
+
+				case 4:
+					r = t;
+					g = p;
+					b = value;
+					break;
+
+				default:
+					r = value;
+					g = p;
+					b = q;
+					break;
+			}
+
+		}
+
+		return new ColorRGB((byte)Math.Round(r * 255), (byte)Math.Round(g * 255), (byte)Math.Round(b * 255));
+	}
 
     public static bool operator ==(ColorHSV left, ColorHSV right)
     {
@@ -157,5 +157,81 @@ public class ColorHSV
     public override int GetHashCode()
     {
         return HashCode.Combine(Hue, Saturation, Value);
+    }
+
+    /// <summary>
+    /// Returns a ColorRGB that represents this HSV but with value = 100%
+    /// </summary>
+    public ColorRGB ToRgbBright()
+    {
+        double r, g, b;
+        double hue = Hue;
+        double saturation = Saturation;
+
+        if (saturation == 0)
+        {
+            r = 1;
+            g = 1;
+            b = 1;
+        }
+        else
+        {
+            int i;
+            double f, p, q, t;
+
+            if (hue == 360)
+                hue = 0;
+            else
+                hue = hue / 60;
+
+            i = (int)Math.Truncate(hue);
+            f = hue - i;
+
+            p = (1.0 - saturation);
+            q = (1.0 - (saturation * f));
+            t = (1.0 - (saturation * (1.0 - f)));
+
+            switch (i)
+            {
+                case 0:
+                    r = 1;
+                    g = t;
+                    b = p;
+                    break;
+
+                case 1:
+                    r = q;
+                    g = 1;
+                    b = p;
+                    break;
+
+                case 2:
+                    r = p;
+                    g = 1;
+                    b = t;
+                    break;
+
+                case 3:
+                    r = p;
+                    g = q;
+                    b = 1;
+                    break;
+
+                case 4:
+                    r = t;
+                    g = p;
+                    b = 1;
+                    break;
+
+                default:
+                    r = 1;
+                    g = p;
+                    b = q;
+                    break;
+            }
+
+        }
+
+        return new ColorRGB((byte)Math.Round(r * 255), (byte)Math.Round(g * 255), (byte)Math.Round(b * 255));
     }
 }

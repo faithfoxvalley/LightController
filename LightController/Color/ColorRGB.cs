@@ -79,6 +79,24 @@ public class ColorRGB : IEquatable<ColorRGB>
         return new ColorHSV(hue, saturation, value);
     }
 
+    public static ColorRGB operator +(ColorRGB left, ColorRGB right)
+    {
+        int r = left.Red + right.Red;
+        if(r > byte.MaxValue) 
+            r = byte.MaxValue;
+        
+        int g = left.Green + right.Green;
+        if(g > byte.MaxValue)
+            g = byte.MaxValue;
+
+        int b = left.Blue + right.Blue;
+        if(b > byte.MaxValue)
+            b = byte.MaxValue;
+
+        return new ColorRGB((byte)r, (byte)g, (byte)b);
+    }
+
+
     public static bool operator ==(ColorRGB left, ColorRGB right)
     {
         return EqualityComparer<ColorRGB>.Default.Equals(left, right);
