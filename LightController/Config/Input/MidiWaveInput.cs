@@ -16,7 +16,7 @@ namespace LightController.Config.Input;
 internal class MidiWaveInput : InputBase
 {
     public string MidiDevice { get; set; }
-    public MidiNote MidiNote { get; set; }
+    public List<MidiNote> MidiNotes { get; set; }
     public SerializableColorHSV Hsv { get; set; }
     public double RisingTime { get; set; }
     public double OnTime { get; set; }
@@ -50,10 +50,29 @@ internal class MidiWaveInput : InputBase
         if (WaveLength == 0)
             return;
 
-        if (string.IsNullOrEmpty(MidiDevice) || !MainWindow.Instance.Midi.TryGetInput(MidiDevice, out midi))
-            Log.Error($"Unable to find midi device for drum wave input!");
+        if (MidiNotes == null || MidiNotes.Count == 0)
+            return;
 
-        if(double.IsFinite(RisingTime) && RisingTime > 0)
+        if (string.IsNullOrEmpty(MidiDevice))
+            throw new NullReferenceException(nameof(MidiDevice));
+
+        MidiDeviceList midiDevices = MainWindow.Instance.Midi;
+        if(!midiDevices.TryGetInput(MidiDevice, out midi))
+        {
+            Log.Error($"Unable to find midi device for midi wave input!");
+            while(ErrorBox.Ask($"Required MIDI Device '{MidiDevice}' not found. Press OK to retry."))
+            {
+                if (midiDevices.TryGetInput(MidiDevice, out midi))
+                    break;
+                else
+                    midiDevices.LogMidiDeviceList();
+            }
+        }
+
+        if(midi != null)
+            Log.Info($"Using midi device '{midi.Name}' for midi wave input");
+
+        if (double.IsFinite(RisingTime) && RisingTime > 0)
             rising = TimeSpan.FromSeconds(RisingTime);
         else
             rising = TimeSpan.Zero;
@@ -93,7 +112,7 @@ internal class MidiWaveInput : InputBase
 
     private void OnMidiNote(MidiNote note)
     {
-        if (note == MidiNote)
+        if (MidiNotes.Contains(note))
             waves.Enqueue(new Wave(ClockTime.UtcNow, rising, on, falling));
     }
 
