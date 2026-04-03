@@ -27,4 +27,10 @@ public static class ErrorBox
             Process.GetCurrentProcess().Kill();
         }
     }
+
+    public static bool Ask(string msg)
+    {
+        var result = MessageBox.Show(msg, "Light Controller", MessageBoxButton.OKCancel, MessageBoxImage.Error, MessageBoxResult.None, MessageBoxOptions.DefaultDesktopOnly);
+        return result == MessageBoxResult.OK;
+    }
 }
