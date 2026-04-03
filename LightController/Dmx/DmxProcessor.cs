@@ -117,6 +117,9 @@ public class DmxProcessor
                 return;
             }
         }
+
+        foreach(DmxUniverse universe in universes)
+            universe.Start();
     }
 
     public void AppendToListbox(System.Windows.Controls.ListBox list)

@@ -9,7 +9,8 @@ internal class DmxUniverse
     private bool debug;
     private List<DmxFixture> fixtures = new List<DmxFixture>();
     private IDmxController controller = new NullDmxController();
-    private readonly TickLoop dmxTimer;
+    private TickLoop dmxTimer;
+    private readonly int fps;
     private string name;
     private PreviewWindow preview;
 
@@ -36,9 +37,14 @@ internal class DmxUniverse
 #endif
         }
 
-        dmxTimer = new TickLoop(fps, Write);
         if (!string.IsNullOrWhiteSpace(serialNumber) && name == null)
             name = serialNumber;
+        this.fps = fps;
+    }
+
+    public void Start()
+    {
+        dmxTimer = new TickLoop(fps, Write);
     }
 
     private bool OpenDevice(string serialNumber)
