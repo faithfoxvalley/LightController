@@ -75,6 +75,11 @@ public static class Log
         log.Error(ex, msg);
     }
 
+    public static void Error(string msg, Exception ex)
+    {
+        log.Error(ex, msg);
+    }
+
     private static void Write(LogEventLevel level, string msg)
     {
         log.Write(level, msg);

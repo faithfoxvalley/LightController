@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.IO.BACnet;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 
@@ -55,16 +57,32 @@ public partial class BacnetProcessor
         BacnetIpUdpProtocolTransport transport;
         if (string.IsNullOrWhiteSpace(config.BindIp) || !IPAddress.TryParse(config.BindIp, out _))
         {
-            transport = new BacnetIpUdpProtocolTransport(port);
-            Log.Info($"[Bacnet] Starting Bacnet client at {IPAddress.Any}:{port}");
+            if (TryGetPreferredBindAddress(out string bindAddress))
+            {
+                transport = new BacnetIpUdpProtocolTransport(port, localEndpointIp: bindAddress);
+                Log.Info($"[Bacnet] Starting Bacnet client at {bindAddress}:{port}");
+            }
+            else
+            {
+                transport = new BacnetIpUdpProtocolTransport(port);
+                Log.Info($"[Bacnet] Starting Bacnet client at {IPAddress.Any}:{port}");
+            }
         }
         else
         {
             transport = new BacnetIpUdpProtocolTransport(port, localEndpointIp: config.BindIp);
             Log.Info($"[Bacnet] Starting Bacnet client at {config.BindIp}:{port}");
         }
+        try
+        {
         bacnetClient = new BacnetClient(transport);
-        bacnetClient.Start();
+            bacnetClient.Start();
+
+        }
+        catch (Exception ex)
+        {
+
+        }
         bacnetClient.OnIam += OnIamReceived;
         bacnetClient.OnError += BacnetClient_OnError;
         bacnetClient.Retries = 1;
@@ -73,6 +91,45 @@ public partial class BacnetProcessor
 
         Enabled = true;
         this.bacnetList = bacnetList;
+    }
+
+    static bool TryGetPreferredBindAddress(out string bindAddress)
+    {
+        bindAddress = null;
+
+        UnicastIPAddressInformation[] unicastAddresses = NetworkInterface.GetAllNetworkInterfaces()
+            .Where(i => i.OperationalStatus == OperationalStatus.Up)
+            .Where(i => i.NetworkInterfaceType != NetworkInterfaceType.Loopback)
+            .Where(i => !(i.Name.Contains("VirtualBox") || i.Name.Contains("VMware")))
+            .SelectMany(i => i.GetIPProperties().UnicastAddresses)
+            .Where(a => a.Address.AddressFamily == AddressFamily.InterNetwork)
+            .ToArray();
+
+        if (unicastAddresses.Length == 1)
+        {
+            bindAddress = unicastAddresses.Single().Address.ToString();
+            return true;
+        }
+
+        Log.Warn("[Bacnet] No bind address specified and multiple network interfaces exist");
+        try
+        {
+            using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0))
+            {
+                socket.Connect("1.1.1.1", 1337);
+                IPEndPoint endPoint = socket.LocalEndPoint as IPEndPoint;
+                if (endPoint == null)
+                    return false;
+                bindAddress = endPoint.Address.ToString();
+                return true;
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error("[Bacnet] Error trying to find bind address:", ex);
+        }
+
+        return false;
     }
 
     private void BacnetClient_OnError(BacnetClient sender, BacnetAddress adr, BacnetPduTypes type, BacnetConfirmedServices service, byte invokeId, BacnetErrorClasses errorClass, BacnetErrorCodes errorCode, byte[] buffer, int offset, int length)
