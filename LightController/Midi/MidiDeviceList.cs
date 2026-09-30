@@ -21,7 +21,13 @@ public class MidiDeviceList
 
     public bool TryGetAnyInput(out MidiInput input)
     {
-        return TryGetInput(MidiDevice.GetDeviceNames(), out input);
+        input = null;
+
+        IEnumerable<MidiDevice> devices = MidiDevice.StartAll();
+        if (devices.Count() == 0)
+            return false;
+        input = new MidiInput(devices);
+        return true;
     }
 
     public bool TryGetInput(IEnumerable<string> deviceNames, out MidiInput input)
@@ -63,8 +69,8 @@ public class MidiDeviceList
     internal void LogMidiDeviceList()
     {
         StringBuilder sb = new StringBuilder();
-        string[] deviceNames = MidiDevice.GetDeviceNames().ToArray();
-        sb.Append("Midi Devices: (").Append(deviceNames.Length).Append(')').AppendLine();
+        var deviceNames = MidiDevice.GetDeviceNames();
+        sb.Append("Midi Devices: (").Append(deviceNames.Count()).Append(')').AppendLine();
 
         foreach(string name in deviceNames)
         {

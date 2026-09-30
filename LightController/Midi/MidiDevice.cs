@@ -1,6 +1,9 @@
 ﻿using NAudio.Midi;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Xml.Linq;
+using Windows.Devices.Enumeration;
 
 namespace LightController.Midi;
 
@@ -8,9 +11,9 @@ public class MidiDevice
 {
     public string Name { get; }
 
-    private readonly MidiIn midi;
+    private readonly IMidiInput midi;
 
-    private MidiDevice(string name, MidiIn midi)
+    private MidiDevice(string name, WinRTMidiIn midi)
     {
         Name = name;
         this.midi = midi;
@@ -18,59 +21,67 @@ public class MidiDevice
         midi.Start();
     }
 
-    private MidiDevice(int index) : this(GetDeviceName(index), new MidiIn(index))
-    {
-
-    }
-
     public static IEnumerable<string> GetDeviceNames()
     {
-        List<string> devices = new List<string>();
-        for (int i = 0; i < MidiIn.NumberOfDevices; i++)
-            devices.Add(GetDeviceName(i));
-        return devices;
+        return AsyncUtils.Run(WinRTMidiIn.GetDevicesAsync).Select(x => x.Name).ToArray();
     }
 
-    public static bool TryStart(string name, out MidiDevice device)
+    private static bool TryGetDeviceId(string name, out string id)
     {
-        name = name.Trim().ToLower();
-        device = null;
+        id = null;
 
-        if (MidiIn.NumberOfDevices == 0)
-            return false;
-
-        if(string.IsNullOrEmpty(name))
+        var devices = AsyncUtils.Run(WinRTMidiIn.GetDevicesAsync);
+        foreach(DeviceInformation info in devices)
         {
-            device = new MidiDevice(0);
-            return true;
-        }
-
-        if(!TryFind(name, out MidiIn midi))
-            return false;
-
-        device = new MidiDevice(name, midi);
-        return true;
-    }
-
-    private static bool TryFind(string name, out MidiIn device)
-    {
-        for (int i = 0; i < MidiIn.NumberOfDevices; i++)
-        {
-            if (GetDeviceName(i) == name)
+            if (info.Name.Equals(name, StringComparison.CurrentCultureIgnoreCase))
             {
-                device = new MidiIn(i);
+                id = info.Id;
                 return true;
             }
         }
 
-        device = null;
         return false;
     }
 
-    private static string GetDeviceName(int index)
+    public static bool TryStart(string name, out MidiDevice device)
     {
-        return MidiIn.DeviceInfo(index).ProductName.Trim().ToLower();
+        device = null;
+
+        if (!TryGetDeviceId(name.Trim(), out string id))
+            return false;
+
+        return TryStart(name, id, out device);
     }
+
+    public static IEnumerable<MidiDevice> StartAll()
+    {
+        List<MidiDevice> result = new List<MidiDevice>();
+
+        var devices = AsyncUtils.Run(WinRTMidiIn.GetDevicesAsync);
+        foreach (DeviceInformation info in devices)
+        {
+            if(TryStart(info.Name, info.Id, out MidiDevice device))
+                result.Add(device);
+        }
+
+        return result;
+    }
+
+    private static bool TryStart(string name, string id, out MidiDevice device)
+    {
+        device = null;
+
+        try
+        {
+            WinRTMidiIn midi = AsyncUtils.Run(WinRTMidiIn.CreateAsync, id);
+            device = new MidiDevice(name, midi);
+            return true;
+        }
+        catch (InvalidOperationException ex)
+        { }
+        return false;
+    }
+
 
     private void OnMessageReceived(object sender, MidiInMessageEventArgs e)
     {
